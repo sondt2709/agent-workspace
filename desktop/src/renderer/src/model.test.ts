@@ -9,6 +9,7 @@ import {
   listGroups,
   pauseText,
   pendingAnswer,
+  sessionLink,
   titleFromFirstMessage,
 } from "./model.ts";
 import { makeGate, makeTask, PROJECT } from "./testing.tsx";
@@ -169,5 +170,37 @@ describe("gate rules", () => {
     expect(pendingAnswer(gate, "macbook-pro").mine?.dev).toBe("macbook-pro");
     expect(pendingAnswer(gate, "macbook-pro").other?.dev).toBe("pixel-9");
     expect(pendingAnswer(makeGate(), "macbook-pro")).toEqual({ mine: null, other: null });
+  });
+});
+
+describe("sessionLink (agent-pushes-updates)", () => {
+  const base = {
+    session: "01a20a1c-5e55-7000-8000-000000000009",
+    device: "ubuntu-01",
+    state: "running" as const,
+    reason: null,
+  };
+  it("names the tmux window and pane, or the Orca terminal", () => {
+    expect(
+      sessionLink({
+        ...base,
+        host: "tmux",
+        name: "AW-7",
+        terminal: { window: "@1", pane: "%12" },
+        pid: 4242,
+      }),
+    ).toEqual([
+      "Claude session 01a20a1c-5e55-7000-8000-000000000009",
+      "name AW-7",
+      "tmux window @1 · pane %12",
+      "pid 4242",
+    ]);
+    expect(
+      sessionLink({ ...base, host: "orca", terminal: { window: null, pane: "term-3" } }),
+    ).toEqual(["Claude session 01a20a1c-5e55-7000-8000-000000000009", "Orca terminal term-3"]);
+    // An older session.started has no link data.
+    expect(sessionLink({ ...base, host: "tmux" })).toEqual([
+      "Claude session 01a20a1c-5e55-7000-8000-000000000009",
+    ]);
   });
 });
