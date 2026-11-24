@@ -47,7 +47,10 @@ describe.skipIf(!TEST_TMUX)("checkpoint branch with tmux and the fake agent", ()
   it("pushes aw/<key> to origin at the Stop after the agent commits", async () => {
     awd = await startSessionDaemon();
     const bare = await bareRemote(awd.checkout);
-    const task = await awd.createTask("bash git commit -q --allow-empty -m work-of-macbook-pro");
+    // CI runners have no git identity: the agent command gives one.
+    const task = await awd.createTask(
+      "bash git -c user.name=t -c user.email=t@example.com commit -q --allow-empty -m work-of-macbook-pro",
+    );
     const opened = await awd.waitRow(
       task.id,
       (r) => r.type === "gate.opened" && data(r).kind === "approve_command",
