@@ -36,6 +36,6 @@
 ## 6. Checks and evidence
 
 - [x] 6.1 Break each new test once, see it fail, and restore the code
-- [ ] 6.2 Run `task check` and `task leakcheck`
+- [x] 6.2 Run `task check` and `task leakcheck`
 - [x] 6.3 Desktop after screenshots on the seeded awd (dark, light, 400 px): task page, Show list, Show more, decisions picked, the subagent report; answer with "Send my choices" and read the `[AW answer]` text in `aw thread`
 - [x] 6.4 Android after screenshots on the `nuc-android` emulator: phone with the keyboard open, 840 dp foldable, 1440 dp window, New task heights
