@@ -1,0 +1,105 @@
+{
+  "description": "HLC test vectors (docs/phase-1.md 3.6). The TypeScript tests (shared/schema/src/hlc.test.ts) and the Kotlin tests read this file. Times are UTC. physical_ms is the time of the device clock at the step.",
+  "format": [
+    { "time_ms": 0, "counter": 0, "text": "1970-01-01T00:00:00.000Z#0000" },
+    { "time_ms": 1795357201123, "counter": 7, "text": "2026-11-22T14:20:01.123Z#0007" },
+    { "time_ms": 1798761599999, "counter": 9999, "text": "2026-12-31T23:59:59.999Z#9999" }
+  ],
+  "invalid": [
+    "2026-11-22T14:20:01Z#0000",
+    "2026-11-22T14:20:01.123Z#000",
+    "2026-11-22T14:20:01.123Z#00000",
+    "2026-11-22T14:20:01.123+00:00#0000",
+    "2026-11-22 14:20:01.123Z#0000",
+    "2026-11-22T14:20:01.123Z",
+    "2026-02-30T00:00:00.000Z#0000",
+    "2026-11-22T24:00:00.000Z#0000",
+    "2026-13-45T25:00:00.000Z#0000",
+    ""
+  ],
+  "order": [
+    { "hlc": "2026-11-22T14:20:01.123Z#0000", "dev": "macbook-pro" },
+    { "hlc": "2026-11-22T14:20:01.123Z#0000", "dev": "pixel-9" },
+    { "hlc": "2026-11-22T14:20:01.123Z#0000", "dev": "ubuntu-01" },
+    { "hlc": "2026-11-22T14:20:01.123Z#0001", "dev": "macbook-pro" },
+    { "hlc": "2026-11-22T14:20:01.123Z#0009", "dev": "pixel-9" },
+    { "hlc": "2026-11-22T14:20:01.123Z#0010", "dev": "ubuntu-01" },
+    { "hlc": "2026-11-22T14:20:01.124Z#0000", "dev": "macbook-pro" },
+    { "hlc": "2026-11-22T14:20:02.000Z#0000", "dev": "pixel-9" }
+  ],
+  "sequences": [
+    {
+      "name": "same millisecond, then a later millisecond",
+      "start": null,
+      "steps": [
+        { "op": "now", "physical_ms": 1795357201123, "expect": "2026-11-22T14:20:01.123Z#0000" },
+        { "op": "now", "physical_ms": 1795357201123, "expect": "2026-11-22T14:20:01.123Z#0001" },
+        { "op": "now", "physical_ms": 1795357201124, "expect": "2026-11-22T14:20:01.124Z#0000" }
+      ]
+    },
+    {
+      "name": "the device clock moves back 5 minutes",
+      "start": null,
+      "steps": [
+        { "op": "now", "physical_ms": 1795357201123, "expect": "2026-11-22T14:20:01.123Z#0000" },
+        { "op": "now", "physical_ms": 1795356901123, "expect": "2026-11-22T14:20:01.123Z#0001" }
+      ]
+    },
+    {
+      "name": "clock skew: the device clock is 5 minutes behind and answers a later question",
+      "start": null,
+      "steps": [
+        { "op": "now", "physical_ms": 1795356901123, "expect": "2026-11-22T14:15:01.123Z#0000" },
+        {
+          "op": "receive",
+          "remote": "2026-11-22T14:20:01.123Z#0003",
+          "physical_ms": 1795356901123,
+          "expect": "2026-11-22T14:20:01.123Z#0004"
+        },
+        { "op": "now", "physical_ms": 1795356902000, "expect": "2026-11-22T14:20:01.123Z#0005" }
+      ]
+    },
+    {
+      "name": "an older remote HLC does not change the clock",
+      "start": "2026-11-22T14:20:01.123Z#0007",
+      "steps": [
+        { "op": "observe", "remote": "2026-11-22T14:20:01.123Z#0002" },
+        { "op": "now", "physical_ms": 1795357201123, "expect": "2026-11-22T14:20:01.123Z#0008" },
+        { "op": "now", "physical_ms": 1795357202000, "expect": "2026-11-22T14:20:02.000Z#0000" }
+      ]
+    },
+    {
+      "name": "a remote HLC with the same time and a higher counter",
+      "start": "2026-11-22T14:20:01.123Z#0002",
+      "steps": [
+        {
+          "op": "receive",
+          "remote": "2026-11-22T14:20:01.123Z#0005",
+          "physical_ms": 1795357201123,
+          "expect": "2026-11-22T14:20:01.123Z#0006"
+        }
+      ]
+    },
+    {
+      "name": "a remote HLC older than the physical time",
+      "start": null,
+      "steps": [
+        {
+          "op": "receive",
+          "remote": "2026-11-22T14:15:01.123Z#0009",
+          "physical_ms": 1795357201123,
+          "expect": "2026-11-22T14:20:01.123Z#0000"
+        }
+      ]
+    },
+    {
+      "name": "counter overflow moves the time part 1 ms forward",
+      "start": "2026-11-22T14:20:01.123Z#9998",
+      "steps": [
+        { "op": "now", "physical_ms": 1795357201123, "expect": "2026-11-22T14:20:01.123Z#9999" },
+        { "op": "now", "physical_ms": 1795357201123, "expect": "2026-11-22T14:20:01.124Z#0000" },
+        { "op": "now", "physical_ms": 1795357201123, "expect": "2026-11-22T14:20:01.124Z#0001" }
+      ]
+    }
+  ]
+}

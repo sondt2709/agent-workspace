@@ -1,0 +1,7 @@
+#!/bin/sh
+# The aw CLI inside an AW session. aw-launch sets AW_NODE and AW_CLI (docs/phase-1.md 9.1).
+if [ -z "${AW_NODE:-}" ] || [ -z "${AW_CLI:-}" ]; then
+  echo "aw: AW did not start this session (AW_CLI is not set)." >&2
+  exit 3
+fi
+exec "$AW_NODE" "$AW_CLI" "$@"

@@ -1,0 +1,5 @@
+kind: project
+schema: 1
+slug: web-app
+name: Web app
+devices: [macbook-pro]

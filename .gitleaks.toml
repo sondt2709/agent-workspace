@@ -1,0 +1,7 @@
+# gitleaks: the default rules plus one allowlist.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Test vectors: fixed, public test keys (HLC, age, Ed25519), not secrets"
+paths = ['''^contracts/test-vectors/.*\.json$''']

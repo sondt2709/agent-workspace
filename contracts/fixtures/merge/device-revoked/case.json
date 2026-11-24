@@ -1,0 +1,4 @@
+{
+  "description": "A revoked device (docs/phase-1.md 6.8). The record of ubuntu-01 has revoked: true, seq 2 and revoked_at 14:20:00. Its events up to 14:20:00 count. Its later events do not count (reason device_revoked): the task.progress at 14:20:01, the message.agent at 14:21:00 and the slot.released at 14:20:30, so the k3d lease stays. The record is a placeholder: merge cases run with no signature check.",
+  "now": "2026-11-22T14:21:30.000Z"
+}

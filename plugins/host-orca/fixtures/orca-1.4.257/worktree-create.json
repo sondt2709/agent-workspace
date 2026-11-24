@@ -1,0 +1,75 @@
+{
+  "id": "76b9c4ce-f824-4d34-bd21-4fa8eeb407e6",
+  "ok": true,
+  "result": {
+    "worktree": {
+      "id": "40f6e034-641e-46a2-a01c-340983a89019::/home/user/orca/workspaces/aw-test-repo/aw-01a2038e-7f00-7000-8000-000000000001",
+      "identity": {
+        "key": "wt2:local:510e3b4a-bd34-486f-93a1-8c8025e341b8",
+        "executionHostId": "local",
+        "instanceId": "510e3b4a-bd34-486f-93a1-8c8025e341b8"
+      },
+      "instanceId": "510e3b4a-bd34-486f-93a1-8c8025e341b8",
+      "repoId": "40f6e034-641e-46a2-a01c-340983a89019",
+      "projectId": "repo:40f6e034-641e-46a2-a01c-340983a89019",
+      "hostId": "local",
+      "projectHostSetupId": "40f6e034-641e-46a2-a01c-340983a89019",
+      "creatorProvenance": {
+        "kind": "host"
+      },
+      "path": "/home/user/orca/workspaces/aw-test-repo/aw-01a2038e-7f00-7000-8000-000000000001",
+      "head": "02e9f6c4ea2c483ee9110bf8f6ce0d359520a460",
+      "branch": "refs/heads/aw/AW-1",
+      "isBare": false,
+      "isMainWorktree": false,
+      "displayName": "aw-01a2038e-7f00-7000-8000-000000000001",
+      "displayNameMode": "fixed",
+      "comment": "",
+      "linkedIssue": null,
+      "linkedPR": null,
+      "linkedLinearIssue": null,
+      "linkedLinearIssueWorkspaceId": null,
+      "linkedLinearIssueOrganizationUrlKey": null,
+      "linkedGitLabMR": null,
+      "linkedGitLabIssue": null,
+      "linkedBitbucketPR": null,
+      "linkedAzureDevOpsPR": null,
+      "linkedGiteaPR": null,
+      "linkedWorkItem": null,
+      "linkedTaskSourceContext": null,
+      "isArchived": false,
+      "isUnread": false,
+      "isPinned": false,
+      "sortOrder": 1795397201617,
+      "lastActivityAt": 1795397201616,
+      "createdAt": 1795397201616,
+      "cliProvenance": {
+        "kind": "created-by-cli",
+        "createdAt": 1795397201165
+      },
+      "baseRef": "main",
+      "workspaceStatus": "in-progress",
+      "parentWorktreeId": null,
+      "childWorktreeIds": [],
+      "lineage": null,
+      "workspaceLineage": null,
+      "git": {
+        "path": "/home/user/orca/workspaces/aw-test-repo/aw-01a2038e-7f00-7000-8000-000000000001",
+        "head": "02e9f6c4ea2c483ee9110bf8f6ce0d359520a460",
+        "branch": "refs/heads/aw/AW-1",
+        "isBare": false,
+        "isMainWorktree": false
+      }
+    },
+    "lineage": null,
+    "workspaceLineage": null,
+    "warnings": [],
+    "catalogVersion": {
+      "epoch": "e2b0ce19-c2b0-4e83-9777-22f4593902d9",
+      "sequence": 5
+    }
+  },
+  "_meta": {
+    "runtimeId": "7c9912a9-7cf5-4083-aa0e-8899e9cc041b"
+  }
+}

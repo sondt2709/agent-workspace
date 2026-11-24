@@ -1,0 +1,504 @@
+{
+  "$comment": "Real reply of `aw --json thread AW-8` (task view of a session with the fake agent), captured 2026-11-24 from a test awd (device macbook-pro). Session ids, the work folder and the process ids are replaced.",
+  "thread": {
+    "task": {
+      "id": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+      "key": "AW-8",
+      "title": "Speed up the dashboard query"
+    },
+    "events": [
+      {
+        "id": "01a20a1c-100a-70e1-b527-c9f280960a71",
+        "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+        "hlc": "2026-11-23T20:32:21.002Z#0000",
+        "dev": "macbook-pro",
+        "type": "task.created",
+        "path": "tasks/01a20a1c-100a-70e1-b527-c4c748f02dc4/log/macbook-pro.jsonl",
+        "line": 1,
+        "applied": true,
+        "reason": null,
+        "event": {
+          "v": 1,
+          "id": "01a20a1c-100a-70e1-b527-c9f280960a71",
+          "hlc": "2026-11-23T20:32:21.002Z#0000",
+          "dev": "macbook-pro",
+          "type": "task.created",
+          "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+          "by": "human@macbook-pro",
+          "data": {
+            "key": "AW-8",
+            "project": "web-app",
+            "title": "Speed up the dashboard query",
+            "first_message": "steps\nreply I read the query plan. The join on events has no index.\nreply I added the index on events(user_id, created_at).\nreply The p95 went from 1.8 s to 220 ms on the test data.\nreply I ran the full test suite: 412 passed.\nwait 600000",
+            "assignee": "claude@macbook-pro",
+            "parent": null,
+            "depends_on": [],
+            "test_server": null,
+            "credentials": [],
+            "links": []
+          }
+        }
+      },
+      {
+        "id": "01a20a1c-1114-76d9-b63b-8525351e93bd",
+        "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+        "hlc": "2026-11-23T20:32:21.268Z#0000",
+        "dev": "macbook-pro",
+        "type": "task.claimed",
+        "path": "tasks/01a20a1c-100a-70e1-b527-c4c748f02dc4/log/macbook-pro.jsonl",
+        "line": 2,
+        "applied": true,
+        "reason": null,
+        "event": {
+          "v": 1,
+          "id": "01a20a1c-1114-76d9-b63b-8525351e93bd",
+          "hlc": "2026-11-23T20:32:21.268Z#0000",
+          "dev": "macbook-pro",
+          "type": "task.claimed",
+          "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+          "by": "aw@macbook-pro",
+          "data": {
+            "epoch": 1,
+            "device": "macbook-pro",
+            "session": "01a20a1c-0000-7000-8000-000000005000",
+            "based_on": null
+          }
+        }
+      },
+      {
+        "id": "01a20a1c-1122-77f0-a76c-e13fb4a3e484",
+        "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+        "hlc": "2026-11-23T20:32:21.282Z#0000",
+        "dev": "macbook-pro",
+        "type": "task.stage_changed",
+        "path": "tasks/01a20a1c-100a-70e1-b527-c4c748f02dc4/log/macbook-pro.jsonl",
+        "line": 3,
+        "applied": true,
+        "reason": null,
+        "event": {
+          "v": 1,
+          "id": "01a20a1c-1122-77f0-a76c-e13fb4a3e484",
+          "hlc": "2026-11-23T20:32:21.282Z#0000",
+          "dev": "macbook-pro",
+          "type": "task.stage_changed",
+          "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+          "by": "aw@macbook-pro",
+          "data": {
+            "from": "backlog",
+            "to": "discuss"
+          }
+        }
+      },
+      {
+        "id": "01a20a1c-1455-79a2-84c6-1ebc87845604",
+        "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+        "hlc": "2026-11-23T20:32:22.142Z#0000",
+        "dev": "macbook-pro",
+        "type": "session.started",
+        "path": "tasks/01a20a1c-100a-70e1-b527-c4c748f02dc4/log/macbook-pro.jsonl",
+        "line": 4,
+        "applied": true,
+        "reason": null,
+        "event": {
+          "v": 1,
+          "id": "01a20a1c-1455-79a2-84c6-1ebc87845604",
+          "hlc": "2026-11-23T20:32:22.142Z#0000",
+          "dev": "macbook-pro",
+          "type": "session.started",
+          "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+          "by": "aw@macbook-pro",
+          "data": {
+            "session": "01a20a1c-0000-7000-8000-000000005000",
+            "host": "tmux",
+            "cwd": "/tmp/aw/worktrees/AW-8",
+            "plugin_dir": "/tmp/aw/plugin",
+            "branch": "aw/AW-8",
+            "credentials": [],
+            "pids": {
+              "pane": null,
+              "claude": null,
+              "pgid": null
+            }
+          }
+        }
+      },
+      {
+        "id": "01a20a1c-1542-757e-8502-58b67cf40d1c",
+        "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+        "hlc": "2026-11-23T20:32:22.463Z#0000",
+        "dev": "macbook-pro",
+        "type": "message.human",
+        "path": "tasks/01a20a1c-100a-70e1-b527-c4c748f02dc4/log/macbook-pro.jsonl",
+        "line": 5,
+        "applied": true,
+        "reason": null,
+        "event": {
+          "v": 1,
+          "id": "01a20a1c-1542-757e-8502-58b67cf40d1c",
+          "hlc": "2026-11-23T20:32:22.463Z#0000",
+          "dev": "macbook-pro",
+          "type": "message.human",
+          "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+          "by": "human@macbook-pro",
+          "data": {
+            "text": "steps\nreply I read the query plan. The join on events has no index.\nreply I added the index on events(user_id, created_at).\nreply The p95 went from 1.8 s to 220 ms on the test data.\nreply I ran the full test suite: 412 passed.\nwait 600000",
+            "source": "first",
+            "session": "01a20a1c-0000-7000-8000-000000005000",
+            "delivery_id": null
+          }
+        }
+      },
+      {
+        "id": "01a20a1c-1634-7473-a231-c24745008261",
+        "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+        "hlc": "2026-11-23T20:32:22.626Z#0000",
+        "dev": "macbook-pro",
+        "type": "message.agent",
+        "path": "tasks/01a20a1c-100a-70e1-b527-c4c748f02dc4/log/macbook-pro.jsonl",
+        "line": 6,
+        "applied": true,
+        "reason": null,
+        "event": {
+          "v": 1,
+          "id": "01a20a1c-1634-7473-a231-c24745008261",
+          "hlc": "2026-11-23T20:32:22.626Z#0000",
+          "dev": "macbook-pro",
+          "type": "message.agent",
+          "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+          "by": "claude@macbook-pro",
+          "data": {
+            "text": "I run 5 steps.",
+            "session": "01a20a1c-0000-7000-8000-000000005000"
+          }
+        }
+      },
+      {
+        "id": "01a20a1c-1727-7ebd-bdea-9c912c495f96",
+        "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+        "hlc": "2026-11-23T20:32:23.256Z#0000",
+        "dev": "macbook-pro",
+        "type": "message.human",
+        "path": "tasks/01a20a1c-100a-70e1-b527-c4c748f02dc4/log/macbook-pro.jsonl",
+        "line": 7,
+        "applied": true,
+        "reason": null,
+        "event": {
+          "v": 1,
+          "id": "01a20a1c-1727-7ebd-bdea-9c912c495f96",
+          "hlc": "2026-11-23T20:32:23.256Z#0000",
+          "dev": "macbook-pro",
+          "type": "message.human",
+          "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+          "by": "human@macbook-pro",
+          "data": {
+            "text": "reply I read the query plan. The join on events has no index.",
+            "source": "typed",
+            "session": "01a20a1c-0000-7000-8000-000000005000",
+            "delivery_id": null
+          }
+        }
+      },
+      {
+        "id": "01a20a1c-1807-776c-b7b6-ce3faedef5f3",
+        "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+        "hlc": "2026-11-23T20:32:23.274Z#0000",
+        "dev": "macbook-pro",
+        "type": "message.agent",
+        "path": "tasks/01a20a1c-100a-70e1-b527-c4c748f02dc4/log/macbook-pro.jsonl",
+        "line": 8,
+        "applied": true,
+        "reason": null,
+        "event": {
+          "v": 1,
+          "id": "01a20a1c-1807-776c-b7b6-ce3faedef5f3",
+          "hlc": "2026-11-23T20:32:23.274Z#0000",
+          "dev": "macbook-pro",
+          "type": "message.agent",
+          "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+          "by": "claude@macbook-pro",
+          "data": {
+            "text": "I read the query plan. The join on events has no index.",
+            "session": "01a20a1c-0000-7000-8000-000000005000"
+          }
+        }
+      },
+      {
+        "id": "01a20a1c-18e2-768d-bf8e-7e2c2bf1b8c4",
+        "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+        "hlc": "2026-11-23T20:32:23.348Z#0000",
+        "dev": "macbook-pro",
+        "type": "message.human",
+        "path": "tasks/01a20a1c-100a-70e1-b527-c4c748f02dc4/log/macbook-pro.jsonl",
+        "line": 9,
+        "applied": true,
+        "reason": null,
+        "event": {
+          "v": 1,
+          "id": "01a20a1c-18e2-768d-bf8e-7e2c2bf1b8c4",
+          "hlc": "2026-11-23T20:32:23.348Z#0000",
+          "dev": "macbook-pro",
+          "type": "message.human",
+          "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+          "by": "human@macbook-pro",
+          "data": {
+            "text": "reply I added the index on events(user_id, created_at).",
+            "source": "typed",
+            "session": "01a20a1c-0000-7000-8000-000000005000",
+            "delivery_id": null
+          }
+        }
+      },
+      {
+        "id": "01a20a1c-19c0-74de-b285-e7d7fe75ae9b",
+        "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+        "hlc": "2026-11-23T20:32:23.495Z#0000",
+        "dev": "macbook-pro",
+        "type": "message.agent",
+        "path": "tasks/01a20a1c-100a-70e1-b527-c4c748f02dc4/log/macbook-pro.jsonl",
+        "line": 10,
+        "applied": true,
+        "reason": null,
+        "event": {
+          "v": 1,
+          "id": "01a20a1c-19c0-74de-b285-e7d7fe75ae9b",
+          "hlc": "2026-11-23T20:32:23.495Z#0000",
+          "dev": "macbook-pro",
+          "type": "message.agent",
+          "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+          "by": "claude@macbook-pro",
+          "data": {
+            "text": "I added the index on events(user_id, created_at).",
+            "session": "01a20a1c-0000-7000-8000-000000005000"
+          }
+        }
+      },
+      {
+        "id": "01a20a1c-1a9f-7909-bf45-810048d4ffa3",
+        "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+        "hlc": "2026-11-23T20:32:23.855Z#0000",
+        "dev": "macbook-pro",
+        "type": "message.human",
+        "path": "tasks/01a20a1c-100a-70e1-b527-c4c748f02dc4/log/macbook-pro.jsonl",
+        "line": 11,
+        "applied": true,
+        "reason": null,
+        "event": {
+          "v": 1,
+          "id": "01a20a1c-1a9f-7909-bf45-810048d4ffa3",
+          "hlc": "2026-11-23T20:32:23.855Z#0000",
+          "dev": "macbook-pro",
+          "type": "message.human",
+          "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+          "by": "human@macbook-pro",
+          "data": {
+            "text": "reply The p95 went from 1.8 s to 220 ms on the test data.",
+            "source": "typed",
+            "session": "01a20a1c-0000-7000-8000-000000005000",
+            "delivery_id": null
+          }
+        }
+      },
+      {
+        "id": "01a20a1c-1b7a-7102-86b5-6520f5eb46dc",
+        "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+        "hlc": "2026-11-23T20:32:24.281Z#0000",
+        "dev": "macbook-pro",
+        "type": "message.agent",
+        "path": "tasks/01a20a1c-100a-70e1-b527-c4c748f02dc4/log/macbook-pro.jsonl",
+        "line": 12,
+        "applied": true,
+        "reason": null,
+        "event": {
+          "v": 1,
+          "id": "01a20a1c-1b7a-7102-86b5-6520f5eb46dc",
+          "hlc": "2026-11-23T20:32:24.281Z#0000",
+          "dev": "macbook-pro",
+          "type": "message.agent",
+          "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+          "by": "claude@macbook-pro",
+          "data": {
+            "text": "The p95 went from 1.8 s to 220 ms on the test data.",
+            "session": "01a20a1c-0000-7000-8000-000000005000"
+          }
+        }
+      },
+      {
+        "id": "01a20a1c-1c4a-7f9b-af16-6a08e5eda8d3",
+        "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+        "hlc": "2026-11-23T20:32:24.304Z#0000",
+        "dev": "macbook-pro",
+        "type": "message.human",
+        "path": "tasks/01a20a1c-100a-70e1-b527-c4c748f02dc4/log/macbook-pro.jsonl",
+        "line": 13,
+        "applied": true,
+        "reason": null,
+        "event": {
+          "v": 1,
+          "id": "01a20a1c-1c4a-7f9b-af16-6a08e5eda8d3",
+          "hlc": "2026-11-23T20:32:24.304Z#0000",
+          "dev": "macbook-pro",
+          "type": "message.human",
+          "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+          "by": "human@macbook-pro",
+          "data": {
+            "text": "reply I ran the full test suite: 412 passed.",
+            "source": "typed",
+            "session": "01a20a1c-0000-7000-8000-000000005000",
+            "delivery_id": null
+          }
+        }
+      },
+      {
+        "id": "01a20a1c-1d1b-7810-a38c-81882660a084",
+        "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+        "hlc": "2026-11-23T20:32:24.405Z#0000",
+        "dev": "macbook-pro",
+        "type": "message.agent",
+        "path": "tasks/01a20a1c-100a-70e1-b527-c4c748f02dc4/log/macbook-pro.jsonl",
+        "line": 14,
+        "applied": true,
+        "reason": null,
+        "event": {
+          "v": 1,
+          "id": "01a20a1c-1d1b-7810-a38c-81882660a084",
+          "hlc": "2026-11-23T20:32:24.405Z#0000",
+          "dev": "macbook-pro",
+          "type": "message.agent",
+          "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+          "by": "claude@macbook-pro",
+          "data": {
+            "text": "I ran the full test suite: 412 passed.",
+            "session": "01a20a1c-0000-7000-8000-000000005000"
+          }
+        }
+      },
+      {
+        "id": "01a20a1c-1de9-72f6-af09-68577d3508d0",
+        "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+        "hlc": "2026-11-23T20:32:24.930Z#0000",
+        "dev": "macbook-pro",
+        "type": "message.human",
+        "path": "tasks/01a20a1c-100a-70e1-b527-c4c748f02dc4/log/macbook-pro.jsonl",
+        "line": 15,
+        "applied": true,
+        "reason": null,
+        "event": {
+          "v": 1,
+          "id": "01a20a1c-1de9-72f6-af09-68577d3508d0",
+          "hlc": "2026-11-23T20:32:24.930Z#0000",
+          "dev": "macbook-pro",
+          "type": "message.human",
+          "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+          "by": "human@macbook-pro",
+          "data": {
+            "text": "wait 600000",
+            "source": "typed",
+            "session": "01a20a1c-0000-7000-8000-000000005000",
+            "delivery_id": null
+          }
+        }
+      },
+      {
+        "id": "01a20a1c-40a0-71da-8506-f55fb2d8ba70",
+        "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+        "hlc": "2026-11-23T20:32:33.440Z#0000",
+        "dev": "macbook-pro",
+        "type": "message.sent",
+        "path": "tasks/01a20a1c-100a-70e1-b527-c4c748f02dc4/log/macbook-pro.jsonl",
+        "line": 16,
+        "applied": true,
+        "reason": null,
+        "event": {
+          "v": 1,
+          "id": "01a20a1c-40a0-71da-8506-f55fb2d8ba70",
+          "hlc": "2026-11-23T20:32:33.440Z#0000",
+          "dev": "macbook-pro",
+          "type": "message.sent",
+          "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+          "by": "human@macbook-pro",
+          "data": {
+            "id": "01a20a1c-40a0-71da-8506-f1ff9799438f",
+            "text": "Please also check the query of the weekly report, part 1.",
+            "to_session": "01a20a1c-0000-7000-8000-000000005000"
+          }
+        }
+      },
+      {
+        "id": "01a20a1c-4934-75e6-9ea4-2c6d19473cef",
+        "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+        "hlc": "2026-11-23T20:32:35.636Z#0000",
+        "dev": "macbook-pro",
+        "type": "message.sent",
+        "path": "tasks/01a20a1c-100a-70e1-b527-c4c748f02dc4/log/macbook-pro.jsonl",
+        "line": 17,
+        "applied": true,
+        "reason": null,
+        "event": {
+          "v": 1,
+          "id": "01a20a1c-4934-75e6-9ea4-2c6d19473cef",
+          "hlc": "2026-11-23T20:32:35.636Z#0000",
+          "dev": "macbook-pro",
+          "type": "message.sent",
+          "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+          "by": "human@macbook-pro",
+          "data": {
+            "id": "01a20a1c-4934-75e6-9ea4-294aa44fa8a9",
+            "text": "Please also check the query of the weekly report, part 2.",
+            "to_session": "01a20a1c-0000-7000-8000-000000005000"
+          }
+        }
+      },
+      {
+        "id": "01a20a1c-51cf-72ec-96bf-b148d800f8d9",
+        "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+        "hlc": "2026-11-23T20:32:37.839Z#0000",
+        "dev": "macbook-pro",
+        "type": "message.sent",
+        "path": "tasks/01a20a1c-100a-70e1-b527-c4c748f02dc4/log/macbook-pro.jsonl",
+        "line": 18,
+        "applied": true,
+        "reason": null,
+        "event": {
+          "v": 1,
+          "id": "01a20a1c-51cf-72ec-96bf-b148d800f8d9",
+          "hlc": "2026-11-23T20:32:37.839Z#0000",
+          "dev": "macbook-pro",
+          "type": "message.sent",
+          "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+          "by": "human@macbook-pro",
+          "data": {
+            "id": "01a20a1c-51cf-72ec-96bf-ae437cd64365",
+            "text": "Please also check the query of the weekly report, part 3.",
+            "to_session": "01a20a1c-0000-7000-8000-000000005000"
+          }
+        }
+      },
+      {
+        "id": "01a20a1e-637b-70a1-af52-15047e217be3",
+        "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+        "hlc": "2026-11-23T20:34:53.435Z#0000",
+        "dev": "macbook-pro",
+        "type": "task.progress",
+        "path": "tasks/01a20a1c-100a-70e1-b527-c4c748f02dc4/log/macbook-pro.jsonl",
+        "line": 19,
+        "applied": true,
+        "reason": null,
+        "event": {
+          "v": 1,
+          "id": "01a20a1e-637b-70a1-af52-15047e217be3",
+          "hlc": "2026-11-23T20:34:53.435Z#0000",
+          "dev": "macbook-pro",
+          "type": "task.progress",
+          "task": "01a20a1c-100a-70e1-b527-c4c748f02dc4",
+          "by": "aw@macbook-pro",
+          "data": {
+            "text": "No recent update for 2 min. Last terminal line: ❯ ❯ wait 600000"
+          }
+        }
+      }
+    ],
+    "next": null,
+    "prev": null,
+    "ancestors": []
+  }
+}

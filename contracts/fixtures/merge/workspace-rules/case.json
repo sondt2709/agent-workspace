@@ -1,0 +1,4 @@
+{
+  "description": "The workspace log rules. Only the resource device gives out a lease (not_resource_device); a fencing token never goes back (stale_fencing_token); a slot above the capacity is refused (no_such_slot); a renew or a release with another token is refused (no_such_lease). The newest queue order wins. Credential names: added, imported on each device once, removed; an import of a name that nobody added is still listed.",
+  "now": "2026-11-22T16:00:00.000Z"
+}

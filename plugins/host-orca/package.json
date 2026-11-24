@@ -1,0 +1,33 @@
+{
+  "name": "@aw/host-orca",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The Orca session host (optional, off by default).",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./testing": "./src/testing/index.ts"
+  },
+  "prettier": "@aw/config/prettier",
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@aw/plugin-api": "workspace:*",
+    "execa": "10.2.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@aw/config": "workspace:*",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Agent Workspace</string>
+    <string name="special_use_subtype">Runs the built-in file sync engine. It keeps the workspace files of the user in sync with the computers of the same user, so that the phone gets new questions and gates in a few seconds.</string>
+    <string name="channel_sync">Sync</string>
+    <string name="channel_sync_description">Shows that the sync engine runs.</string>
+    <plurals name="sync_running">
+        <item quantity="one">AW · syncing with %d device</item>
+        <item quantity="other">AW · syncing with %d devices</item>
+    </plurals>
+    <string name="sync_starting">AW · sync is starting</string>
+    <string name="sync_failed">AW · sync failed, it tries again</string>
+    <string name="sync_not_installed">AW · sync is off: the engine is not installed</string>
+    <string name="battery_restricted">Battery mode \"Restricted\": sync stops in Doze. Tap to open the app settings and select \"Unrestricted\" or \"Optimized\".</string>
+    <string name="channel_gates">Gates</string>
+    <string name="channel_gates_description">A question, an approach, a command or a result that needs your answer.</string>
+</resources>

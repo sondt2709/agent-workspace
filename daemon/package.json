@@ -1,0 +1,63 @@
+{
+  "name": "@aw/daemon",
+  "version": "0.0.0",
+  "private": true,
+  "description": "awd, the aw CLI, the MCP server and the service units.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "awd": "./src/bin/awd.ts",
+    "aw": "./src/bin/aw.ts"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "prettier": "@aw/config/prettier",
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "api:generate": "node scripts/api-generate.ts",
+    "build": "node scripts/build.ts"
+  },
+  "dependencies": {
+    "@aw/agent-claude": "workspace:*",
+    "@aw/client": "workspace:*",
+    "@aw/core": "workspace:*",
+    "@aw/host-orca": "workspace:*",
+    "@aw/host-tmux": "workspace:*",
+    "@aw/identity": "workspace:*",
+    "@aw/kb-files": "workspace:*",
+    "@aw/plugin-api": "workspace:*",
+    "@aw/push-webpush": "workspace:*",
+    "@aw/schema": "workspace:*",
+    "@aw/sync-syncthing": "workspace:*",
+    "@commander-js/extra-typings": "15.1.0",
+    "@fastify/swagger": "9.9.4",
+    "@fastify/websocket": "11.3.7",
+    "@modelcontextprotocol/fastify": "2.0.1",
+    "@modelcontextprotocol/node": "2.1.2",
+    "@modelcontextprotocol/server": "2.4.0",
+    "@parcel/watcher": "2.6.0",
+    "commander": "15.1.0",
+    "execa": "10.2.1",
+    "fastify": "5.12.8",
+    "fastify-type-provider-zod": "7.0.0",
+    "p-queue": "10.0.0",
+    "pino": "10.4.0",
+    "qr": "0.7.2",
+    "yaml": "2.9.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@aw/config": "workspace:*",
+    "@modelcontextprotocol/client": "2.4.0",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "name": "@aw/core",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Files, merge and index. All writes to a workspace folder go through files.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./clock": "./src/clock.ts"
+  },
+  "prettier": "@aw/config/prettier",
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@aw/schema": "workspace:*",
+    "sift": "17.1.4",
+    "yaml": "2.9.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@aw/config": "workspace:*",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

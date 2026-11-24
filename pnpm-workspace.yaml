@@ -1,0 +1,45 @@
+# The TypeScript packages (docs/decisions/2026-11-23-repo-layout.md). contracts/ and android/ are
+# not pnpm packages.
+packages:
+  - "daemon"
+  - "desktop"
+  - "shared/*"
+  - "plugins/*"
+  - "e2e"
+  - "scripts"
+
+# The version of each tool that many packages use. A package names it with "catalog:".
+catalog:
+  "@eslint/js": 10.0.1
+  "@tanstack/eslint-plugin-query": 5.107.1
+  "@types/node": 24.19.2
+  "@vitejs/plugin-react": 6.3.0
+  electron-vite: 6.0.0
+  eslint: 10.15.0
+  globals: 17.14.0
+  jsdom: 31.0.1
+  prettier: 3.10.1
+  prettier-plugin-organize-imports: 4.3.0
+  typescript: 6.0.3
+  typescript-eslint: 8.72.2
+  vite: 8.3.8
+  vitest: 5.1.0
+
+# A new release waits 7 days before an install (engineering-rules 4.12).
+# Take an urgent security fix earlier only through minimumReleaseAgeExclude,
+# with a row in the exceptions table of docs/engineering-rules.md.
+minimumReleaseAge: 10080
+
+# A dependency build script fails the install until it is in the allowlist (engineering-rules 4.6).
+strictDepBuilds: true
+
+# Build scripts of dependencies (engineering-rules 4.6). false: the package installs, its script does
+# not run. @parcel/watcher loads its N-API prebuild; its script only builds from source.
+# electron-winstaller (a dependency of electron-builder) prepares the Windows installer; AW builds
+# no Windows app.
+allowBuilds:
+  "@parcel/watcher": false
+  # sharp (the icon script of @aw/scripts, dev only) loads its N-API prebuild; its script only
+  # builds from source.
+  sharp: false
+  "electron-winstaller": false

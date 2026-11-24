@@ -1,0 +1,9 @@
+kind: workspace
+schema: 1
+id: 01a2038e-7f00-721a-b230-e03772a58aff
+name: Example workspace
+key_prefix: AW
+# Priority order of the devices (pairing order).
+device_order: [macbook-pro, ubuntu-01, pixel-9]
+switches:
+  community_relays: true

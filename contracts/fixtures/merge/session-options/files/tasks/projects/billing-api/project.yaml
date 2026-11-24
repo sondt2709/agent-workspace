@@ -1,0 +1,13 @@
+kind: project
+schema: 1
+slug: billing-api
+name: Billing API
+# Implementing devices, in order.
+devices: [ubuntu-01, macbook-pro]
+default_agent: claude
+test_servers: [billing-k3d]
+links: ["github:example/billing-api"]
+switches:
+  assign_new_subtasks_to_default_device: true
+# The default of new sessions: a task of an agent never gets skip from it.
+permission_mode: skip

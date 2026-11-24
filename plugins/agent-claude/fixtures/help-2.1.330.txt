@@ -1,0 +1,9 @@
+# claude --help of Claude Code 2.1.330 on macOS, captured on 2026-11-23: the option lines of the flags that aw-launch uses.
+  --allowedTools, --allowed-tools <tools...>
+  --model <model>                       Model for the current session. Use an
+  -n, --name <name>                     Set a display name for this session
+  --permission-mode <mode>              Permission mode to use for the session
+  --plugin-dir <path>                   Load a plugin from a directory or .zip
+  -r, --resume [value]                  Resume a conversation by session ID or
+  --session-id <uuid>                   Use a specific session ID for the
+  --settings <file-or-json>             Settings file or JSON string to load

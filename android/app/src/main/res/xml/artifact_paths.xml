@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The files that "Open" of an artifact may give to another app (openspec gate-full-context): the
+     workspace folders of <files>/aw/. The opener gives a read grant for one artifact file only. -->
+<paths>
+    <files-path name="aw" path="aw/" />
+</paths>

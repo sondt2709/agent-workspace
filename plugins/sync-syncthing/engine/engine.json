@@ -1,0 +1,26 @@
+{
+  "engine": "syncthing",
+  "tag": "v2.1.7",
+  "release_url": "https://github.com/syncthing/syncthing/releases/download/v2.1.7",
+  "signed_sums": "sha256sum.txt.asc",
+  "release_key_url": "https://syncthing.net/release-key.txt",
+  "release_key_fingerprint": "FBA2E162F2F44657B38F0309E5665F9BD5970C47",
+  "platforms": {
+    "darwin-arm64": {
+      "archive": "syncthing-macos-universal-v2.1.7.zip",
+      "sha256": "a98fb709c79412e5586c81a1586bfb256b6e5a97b067ddf7447155bcdf6aac3f"
+    },
+    "darwin-x64": {
+      "archive": "syncthing-macos-universal-v2.1.7.zip",
+      "sha256": "a98fb709c79412e5586c81a1586bfb256b6e5a97b067ddf7447155bcdf6aac3f"
+    },
+    "linux-x64": {
+      "archive": "syncthing-linux-amd64-v2.1.7.tar.gz",
+      "sha256": "2edc416e7ed136b7c858ed5f3f02a3b8316589605e54c380228ceea7acbf0142"
+    },
+    "linux-arm64": {
+      "archive": "syncthing-linux-arm64-v2.1.7.tar.gz",
+      "sha256": "48e456690cd2b97e7d26b02b5ac35f62a3b36172267b144cfeaf02c993ab955c"
+    }
+  }
+}

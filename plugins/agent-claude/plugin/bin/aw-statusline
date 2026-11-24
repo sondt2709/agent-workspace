@@ -1,0 +1,11 @@
+#!/bin/sh
+# The statusLine command of an AW session (docs/architecture.md 4.6.6). It sends the usage windows
+# to awd (a file of the session), then runs the user's own statusline command. Outside an AW
+# session it runs only the user command.
+if [ -z "${AW_NODE:-}" ] || [ -z "${AW_STATUSLINE:-}" ]; then
+  if [ -n "${AW_USER_STATUSLINE:-}" ]; then
+    exec sh -c "$AW_USER_STATUSLINE"
+  fi
+  exit 0
+fi
+exec "$AW_NODE" "$AW_STATUSLINE" "$@"

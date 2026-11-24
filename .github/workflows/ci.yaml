@@ -1,0 +1,183 @@
+name: ci
+
+# Runs on each pull request and on each push to main.
+# The ruleset of main requires one check only: "CI OK".
+# This workflow has checks only. The task release-pipeline adds the release job.
+# Pin each third-party action by its commit SHA, with the tag in a comment (engineering-rules 6.9).
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  # Cancel old runs of a pull request only. A push to main must not cancel a release.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  rules:
+    name: Repository rules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: YAML files use the .yaml extension
+        run: scripts/check-yaml-ext.sh
+      - name: Leak check (generic patterns; the private terms file is local only)
+        run: scripts/leakcheck.sh
+
+  node:
+    name: Node ${{ matrix.node }} on ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        node: ["24", "26"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Reads packageManager from package.json. Node 25 and later ship no corepack.
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # docs/engineering-rules.md 7.3.2: the generated files must match shared/schema/src: the JSON
+      # Schemas, the schema samples and the Kotlin classes of android/shared.
+      - name: Generated schemas are current
+        run: |
+          pnpm schema:generate
+          changes="$(git status --porcelain -- contracts/schemas contracts/samples android/shared/generated)"
+          if [ -n "$changes" ]; then
+            echo "Run pnpm schema:generate and commit the result:"
+            echo "$changes"
+            git diff -- contracts/schemas contracts/samples android/shared/generated
+            exit 1
+          fi
+      # docs/phase-1.md 12: contracts/openapi.yaml is the local API contract, generated from the routes.
+      - name: Generated API file is current
+        run: |
+          pnpm api:generate
+          changes="$(git status --porcelain -- contracts/openapi.yaml)"
+          if [ -n "$changes" ]; then
+            echo "Run pnpm api:generate and commit the result:"
+            git diff -- contracts/openapi.yaml
+            exit 1
+          fi
+      # docs/tech-stack.md 1.2: the engine pins must match the sums that the Syncthing release key
+      # signed (plugins/sync-syncthing/engine/engine.json). Needs the network and gpg.
+      - name: Engine pins match the signed release
+        if: matrix.os == 'ubuntu-latest' && matrix.node == '24'
+        run: pnpm --filter @aw/sync-syncthing engine:verify-pins
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+
+  audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Fails on high and critical issues in runtime dependencies.
+      # Write an accepted issue in the exceptions table of docs/engineering-rules.md.
+      - run: pnpm audit --prod --audit-level high
+
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      # The gitleaks CLI in its container needs no license key. Keep the tag equal to the
+      # gitleaks rev in .pre-commit-config.yaml.
+      - name: gitleaks on the full history
+        run: |
+          docker run --rm -v "$PWD:/repo" -w /repo ghcr.io/gitleaks/gitleaks:v8.30.1 \
+            git . --config .gitleaks.toml --redact --no-banner --verbose
+
+  changes:
+    name: Changed paths
+    runs-on: ubuntu-latest
+    outputs:
+      android: ${{ steps.filter.outputs.android }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      # The path filter of the Android job (tech-stack 1.7 "CI"): the Gradle project, the generator
+      # in shared/schema and contracts/ (fixtures, test vectors, samples) that the Kotlin tests read.
+      # No base commit (a new branch, a manual run) runs the job.
+      - id: filter
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          android=true
+          if [ -n "$BASE" ] && git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            if ! git diff --name-only "$BASE" HEAD |
+              grep -qE '^(android/|shared/schema/|contracts/|plugins/sync-syncthing/engine/|\.github/workflows/ci\.yaml$)'; then
+              android=false
+            fi
+          fi
+          echo "android=$android" >> "$GITHUB_OUTPUT"
+
+  android:
+    name: Android shared module (JVM)
+    needs: changes
+    if: needs.changes.outputs.android == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+      # The wrapper jar runs before each check: it must be the published jar of the Gradle version
+      # in gradle-wrapper.properties (services.gradle.org/distributions/gradle-9.9.1-wrapper.jar.sha256).
+      # A Gradle update changes this checksum in the same commit.
+      - name: Gradle wrapper jar is the published jar
+        run: echo "621008afc4f5d59357fcf06ffa644dd5aade5e091bdc363742710445f73cdaf8  gradle/wrapper/gradle-wrapper.jar" | sha256sum -c -
+      # The same Gradle tasks as `task android:check` (docs/engineering-rules.md 5.1).
+      - run: ./gradlew --no-daemon spotlessCheck :shared:detektAll :shared:jvmTest :identity:detektAll :identity:jvmTest :engine:detektAll :engine:jvmTest :control:detektAll :control:jvmTest :app:detektAll
+
+  ci-ok:
+    name: CI OK
+    needs: [rules, node, audit, secrets, changes, android]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "results: $RESULTS"
+          for r in $RESULTS; do
+            case "$r" in
+              success|skipped) ;;
+              *) exit 1 ;;
+            esac
+          done

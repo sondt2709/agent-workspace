@@ -1,0 +1,5 @@
+kind: project
+schema: 1
+slug: docs-site
+name: Docs site
+devices: [ubuntu-01]

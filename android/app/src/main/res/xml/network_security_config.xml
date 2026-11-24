@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- No cleartext traffic, except the host name "syncthing": the engine REST client sends its
+     requests to it, and its socket factory connects them to the Unix socket of the engine in the app
+     files folder (no network). The HTTPS fallback on 127.0.0.1 trusts only the engine certificate. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">syncthing</domain>
+    </domain-config>
+</network-security-config>

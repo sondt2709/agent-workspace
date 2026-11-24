@@ -1,0 +1,26 @@
+{
+  "name": "@aw/scripts",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The repo-wide checks: the leak check, the YAML extension check, the workspace rules and the format of the repo-wide files; the app icon generator.",
+  "license": "MIT",
+  "type": "module",
+  "prettier": "@aw/config/prettier",
+  "scripts": {
+    "format": "prettier --write . && prettier --write --ignore-path ../.prettierignore ../.github ../contracts ../openspec ../package.json ../pnpm-workspace.yaml ../Taskfile.yaml ../.pre-commit-config.yaml ../android/Taskfile.yaml ../android/detekt.yaml",
+    "format:check": "prettier --check . && prettier --check --ignore-path ../.prettierignore ../.github ../contracts ../openspec ../package.json ../pnpm-workspace.yaml ../Taskfile.yaml ../.pre-commit-config.yaml ../android/Taskfile.yaml ../android/detekt.yaml",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "icons": "node icons.ts"
+  },
+  "devDependencies": {
+    "@aw/config": "workspace:*",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "sharp": "0.35.5",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

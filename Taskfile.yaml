@@ -1,0 +1,81 @@
+# Tasks for people and agents. Install go-task 3 (https://taskfile.dev). Run "task --list".
+# Each folder has its own Taskfile.yaml with a "check" task; this file calls them
+# (docs/decisions/2026-11-23-repo-layout.md). CI runs the same pnpm scripts (.github/workflows/ci.yaml).
+version: "3"
+
+includes:
+  scripts:
+    taskfile: ./scripts/Taskfile.yaml
+    dir: ./scripts
+  shared:
+    taskfile: ./shared/Taskfile.yaml
+    dir: ./shared
+  daemon:
+    taskfile: ./daemon/Taskfile.yaml
+    dir: ./daemon
+  desktop:
+    taskfile: ./desktop/Taskfile.yaml
+    dir: ./desktop
+  plugins:
+    taskfile: ./plugins/Taskfile.yaml
+    dir: ./plugins
+  e2e:
+    taskfile: ./e2e/Taskfile.yaml
+    dir: ./e2e
+  android:
+    taskfile: ./android/Taskfile.yaml
+    dir: ./android
+
+tasks:
+  check:
+    desc: Run all checks in sequence and stop at the first failure
+    cmds:
+      - task: rules
+      - task: scripts:check
+      - task: shared:check
+      - task: daemon:check
+      - task: desktop:check
+      - task: plugins:check
+      - task: e2e:check
+      - task: android:check
+      - task: leakcheck
+
+  e2e:
+    desc: Run the Docker e2e suite (e2e/compose.yaml); needs Docker
+    cmds:
+      - task: e2e:docker
+
+  rules:
+    desc: Check that YAML files use the .yaml extension
+    cmds:
+      - scripts/check-yaml-ext.sh
+
+  format:
+    desc: Format the files of each package and the repo-wide files with Prettier
+    cmds:
+      - pnpm format
+
+  format:check:
+    desc: Check the format of each package and of the repo-wide files
+    cmds:
+      - pnpm format:check
+
+  lint:
+    desc: Run ESLint with --max-warnings 0 in each package
+    cmds:
+      - pnpm lint
+
+  typecheck:
+    desc: Run tsc in each package
+    cmds:
+      - pnpm typecheck
+
+  test:
+    desc: Run the tests of each package (Vitest), one package at a time
+    cmds:
+      - pnpm test
+
+  leakcheck:
+    desc: Find personal data and secrets (generic patterns and the private terms file)
+    cmds:
+      - scripts/leakcheck.sh

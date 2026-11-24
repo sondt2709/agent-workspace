@@ -1,0 +1,14 @@
+# Signed device record. Fixture values: the keys and the signature are placeholders, not real keys.
+kind: device
+schema: 1
+slug: ubuntu-01
+name: ubuntu-01
+role: remote
+keys:
+  ed25519: AgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgI=
+  x25519: EhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhI=
+sync_device_id: UBUNTU2-AAAAAAA-AAAAAAA-AAAAAAA-AAAAAAA-AAAAAAA-AAAAAAA-AAAAAAA
+seq: 1
+revoked: false
+paired_at: "2026-11-20T09:30:00.000Z"
+signature: IiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIiIg==

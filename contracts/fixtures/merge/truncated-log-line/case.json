@@ -1,0 +1,4 @@
+{
+  "description": "ubuntu-01 crashed in the middle of a line, then appended a newline and a new line after its restart: line 16 is a bad line and line 17 merges. The log of macbook-pro ends with a half-written line with no newline: the reader skips it and reports it as the partial tail.",
+  "now": "2026-11-22T14:30:00.000Z"
+}

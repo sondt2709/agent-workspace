@@ -1,0 +1,4 @@
+{
+  "description": "Claims only from the device of the assignee (docs/decisions/2026-11-23-manual-move.md). AW-30 has no assignee: the claim of ubuntu-01 is ignored. A human assigns claude@macbook-pro: a second claim of ubuntu-01, its automatic task.assigned and its stage change are ignored; the owner stays the creating device. macbook-pro claims epoch 1. The laptop sleeps and a human moves the task to claude@ubuntu-01 (task.assigned); ubuntu-01 claims epoch 2. The old owner macbook-pro opens a gate: ignored, and the answer to it becomes a comment. The laptop wakes with an old view: its claim with epoch 3 is ignored, its comment with the wake branch merges, its message.agent does not count. At 15:45 a human moves the task back to claude@macbook-pro: moving_to is macbook-pro until it claims.",
+  "now": "2026-11-22T16:00:00.000Z"
+}

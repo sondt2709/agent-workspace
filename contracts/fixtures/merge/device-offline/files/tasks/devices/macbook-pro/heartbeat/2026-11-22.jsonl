@@ -1,0 +1,11 @@
+{"v":1,"id":"01a203a0-ce80-7a30-8ecb-3063cf98ae3e","hlc":"2026-11-22T14:20:00.000Z#0000","dev":"macbook-pro","type":"device.heartbeat","data":{"boot_time":"2026-11-22T08:00:00.000Z"}}
+{"v":1,"id":"01a203a1-43b0-7d99-859f-f5666ee12464","hlc":"2026-11-22T14:20:30.000Z#0000","dev":"macbook-pro","type":"device.heartbeat","data":{"boot_time":"2026-11-22T08:00:00.000Z"}}
+{"v":1,"id":"01a203a1-b8e0-7b14-9bde-0869a16096f2","hlc":"2026-11-22T14:21:00.000Z#0000","dev":"macbook-pro","type":"device.heartbeat","data":{"boot_time":"2026-11-22T08:00:00.000Z"}}
+{"v":1,"id":"01a203a2-2e10-7000-8000-bbe84db2177c","hlc":"2026-11-22T14:21:30.000Z#0000","dev":"macbook-pro","type":"device.heartbeat","data":{"boot_time":"2026-11-22T08:00:00.000Z"}}
+{"v":1,"id":"01a203a2-a340-7000-8000-bc3da2076cd1","hlc":"2026-11-22T14:22:00.000Z#0000","dev":"macbook-pro","type":"device.heartbeat","data":{"boot_time":"2026-11-22T08:00:00.000Z"}}
+{"v":1,"id":"01a203a3-1870-7000-8000-c192f75cc126","hlc":"2026-11-22T14:22:30.000Z#0000","dev":"macbook-pro","type":"device.heartbeat","data":{"boot_time":"2026-11-22T08:00:00.000Z"}}
+{"v":1,"id":"01a203a3-8da0-7000-8000-c6e74cb1167b","hlc":"2026-11-22T14:23:00.000Z#0000","dev":"macbook-pro","type":"device.heartbeat","data":{"boot_time":"2026-11-22T08:00:00.000Z"}}
+{"v":1,"id":"01a203a4-02d0-7000-8000-cb3ca1066bd0","hlc":"2026-11-22T14:23:30.000Z#0000","dev":"macbook-pro","type":"device.heartbeat","data":{"boot_time":"2026-11-22T08:00:00.000Z"}}
+{"v":1,"id":"01a203a4-7800-7000-8000-cc91f65bc025","hlc":"2026-11-22T14:24:00.000Z#0000","dev":"macbook-pro","type":"device.heartbeat","data":{"boot_time":"2026-11-22T08:00:00.000Z"}}
+{"v":1,"id":"01a203a4-ed30-7000-8000-d1e64bb0157a","hlc":"2026-11-22T14:24:30.000Z#0000","dev":"macbook-pro","type":"device.heartbeat","data":{"boot_time":"2026-11-22T08:00:00.000Z"}}
+{"v":1,"id":"01a203a5-6260-7000-8000-d63ba0056acf","hlc":"2026-11-22T14:25:00.000Z#0000","dev":"macbook-pro","type":"device.heartbeat","data":{"boot_time":"2026-11-22T08:00:00.000Z"}}

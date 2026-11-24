@@ -1,0 +1,28 @@
+kind: health
+schema: 1
+device: macbook-pro
+updated: "2026-11-22T14:21:00.000Z#0000"
+boot_time: "2026-11-22T08:00:00.000Z"
+versions:
+  awd: 0.0.0
+  engine: v2.1.7
+sessions: []
+usage: []
+disk:
+  used_percentage: 61
+sync:
+  - peer: ubuntu-01
+    connected: true
+    last_seen: "2026-11-22T14:21:00.000Z"
+    route: lan
+    need_items: 0
+    need_bytes: 0
+    errors: []
+  - peer: pixel-9
+    connected: true
+    last_seen: "2026-11-22T14:21:00.000Z"
+    route: tailscale
+    need_items: 0
+    need_bytes: 0
+    errors: []
+repairs: []

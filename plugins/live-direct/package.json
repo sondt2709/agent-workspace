@@ -1,0 +1,24 @@
+{
+  "name": "@aw/live-direct",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The live channel between devices: wss:// on the local network and Tailscale.",
+  "license": "MIT",
+  "type": "module",
+  "prettier": "@aw/config/prettier",
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@aw/config": "workspace:*",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

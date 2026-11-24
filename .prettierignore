@@ -1,0 +1,12 @@
+# This file stays at the root: the pre-commit Prettier hook and the repo-wide check of scripts/ run
+# Prettier on files of many folders, and Prettier reads the ignore file of the current folder only.
+# Markdown is prose that people review by hand. Prettier pads each table (design.md decision 6).
+*.md
+pnpm-lock.yaml
+node_modules/
+dist/
+coverage/
+tmp/
+# Local agent files and the worktrees of other branches. .git/info/exclude can ignore them, and
+# Prettier does not read that file.
+.claude/

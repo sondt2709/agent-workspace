@@ -1,0 +1,23 @@
+{
+  "id": "f2258e8b-ebda-4276-a98f-760662494384",
+  "ok": true,
+  "result": {
+    "terminal": {
+      "processId": 3845036,
+      "handle": "term_5a8da4b6-4cba-40bc-a218-f3e978e9e214",
+      "tabId": "2c05a8c2-e3c2-48ca-94b1-7bebb3b24c41",
+      "paneKey": "2c05a8c2-e3c2-48ca-94b1-7bebb3b24c41:29451a7c-80d2-405b-831e-896609b5bb59",
+      "ptyId": "40f6e034-641e-46a2-a01c-340983a89019::/home/user/orca/workspaces/aw-test-repo/aw-01a2038e-7f00-7000-8000-000000000001@@0370c5b1",
+      "worktreeId": "40f6e034-641e-46a2-a01c-340983a89019::/home/user/orca/workspaces/aw-test-repo/aw-01a2038e-7f00-7000-8000-000000000001",
+      "title": "aw-exit",
+      "executionHostId": "local",
+      "incarnationId": "0d44cbd5-9a42-4837-a37b-832495d9e55d",
+      "hostPlatform": "linux",
+      "surface": "background",
+      "warning": "Terminal term_5a8da4b6-4cba-40bc-a218-f3e978e9e214 is running, but Orca could not make it discoverable. Run `orca terminal focus --terminal term_5a8da4b6-4cba-40bc-a218-f3e978e9e214` to reveal and focus it."
+    }
+  },
+  "_meta": {
+    "runtimeId": "7c9912a9-7cf5-4083-aa0e-8899e9cc041b"
+  }
+}

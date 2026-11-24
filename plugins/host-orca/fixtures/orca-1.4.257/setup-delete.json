@@ -1,0 +1,54 @@
+{
+  "id": "7ca20ecb-be28-47ea-8baf-d5895eb21ad9",
+  "ok": true,
+  "result": {
+    "result": {
+      "project": {
+        "id": "repo:40f6e034-641e-46a2-a01c-340983a89019",
+        "displayName": "aw-test-repo",
+        "badgeColor": "#737373",
+        "kind": "git",
+        "sourceRepoIds": ["40f6e034-641e-46a2-a01c-340983a89019"],
+        "createdAt": 1795397200531,
+        "updatedAt": 1795397200531
+      },
+      "setup": {
+        "id": "40f6e034-641e-46a2-a01c-340983a89019",
+        "projectId": "repo:40f6e034-641e-46a2-a01c-340983a89019",
+        "hostId": "local",
+        "repoId": "40f6e034-641e-46a2-a01c-340983a89019",
+        "path": "/home/user/src/aw-test-repo",
+        "displayName": "aw-test-repo",
+        "kind": "git",
+        "setupState": "ready",
+        "setupMethod": "legacy-repo",
+        "createdAt": 1795397200531,
+        "updatedAt": 1795397200531
+      },
+      "repo": {
+        "id": "40f6e034-641e-46a2-a01c-340983a89019",
+        "path": "/home/user/src/aw-test-repo",
+        "displayName": "aw-test-repo",
+        "badgeColor": "#737373",
+        "addedAt": 1795397200531,
+        "kind": "git",
+        "externalWorktreeVisibilityLegacy": false,
+        "upstream": null,
+        "gitRemoteIdentity": null,
+        "hookSettings": {
+          "mode": "auto",
+          "setupRunPolicy": "run-by-default",
+          "setupAgentStartupPolicy": "start-immediately",
+          "scripts": {
+            "setup": "",
+            "archive": ""
+          }
+        },
+        "externalWorktreeVisibility": "hide"
+      }
+    }
+  },
+  "_meta": {
+    "runtimeId": "7c9912a9-7cf5-4083-aa0e-8899e9cc041b"
+  }
+}

@@ -1,0 +1,12 @@
+# Checks of the packages in shared/. The root "task check" calls "task shared:check".
+# pnpm reads a --filter path from the workspace root, not from this folder.
+version: "3"
+
+tasks:
+  check:
+    desc: Check the packages in shared/ (format, lint, typecheck, tests)
+    cmds:
+      - pnpm --filter "./shared/*" run format:check
+      - pnpm --filter "./shared/*" run lint
+      - pnpm --filter "./shared/*" run typecheck
+      - pnpm --filter "./shared/*" --workspace-concurrency=1 run test

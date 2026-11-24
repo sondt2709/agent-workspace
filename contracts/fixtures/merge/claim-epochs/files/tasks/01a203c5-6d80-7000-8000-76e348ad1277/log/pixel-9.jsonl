@@ -1,0 +1,2 @@
+{"v":1,"id":"01a203ce-9540-7000-8000-a13a9f0469ce","hlc":"2026-11-22T15:10:00.000Z#0000","dev":"pixel-9","type":"task.assigned","task":"01a203c5-6d80-7000-8000-76e348ad1277","by":"human@pixel-9","data":{"assignee":"claude@macbook-pro"}}
+{"v":1,"id":"01a203cf-7fa0-7000-8000-a6bf2489ee53","hlc":"2026-11-22T15:11:00.000Z#0000","dev":"pixel-9","type":"task.claimed","task":"01a203c5-6d80-7000-8000-76e348ad1277","by":"aw@pixel-9","data":{"epoch":5,"device":"ubuntu-01","session":"01a203c6-57e0-7000-8000-7b68cd3297fc","based_on":null}}

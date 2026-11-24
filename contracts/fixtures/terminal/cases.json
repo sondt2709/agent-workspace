@@ -1,0 +1,171 @@
+{
+  "description": "The terminal snapshot file of openspec task-terminal-view (daemon/src/sessions/terminal-snapshot.ts and android/control TerminalPane.kt): parse cases and the newest snapshot of a task. Synthetic data, written by hand on 2026-11-23.",
+  "parse": [
+    {
+      "name": "header and screen",
+      "content": "{\"kind\":\"aw-terminal\",\"v\":1,\"device\":\"ubuntu-01\",\"session\":\"01a2038e-8100-7000-8000-000000000001\",\"host\":\"tmux\",\"socket\":\"aw\",\"window\":\"aw-01a2038e-7f00-70eb-b429-fa86d481c263\",\"captured_at\":\"2026-11-23T14:20:05.000Z\"}\n❯ use-credential staging-api-key 120\n● I used the key [redacted:staging-api-key] for the staging call.\n❯ \n",
+      "header": {
+        "kind": "aw-terminal",
+        "v": 1,
+        "device": "ubuntu-01",
+        "session": "01a2038e-8100-7000-8000-000000000001",
+        "host": "tmux",
+        "socket": "aw",
+        "window": "aw-01a2038e-7f00-70eb-b429-fa86d481c263",
+        "captured_at": "2026-11-23T14:20:05.000Z"
+      },
+      "text": "❯ use-credential staging-api-key 120\n● I used the key [redacted:staging-api-key] for the staging call.\n❯ "
+    },
+    {
+      "name": "header with null socket and window (Orca)",
+      "content": "{\"kind\":\"aw-terminal\",\"v\":1,\"device\":\"ubuntu-01\",\"session\":\"01a2038e-8100-7000-8000-000000000001\",\"host\":\"orca\",\"socket\":null,\"window\":null,\"captured_at\":\"2026-11-23T14:20:05.000Z\"}\nline\n",
+      "header": {
+        "kind": "aw-terminal",
+        "v": 1,
+        "device": "ubuntu-01",
+        "session": "01a2038e-8100-7000-8000-000000000001",
+        "host": "orca",
+        "socket": null,
+        "window": null,
+        "captured_at": "2026-11-23T14:20:05.000Z"
+      },
+      "text": "line"
+    },
+    {
+      "name": "header and no screen",
+      "content": "{\"kind\":\"aw-terminal\",\"v\":1,\"device\":\"ubuntu-01\",\"session\":\"01a2038e-8100-7000-8000-000000000001\",\"host\":\"tmux\",\"socket\":\"aw\",\"window\":\"aw-01a2038e-7f00-70eb-b429-fa86d481c263\",\"captured_at\":\"2026-11-23T14:20:05.000Z\"}",
+      "header": {
+        "kind": "aw-terminal",
+        "v": 1,
+        "device": "ubuntu-01",
+        "session": "01a2038e-8100-7000-8000-000000000001",
+        "host": "tmux",
+        "socket": "aw",
+        "window": "aw-01a2038e-7f00-70eb-b429-fa86d481c263",
+        "captured_at": "2026-11-23T14:20:05.000Z"
+      },
+      "text": ""
+    },
+    {
+      "name": "no header",
+      "content": "$ make test\nok\n",
+      "header": null,
+      "text": "$ make test\nok\n"
+    },
+    {
+      "name": "header of another kind",
+      "content": "{\"kind\": \"other\", \"v\": 1, \"device\": \"ubuntu-01\", \"session\": \"01a2038e-8100-7000-8000-000000000001\", \"host\": \"tmux\", \"socket\": \"aw\", \"window\": \"aw-01a2038e-7f00-70eb-b429-fa86d481c263\", \"captured_at\": \"2026-11-23T14:20:05.000Z\"}\nx\n",
+      "header": null,
+      "text": "{\"kind\": \"other\", \"v\": 1, \"device\": \"ubuntu-01\", \"session\": \"01a2038e-8100-7000-8000-000000000001\", \"host\": \"tmux\", \"socket\": \"aw\", \"window\": \"aw-01a2038e-7f00-70eb-b429-fa86d481c263\", \"captured_at\": \"2026-11-23T14:20:05.000Z\"}\nx\n"
+    },
+    {
+      "name": "header of version 2",
+      "content": "{\"kind\": \"aw-terminal\", \"v\": 2, \"device\": \"ubuntu-01\", \"session\": \"01a2038e-8100-7000-8000-000000000001\", \"host\": \"tmux\", \"socket\": \"aw\", \"window\": \"aw-01a2038e-7f00-70eb-b429-fa86d481c263\", \"captured_at\": \"2026-11-23T14:20:05.000Z\"}\nx\n",
+      "header": null,
+      "text": "{\"kind\": \"aw-terminal\", \"v\": 2, \"device\": \"ubuntu-01\", \"session\": \"01a2038e-8100-7000-8000-000000000001\", \"host\": \"tmux\", \"socket\": \"aw\", \"window\": \"aw-01a2038e-7f00-70eb-b429-fa86d481c263\", \"captured_at\": \"2026-11-23T14:20:05.000Z\"}\nx\n"
+    },
+    {
+      "name": "header with a bad time",
+      "content": "{\"kind\": \"aw-terminal\", \"v\": 1, \"device\": \"ubuntu-01\", \"session\": \"01a2038e-8100-7000-8000-000000000001\", \"host\": \"tmux\", \"socket\": \"aw\", \"window\": \"aw-01a2038e-7f00-70eb-b429-fa86d481c263\", \"captured_at\": \"yesterday\"}\nx\n",
+      "header": null,
+      "text": "{\"kind\": \"aw-terminal\", \"v\": 1, \"device\": \"ubuntu-01\", \"session\": \"01a2038e-8100-7000-8000-000000000001\", \"host\": \"tmux\", \"socket\": \"aw\", \"window\": \"aw-01a2038e-7f00-70eb-b429-fa86d481c263\", \"captured_at\": \"yesterday\"}\nx\n"
+    },
+    {
+      "name": "header with a date that does not exist (final check fc1-14)",
+      "content": "{\"kind\":\"aw-terminal\",\"v\":1,\"device\":\"ubuntu-01\",\"session\":\"01a2038e-8100-7000-8000-000000000001\",\"host\":\"tmux\",\"socket\":\"aw\",\"window\":null,\"captured_at\":\"2026-02-31T10:00:00.000Z\"}\nline\n",
+      "header": null,
+      "text": "{\"kind\":\"aw-terminal\",\"v\":1,\"device\":\"ubuntu-01\",\"session\":\"01a2038e-8100-7000-8000-000000000001\",\"host\":\"tmux\",\"socket\":\"aw\",\"window\":null,\"captured_at\":\"2026-02-31T10:00:00.000Z\"}\nline\n"
+    },
+    {
+      "name": "header with a time with no milliseconds",
+      "content": "{\"kind\": \"aw-terminal\", \"v\": 1, \"device\": \"ubuntu-01\", \"session\": \"01a2038e-8100-7000-8000-000000000001\", \"host\": \"tmux\", \"socket\": \"aw\", \"window\": \"aw-01a2038e-7f00-70eb-b429-fa86d481c263\", \"captured_at\": \"2026-11-23T14:20:05Z\"}\nx\n",
+      "header": null,
+      "text": "{\"kind\": \"aw-terminal\", \"v\": 1, \"device\": \"ubuntu-01\", \"session\": \"01a2038e-8100-7000-8000-000000000001\", \"host\": \"tmux\", \"socket\": \"aw\", \"window\": \"aw-01a2038e-7f00-70eb-b429-fa86d481c263\", \"captured_at\": \"2026-11-23T14:20:05Z\"}\nx\n"
+    },
+    {
+      "name": "header with no device",
+      "content": "{\"kind\":\"aw-terminal\",\"v\":1}\nx\n",
+      "header": null,
+      "text": "{\"kind\":\"aw-terminal\",\"v\":1}\nx\n"
+    },
+    {
+      "name": "empty file",
+      "content": "",
+      "header": null,
+      "text": ""
+    },
+    {
+      "name": "header with a shell character in the socket",
+      "content": "{\"kind\":\"aw-terminal\",\"v\":1,\"device\":\"ubuntu-01\",\"session\":\"01a2038e-8100-7000-8000-000000000001\",\"host\":\"tmux\",\"socket\":\"aw;touch${IFS}/tmp/x\",\"window\":\"aw-01a2038e-7f00-70eb-b429-fa86d481c263\",\"captured_at\":\"2026-11-23T14:20:05.000Z\"}\nscreen\n",
+      "header": null,
+      "text": "{\"kind\":\"aw-terminal\",\"v\":1,\"device\":\"ubuntu-01\",\"session\":\"01a2038e-8100-7000-8000-000000000001\",\"host\":\"tmux\",\"socket\":\"aw;touch${IFS}/tmp/x\",\"window\":\"aw-01a2038e-7f00-70eb-b429-fa86d481c263\",\"captured_at\":\"2026-11-23T14:20:05.000Z\"}\nscreen\n"
+    },
+    {
+      "name": "header with no socket key",
+      "content": "{\"kind\":\"aw-terminal\",\"v\":1,\"device\":\"ubuntu-01\",\"session\":\"01a2038e-8100-7000-8000-000000000001\",\"host\":\"tmux\",\"window\":\"aw-01a2038e-7f00-70eb-b429-fa86d481c263\",\"captured_at\":\"2026-11-23T14:20:05.000Z\"}\nscreen\n",
+      "header": null,
+      "text": "{\"kind\":\"aw-terminal\",\"v\":1,\"device\":\"ubuntu-01\",\"session\":\"01a2038e-8100-7000-8000-000000000001\",\"host\":\"tmux\",\"window\":\"aw-01a2038e-7f00-70eb-b429-fa86d481c263\",\"captured_at\":\"2026-11-23T14:20:05.000Z\"}\nscreen\n"
+    },
+    {
+      "name": "header with the version written as 1.0",
+      "content": "{\"kind\":\"aw-terminal\",\"v\":1.0,\"device\":\"ubuntu-01\",\"session\":\"01a2038e-8100-7000-8000-000000000001\",\"host\":\"tmux\",\"socket\":\"aw\",\"window\":\"aw-01a2038e-7f00-70eb-b429-fa86d481c263\",\"captured_at\":\"2026-11-23T14:20:05.000Z\"}\nscreen\n",
+      "header": {
+        "kind": "aw-terminal",
+        "v": 1,
+        "device": "ubuntu-01",
+        "session": "01a2038e-8100-7000-8000-000000000001",
+        "host": "tmux",
+        "socket": "aw",
+        "window": "aw-01a2038e-7f00-70eb-b429-fa86d481c263",
+        "captured_at": "2026-11-23T14:20:05.000Z"
+      },
+      "text": "screen"
+    }
+  ],
+  "newest": [
+    {
+      "name": "the later capture wins",
+      "files": {
+        "ubuntu-01.txt": "{\"kind\": \"aw-terminal\", \"v\": 1, \"device\": \"ubuntu-01\", \"session\": \"01a2038e-8100-7000-8000-000000000001\", \"host\": \"tmux\", \"socket\": \"aw\", \"window\": \"aw-01a2038e-7f00-70eb-b429-fa86d481c263\", \"captured_at\": \"2026-11-23T14:20:05.000Z\"}\nold\n",
+        "macbook-pro.txt": "{\"kind\": \"aw-terminal\", \"v\": 1, \"device\": \"macbook-pro\", \"session\": \"01a2038e-8100-7000-8000-000000000002\", \"host\": \"tmux\", \"socket\": \"aw\", \"window\": \"aw-01a2038e-7f00-70eb-b429-fa86d481c263\", \"captured_at\": \"2026-11-23T14:22:30.000Z\"}\nnew\n"
+      },
+      "device": "macbook-pro",
+      "text": "new"
+    },
+    {
+      "name": "a file with a header wins over a file with none",
+      "files": {
+        "pixel-9.txt": "no header\n",
+        "ubuntu-01.txt": "{\"kind\": \"aw-terminal\", \"v\": 1, \"device\": \"ubuntu-01\", \"session\": \"01a2038e-8100-7000-8000-000000000001\", \"host\": \"tmux\", \"socket\": \"aw\", \"window\": \"aw-01a2038e-7f00-70eb-b429-fa86d481c263\", \"captured_at\": \"2026-11-23T14:20:05.000Z\"}\nscreen\n"
+      },
+      "device": "ubuntu-01",
+      "text": "screen"
+    },
+    {
+      "name": "no header at all: the first file name",
+      "files": {
+        "ubuntu-01.txt": "b\n",
+        "mac-mini-lab.txt": "a\n"
+      },
+      "device": "mac-mini-lab",
+      "text": "a\n"
+    },
+    {
+      "name": "no file",
+      "files": {},
+      "device": null,
+      "text": null
+    },
+    {
+      "name": "a conflict copy and a temp file are not snapshots of a device",
+      "files": {
+        "ubuntu-01.txt": "{\"kind\":\"aw-terminal\",\"v\":1,\"device\":\"ubuntu-01\",\"session\":\"01a2038e-8100-7000-8000-000000000001\",\"host\":\"tmux\",\"socket\":\"aw\",\"window\":\"aw-01a2038e-7f00-70eb-b429-fa86d481c263\",\"captured_at\":\"2026-11-23T14:20:05.000Z\"}\nscreen of ubuntu-01\n",
+        "ubuntu-01.sync-conflict-20261123-142100-ABCDEFG.txt": "{\"kind\":\"aw-terminal\",\"v\":1,\"device\":\"ubuntu-01\",\"session\":\"01a2038e-8100-7000-8000-000000000001\",\"host\":\"tmux\",\"socket\":\"aw\",\"window\":\"aw-01a2038e-7f00-70eb-b429-fa86d481c263\",\"captured_at\":\"2026-11-23T14:21:00.000Z\"}\nconflict copy\n",
+        "~syncthing~ubuntu-01.txt.tmp": "{\"kind\":\"aw-terminal\",\"v\":1,\"device\":\"ubuntu-01\",\"session\":\"01a2038e-8100-7000-8000-000000000001\",\"host\":\"tmux\",\"socket\":\"aw\",\"window\":\"aw-01a2038e-7f00-70eb-b429-fa86d481c263\",\"captured_at\":\"2026-11-23T14:21:00.000Z\"}\nconflict copy\n",
+        ".syncthing.ubuntu-01.txt.tmp": "{\"kind\":\"aw-terminal\",\"v\":1,\"device\":\"ubuntu-01\",\"session\":\"01a2038e-8100-7000-8000-000000000001\",\"host\":\"tmux\",\"socket\":\"aw\",\"window\":\"aw-01a2038e-7f00-70eb-b429-fa86d481c263\",\"captured_at\":\"2026-11-23T14:21:00.000Z\"}\nconflict copy\n"
+      },
+      "device": "ubuntu-01",
+      "text": "screen of ubuntu-01"
+    }
+  ]
+}

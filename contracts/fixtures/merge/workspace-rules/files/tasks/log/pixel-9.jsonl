@@ -1,0 +1,3 @@
+{"v":1,"id":"01a203c5-6d80-7291-97ec-0e89069881d7","hlc":"2026-11-22T15:00:00.000Z#0000","dev":"pixel-9","type":"queue.reordered","by":"human@pixel-9","data":{"agent":"claude@ubuntu-01","tasks":[]}}
+{"v":1,"id":"01a203c5-7168-779e-b41a-ebeaa2589547","hlc":"2026-11-22T15:00:01.000Z#0000","dev":"pixel-9","type":"credential.added","by":"human@pixel-9","data":{"name":"github-bot"}}
+{"v":1,"id":"01a203c5-7550-740c-ac35-47c301ef0862","hlc":"2026-11-22T15:00:02.000Z#0000","dev":"pixel-9","type":"credential.removed","by":"human@pixel-9","data":{"name":"stripe-test"}}

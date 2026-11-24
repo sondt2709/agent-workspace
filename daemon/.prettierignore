@@ -1,0 +1,3 @@
+# The build output of scripts/build.ts (the npm package folder). The root file lists the same.
+dist/
+node_modules/

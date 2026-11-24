@@ -1,0 +1,4 @@
+#!/bin/sh
+# The fake claude of the tests (src/testing/fake-claude.ts). aw-launch sets AW_NODE.
+here=$(cd "$(dirname "$0")" && pwd)
+exec "${AW_NODE:-node}" "$here/../../src/testing/fake-claude.ts" "$@"

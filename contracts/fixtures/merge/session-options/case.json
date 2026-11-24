@@ -1,0 +1,4 @@
+{
+  "description": "Session options (openspec session-options). AW-30: a person creates it with skip, agent teams and the project checkout; the session.started fields go to the session view and a session.resumed keeps them; an agent assignment with options keeps the assignee and ignores the options (session_options_ignored); a person on the phone sets accept_edits and another folder; a stop request of the agent is not_human, the one of the person applies. AW-31: an agent subtask with skip options keeps its assignee (the project switch), and the options are ignored; the project default is skip, which counts only for a task of a person.",
+  "now": "2026-11-24T10:00:00.000Z"
+}

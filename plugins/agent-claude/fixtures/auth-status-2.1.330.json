@@ -1,0 +1,20 @@
+{
+  "$comment": "claude auth status --json of Claude Code 2.1.330 on macOS, captured on 2026-11-23. The keys are real; each personal value is replaced. AW keeps only loggedIn, authMethod and loginExpiresAt.",
+  "output": {
+    "loggedIn": true,
+    "authMethod": "claude.ai",
+    "apiProvider": "firstParty",
+    "analyticsDisabled": false,
+    "projectsDirectory": "<config>/projects",
+    "configDirectory": "<config>",
+    "loginExpiresAt": "2026-11-25T13:35:11.530Z",
+    "consoleProfileSignInOffered": true,
+    "email": "someone@example.com",
+    "orgId": "00000000-0000-4000-8000-000000000003",
+    "orgName": "Example",
+    "subscriptionType": "pro",
+    "storedClaudeAiLogin": true,
+    "planTier": "pro"
+  },
+  "version_output": "2.1.330 (Claude Code)"
+}

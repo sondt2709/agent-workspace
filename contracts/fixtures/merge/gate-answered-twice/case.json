@@ -1,0 +1,4 @@
+{
+  "description": "macbook-pro and pixel-9 answer the same gate. The session device ubuntu-01 receives the answer of pixel-9 first and resolves the gate with it, although the answer of macbook-pro has an earlier HLC. The answer of macbook-pro, a later answer and an answer to version 1 of a re-opened gate become comments.",
+  "now": "2026-11-22T15:20:00.000Z"
+}

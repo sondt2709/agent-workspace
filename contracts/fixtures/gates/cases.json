@@ -1,0 +1,57 @@
+{
+  "description": "The gate text and its decision block (openspec gate-full-context, design decision 4): text is the output of gateText in daemon/src/loop/agent.ts, body is the text that a screen shows next to the decisions. TypeScript (@aw/client/gates) and Kotlin (GateTexts.kt) run the same cases. Source: the output of gateText of awd, captured on 2026-11-23 with synthetic task texts. daemon/src/loop/units.test.ts fails when gateText gives another text.",
+  "cases": [
+    {
+      "name": "approach with 2 decisions",
+      "text": "# Add rate limits\n\n## Steps\n1. Add a token bucket per API key.\n2. Return 429.\n\n## Decisions\n1. Which limit per API key?\n   Options: 100/min · 1000/min\n   Recommended: 100/min\n2. Where do we keep the counters?\n   Options: In memory · Redis\n   Recommended: Redis\n\n\"Confirm\" accepts the recommended options. To choose another option, request changes with a comment.",
+      "decisions": [
+        {
+          "question": "Which limit per API key?",
+          "options": ["100/min", "1000/min"],
+          "recommended": "100/min"
+        },
+        {
+          "question": "Where do we keep the counters?",
+          "options": ["In memory", "Redis"],
+          "recommended": "Redis"
+        }
+      ],
+      "body": "# Add rate limits\n\n## Steps\n1. Add a token bucket per API key.\n2. Return 429."
+    },
+    {
+      "name": "no decisions",
+      "text": "# Add rate limits\n\n## Steps\n1. Add a token bucket per API key.\n2. Return 429.",
+      "decisions": [],
+      "body": "# Add rate limits\n\n## Steps\n1. Add a token bucket per API key.\n2. Return 429."
+    },
+    {
+      "name": "own Decisions heading and 1 decision",
+      "text": "# Plan\n\n## Decisions\nThe agent wrote this heading itself.\n\n## Steps\n1. Do it.\n\n## Decisions\n1. Which limit per API key?\n   Options: 100/min · 1000/min\n   Recommended: 100/min\n\n\"Confirm\" accepts the recommended options. To choose another option, request changes with a comment.",
+      "decisions": [
+        {
+          "question": "Which limit per API key?",
+          "options": ["100/min", "1000/min"],
+          "recommended": "100/min"
+        }
+      ],
+      "body": "# Plan\n\n## Decisions\nThe agent wrote this heading itself.\n\n## Steps\n1. Do it."
+    },
+    {
+      "name": "decisions in the data, no block in the text",
+      "text": "# Add rate limits\n\n## Steps\n1. Add a token bucket per API key.\n2. Return 429.",
+      "decisions": [
+        {
+          "question": "Which limit per API key?",
+          "options": ["100/min", "1000/min"],
+          "recommended": "100/min"
+        },
+        {
+          "question": "Where do we keep the counters?",
+          "options": ["In memory", "Redis"],
+          "recommended": "Redis"
+        }
+      ],
+      "body": "# Add rate limits\n\n## Steps\n1. Add a token bucket per API key.\n2. Return 429."
+    }
+  ]
+}

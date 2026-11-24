@@ -1,0 +1,29 @@
+# Checks of the Gradle project android/. The root "task check" calls "task android:check".
+# Gradle needs a JDK 21 (docs/tech-stack.md 1.5): set JAVA_HOME, or pass the toolchain path with
+# -Porg.gradle.java.installations.paths. The Android SDK is not needed: the checks use the JVM target,
+# and detekt checks the app sources without type resolution.
+version: "3"
+
+tasks:
+  check:
+    desc: Check and test the Android modules on the JVM (ktlint, detekt, :shared, :identity, :engine and :control jvmTest)
+    preconditions:
+      - sh: ./gradlew --version > /dev/null 2>&1
+        msg: "Gradle does not start: install a JDK 21 and set JAVA_HOME (docs/tech-stack.md 1.5)"
+    cmds:
+      - ./gradlew spotlessCheck :shared:detektAll :shared:jvmTest :identity:detektAll :identity:jvmTest :engine:detektAll :engine:jvmTest :control:detektAll :control:jvmTest :app:detektAll
+
+  lint:
+    desc: Android Lint of the app and of the Android target of :shared, :identity, :engine and :control (NewApi against minSdk; needs the Android SDK)
+    cmds:
+      - ./gradlew :shared:lintAndroidMain :identity:lintAndroidMain :engine:lintAndroidMain :control:lintAndroidMain :app:lintDebug
+
+  engine-libs:
+    desc: Build libawsync.so (arm64-v8a, x86_64) with the pinned Go and NDK (needs ANDROID_HOME or ANDROID_NDK_HOME)
+    cmds:
+      - ./gradlew :engine:buildEngineLibs
+
+  app:
+    desc: Build the debug APK (needs the Android SDK; builds libawsync.so first when it is missing)
+    cmds:
+      - ./gradlew :app:assembleDebug

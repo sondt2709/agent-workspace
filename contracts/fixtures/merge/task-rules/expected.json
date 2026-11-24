@@ -1,0 +1,669 @@
+{
+  "presence": {
+    "devices": [
+      {
+        "device": "macbook-pro",
+        "last_heartbeat_hlc": "2026-11-22T14:21:00.000Z#0000",
+        "offline_since": "2026-11-22T14:22:30.000Z",
+        "online": false,
+        "received_at": "2026-11-22T14:21:00.000Z"
+      },
+      {
+        "device": "pixel-9",
+        "last_heartbeat_hlc": "2026-11-22T14:21:00.000Z#0000",
+        "offline_since": "2026-11-22T14:22:30.000Z",
+        "online": false,
+        "received_at": "2026-11-22T14:21:00.000Z"
+      },
+      {
+        "device": "ubuntu-01",
+        "last_heartbeat_hlc": "2026-11-22T14:21:00.000Z#0000",
+        "offline_since": "2026-11-22T14:22:30.000Z",
+        "online": false,
+        "received_at": "2026-11-22T14:21:00.000Z"
+      }
+    ],
+    "now": "2026-11-22T16:00:00.000Z",
+    "offline_tasks": [
+      {
+        "cause": "device_offline",
+        "device": "ubuntu-01",
+        "since": "2026-11-22T14:22:30.000Z",
+        "task": "01a2038e-7f00-70eb-b429-fa86d481c263"
+      },
+      {
+        "cause": "device_offline",
+        "device": "ubuntu-01",
+        "since": "2026-11-22T14:22:30.000Z",
+        "task": "01a203c5-6d80-7428-9915-52b38e7dc1e2"
+      },
+      {
+        "cause": "device_offline",
+        "device": "ubuntu-01",
+        "since": "2026-11-22T14:22:30.000Z",
+        "task": "01a203c5-6d80-7428-9915-5705f618bd41"
+      }
+    ]
+  },
+  "view": {
+    "credentials": [
+      {
+        "added": {
+          "dev": "macbook-pro",
+          "event": "01a20385-5740-7a66-89d0-a2958dab0177",
+          "hlc": "2026-11-22T13:50:00.000Z#0000"
+        },
+        "imported_on": ["ubuntu-01"],
+        "name": "stripe-test"
+      }
+    ],
+    "devices": [
+      {
+        "health": {
+          "boot_time": "2026-11-22T08:00:00.000Z",
+          "disk_used_percentage": 61,
+          "updated": "2026-11-22T14:21:00.000Z#0000"
+        },
+        "heartbeat": {
+          "boot_time": "2026-11-22T08:00:00.000Z",
+          "count": 3,
+          "last_hlc": "2026-11-22T14:21:00.000Z#0000"
+        },
+        "may_run": true,
+        "name": "MacBook Pro",
+        "priority": 0,
+        "resources": {},
+        "revoked": false,
+        "role": "local",
+        "slug": "macbook-pro"
+      },
+      {
+        "health": {
+          "boot_time": "2026-11-19T03:12:00.000Z",
+          "disk_used_percentage": 48,
+          "updated": "2026-11-22T14:21:00.000Z#0000"
+        },
+        "heartbeat": {
+          "boot_time": "2026-11-19T03:12:00.000Z",
+          "count": 3,
+          "last_hlc": "2026-11-22T14:21:00.000Z#0000"
+        },
+        "may_run": true,
+        "name": "ubuntu-01",
+        "priority": 1,
+        "resources": {
+          "k3d": 1
+        },
+        "revoked": false,
+        "role": "remote",
+        "slug": "ubuntu-01"
+      },
+      {
+        "health": {
+          "boot_time": "2026-11-21T22:40:00.000Z",
+          "disk_used_percentage": 72,
+          "updated": "2026-11-22T14:21:00.000Z#0000"
+        },
+        "heartbeat": {
+          "boot_time": "2026-11-21T22:40:00.000Z",
+          "count": 3,
+          "last_hlc": "2026-11-22T14:21:00.000Z#0000"
+        },
+        "may_run": false,
+        "name": "Pixel 9",
+        "priority": 2,
+        "resources": {},
+        "revoked": false,
+        "role": "mobile",
+        "slug": "pixel-9"
+      }
+    ],
+    "issues": [
+      {
+        "code": "ignored",
+        "event": "01a203c6-30d0-7507-b46d-d6fd31ef20e2",
+        "line": 4,
+        "message": "task.rekeyed of macbook-pro not applied: stale_rekey",
+        "path": "tasks/01a203c5-6d80-7428-9915-52b38e7dc1e2/log/macbook-pro.jsonl",
+        "reason": "stale_rekey",
+        "task": "01a203c5-6d80-7428-9915-52b38e7dc1e2"
+      },
+      {
+        "code": "ignored",
+        "event": "01a203c6-09c0-7105-a165-300a86247a59",
+        "line": 3,
+        "message": "task.rekeyed of pixel-9 not applied: not_creator",
+        "path": "tasks/01a203c5-6d80-7428-9915-52b38e7dc1e2/log/pixel-9.jsonl",
+        "reason": "not_creator",
+        "task": "01a203c5-6d80-7428-9915-52b38e7dc1e2"
+      },
+      {
+        "code": "ignored",
+        "event": "01a203c7-4240-716b-b8ac-c33ae263095a",
+        "line": 5,
+        "message": "task.edited of pixel-9 not applied: first_message_locked",
+        "path": "tasks/01a203c5-6d80-7428-9915-52b38e7dc1e2/log/pixel-9.jsonl",
+        "reason": "first_message_locked",
+        "task": "01a203c5-6d80-7428-9915-52b38e7dc1e2"
+      },
+      {
+        "code": "ignored",
+        "event": "01a203c8-a1d0-708f-9994-ab19bcbe598b",
+        "line": 6,
+        "message": "task.assigned of ubuntu-01 not applied: assignment_not_allowed",
+        "path": "tasks/01a203c5-6d80-7428-9915-52b38e7dc1e2/log/ubuntu-01.jsonl",
+        "reason": "assignment_not_allowed",
+        "task": "01a203c5-6d80-7428-9915-52b38e7dc1e2"
+      },
+      {
+        "code": "ignored",
+        "event": "01a203c9-1700-7598-bdb9-2f020e12e952",
+        "line": 7,
+        "message": "session.ended of ubuntu-01 not applied: unknown_session",
+        "path": "tasks/01a203c5-6d80-7428-9915-52b38e7dc1e2/log/ubuntu-01.jsonl",
+        "reason": "unknown_session",
+        "task": "01a203c5-6d80-7428-9915-52b38e7dc1e2"
+      },
+      {
+        "code": "ignored",
+        "event": "01a203c5-6d80-71d5-940c-45b720662f26",
+        "line": 2,
+        "message": "task.assigned of ubuntu-01 not applied: assignment_not_allowed",
+        "path": "tasks/01a203c5-6d80-7428-9915-5b5a12b91ba1/log/ubuntu-01.jsonl",
+        "reason": "assignment_not_allowed",
+        "task": "01a203c5-6d80-7428-9915-5b5a12b91ba1"
+      },
+      {
+        "code": "ignored",
+        "event": "01a203c5-6d80-71d5-940c-4a35b0859728",
+        "line": 1,
+        "message": "The assignee of task.created of macbook-pro is ignored: only a human assigns a task",
+        "path": "tasks/01a203c5-6d80-7428-9915-5e8403a66c02/log/macbook-pro.jsonl",
+        "reason": "assignee_ignored",
+        "task": "01a203c5-6d80-7428-9915-5e8403a66c02"
+      }
+    ],
+    "last_hlc": "2026-11-22T15:13:00.000Z#0000",
+    "projects": [
+      {
+        "added_at": null,
+        "archived": false,
+        "default_agent": "claude",
+        "devices": ["ubuntu-01", "macbook-pro"],
+        "kind": "project",
+        "links": ["github:example/billing-api"],
+        "main_repo": null,
+        "name": "Billing API",
+        "permission_mode": "skip",
+        "schema": 1,
+        "slug": "billing-api",
+        "switches": {
+          "assign_new_subtasks_to_default_device": true
+        },
+        "tasks": [
+          "01a2038e-7f00-70eb-b429-fa86d481c263",
+          "01a203c5-6d80-7428-9915-52b38e7dc1e2",
+          "01a203c5-6d80-7428-9915-5705f618bd41",
+          "01a203c5-6d80-7428-9915-5b5a12b91ba1",
+          "01a203c5-6d80-7428-9915-5e8403a66c02"
+        ],
+        "test_servers": ["billing-k3d"]
+      }
+    ],
+    "queues": [
+      {
+        "agent": "claude@ubuntu-01",
+        "dev": "macbook-pro",
+        "event": "01a2038f-de90-7588-96d6-8769d32ddc61",
+        "hlc": "2026-11-22T14:01:30.000Z#0000",
+        "tasks": ["01a2038e-7f00-70eb-b429-fa86d481c263"]
+      }
+    ],
+    "removed_projects": [],
+    "removed_tasks": [],
+    "slots": [],
+    "tasks": [
+      {
+        "approach": {
+          "confirmed": 1,
+          "latest": 1
+        },
+        "archived": false,
+        "artifacts": [],
+        "assignee": "claude@ubuntu-01",
+        "branch": "aw/AW-7",
+        "claim": {
+          "device": "ubuntu-01",
+          "epoch": 1,
+          "event": "01a20390-53c0-7d86-9882-e3491cbd3235",
+          "session": "01a20390-53c0-73f3-af1e-cebbd1410ab4"
+        },
+        "comments": [
+          {
+            "by": "human@pixel-9",
+            "dev": "pixel-9",
+            "event": "01a203a2-a340-7844-9cfa-16e686340e68",
+            "gate": null,
+            "hlc": "2026-11-22T14:22:00.000Z#0000",
+            "source": "comment",
+            "text": "Also check the refund test, please."
+          }
+        ],
+        "created": {
+          "dev": "macbook-pro",
+          "event": "01a2038e-7f00-7ce5-a904-0a1e60c3ed48",
+          "hlc": "2026-11-22T14:00:00.000Z#0000"
+        },
+        "created_by": "human@macbook-pro",
+        "created_key": "AW-7",
+        "credentials": ["stripe-test"],
+        "depends_on": [],
+        "event_count": 20,
+        "first_message": "/opsx:explore The invoice test fails 1 time in 5 on CI.",
+        "gates": [
+          {
+            "answer": "Fake clock in the test",
+            "answer_event": "01a20394-7270-7675-90a8-c5dd35e24e72",
+            "answers": [
+              {
+                "answer": "Fake clock in the test",
+                "by": "human@pixel-9",
+                "comment": null,
+                "dev": "pixel-9",
+                "event": "01a20394-7270-7675-90a8-c5dd35e24e72",
+                "hlc": "2026-11-22T14:06:30.000Z#0000",
+                "use": "used",
+                "version": 1
+              }
+            ],
+            "file": null,
+            "gate": "01a20393-12e0-78a6-a158-03674c770697",
+            "kind": "question",
+            "opened": {
+              "dev": "ubuntu-01",
+              "event": "01a20393-12e0-788f-8b89-62da8cc4ab87",
+              "hlc": "2026-11-22T14:05:00.000Z#0000"
+            },
+            "options": ["Fake clock in the test", "Retry the test"],
+            "resolved_by": "ubuntu-01",
+            "state": "resolved",
+            "title": "Which fix?",
+            "version": 1
+          },
+          {
+            "answer": "confirm",
+            "answer_event": "01a20399-7b80-73e6-b93e-974147ddfe38",
+            "answers": [
+              {
+                "answer": "confirm",
+                "by": "human@macbook-pro",
+                "comment": null,
+                "dev": "macbook-pro",
+                "event": "01a20399-7b80-73e6-b93e-974147ddfe38",
+                "hlc": "2026-11-22T14:12:00.000Z#0000",
+                "use": "used",
+                "version": 1
+              }
+            ],
+            "file": "approach/v1.md",
+            "gate": "01a20397-a6c0-7e6c-bb4d-77006b2cc4c0",
+            "kind": "confirm_approach",
+            "opened": {
+              "dev": "ubuntu-01",
+              "event": "01a20397-a6c0-77fa-97ab-af0d3aeaca24",
+              "hlc": "2026-11-22T14:10:00.000Z#0001"
+            },
+            "options": ["Confirm", "Request changes"],
+            "resolved_by": "ubuntu-01",
+            "state": "resolved",
+            "title": "Confirm approach v1",
+            "version": 1
+          }
+        ],
+        "id": "01a2038e-7f00-70eb-b429-fa86d481c263",
+        "includes": {
+          "macbook-pro": 2,
+          "pixel-9": 3,
+          "ubuntu-01": 15
+        },
+        "key": "AW-7",
+        "key_state": "ok",
+        "last_hlc": "2026-11-22T14:22:00.000Z#0000",
+        "learned": false,
+        "links": ["github:example/billing-api#412"],
+        "moving_to": null,
+        "needs_you": [],
+        "needs_you_lane": false,
+        "needs_you_reasons": [],
+        "open_dependencies": [],
+        "owner": "ubuntu-01",
+        "parent": null,
+        "paused": null,
+        "priority": null,
+        "progress": "Run the tests",
+        "project": "billing-api",
+        "ready": {
+          "missing": [],
+          "passed_on": "ubuntu-01"
+        },
+        "rekey_by": null,
+        "released_epoch": null,
+        "result": null,
+        "session": {
+          "agent_teams": null,
+          "branch": "aw/AW-7",
+          "cwd": "~/code/billing-api/.worktrees/aw-01a2038e-7f00-70eb-b429-fa86d481c263",
+          "device": "ubuntu-01",
+          "host": "tmux",
+          "permission_mode": null,
+          "reason": null,
+          "session": "01a20390-53c0-73f3-af1e-cebbd1410ab4",
+          "state": "running",
+          "work_in": null
+        },
+        "session_options": null,
+        "stage": "implement",
+        "subtasks": [
+          "01a203c5-6d80-7428-9915-5e8403a66c02",
+          "01a203c5-6d80-7428-9915-5b5a12b91ba1"
+        ],
+        "test_server": "billing-k3d",
+        "title": "Fix the flaky invoice test"
+      },
+      {
+        "approach": {
+          "confirmed": 2,
+          "latest": 2
+        },
+        "archived": false,
+        "artifacts": [],
+        "assignee": "claude@ubuntu-01",
+        "branch": "aw/AW-20",
+        "claim": {
+          "device": "ubuntu-01",
+          "epoch": 1,
+          "event": "01a203c6-57e0-7747-86f6-bee45bc7a9cd",
+          "session": "01a203c6-57e0-7532-9c0f-d97201f4fd2c"
+        },
+        "comments": [],
+        "created": {
+          "dev": "macbook-pro",
+          "event": "01a203c5-6d80-731c-b070-0873c38b9ffc",
+          "hlc": "2026-11-22T15:00:00.000Z#0000"
+        },
+        "created_by": "human@macbook-pro",
+        "created_key": "AW-20",
+        "credentials": [],
+        "depends_on": [],
+        "event_count": 19,
+        "first_message": "/my-team:implement it",
+        "gates": [
+          {
+            "answer": "Confirm",
+            "answer_event": null,
+            "answers": [],
+            "file": "approach/v2.md",
+            "gate": "01a203c7-9060-705d-adc9-5f4d5cb41ffc",
+            "kind": "confirm_approach",
+            "opened": {
+              "dev": "ubuntu-01",
+              "event": "01a203c7-9060-76d0-bae5-2fb0bd269ddc",
+              "hlc": "2026-11-22T15:02:20.000Z#0000"
+            },
+            "options": [],
+            "resolved_by": "ubuntu-01",
+            "state": "resolved",
+            "title": "Confirm the approach",
+            "version": 1
+          }
+        ],
+        "id": "01a203c5-6d80-7428-9915-52b38e7dc1e2",
+        "includes": {
+          "macbook-pro": 5,
+          "pixel-9": 6,
+          "ubuntu-01": 8
+        },
+        "key": "AW-24",
+        "key_state": "ok",
+        "last_hlc": "2026-11-22T15:05:00.000Z#0000",
+        "learned": false,
+        "links": [],
+        "moving_to": null,
+        "needs_you": [],
+        "needs_you_lane": false,
+        "needs_you_reasons": [],
+        "open_dependencies": [],
+        "owner": "ubuntu-01",
+        "parent": null,
+        "paused": null,
+        "priority": "high",
+        "progress": null,
+        "project": "billing-api",
+        "ready": null,
+        "rekey_by": null,
+        "released_epoch": null,
+        "result": null,
+        "session": {
+          "agent_teams": null,
+          "branch": "aw/AW-20",
+          "cwd": "/w",
+          "device": "ubuntu-01",
+          "host": "tmux",
+          "permission_mode": null,
+          "reason": "done",
+          "session": "01a203c6-57e0-7532-9c0f-d97201f4fd2c",
+          "state": "ended",
+          "work_in": null
+        },
+        "session_options": null,
+        "stage": "backlog",
+        "subtasks": [],
+        "test_server": null,
+        "title": "New title"
+      },
+      {
+        "approach": {
+          "confirmed": 3,
+          "latest": 3
+        },
+        "archived": false,
+        "artifacts": [],
+        "assignee": "claude@ubuntu-01",
+        "branch": null,
+        "claim": {
+          "device": "ubuntu-01",
+          "epoch": 1,
+          "event": "01a203ca-ebc0-762c-950a-f1c13fae0eb2",
+          "session": "01a203ca-ebc0-761b-9d46-045a2b83cec0"
+        },
+        "comments": [],
+        "created": {
+          "dev": "macbook-pro",
+          "event": "01a203c5-6d80-74ba-a373-482144b66035",
+          "hlc": "2026-11-22T15:00:00.000Z#0001"
+        },
+        "created_by": "human@macbook-pro",
+        "created_key": "AW-21",
+        "credentials": [],
+        "depends_on": [],
+        "event_count": 6,
+        "first_message": "/opsx:explore Task AW-21",
+        "gates": [
+          {
+            "answer": "confirm",
+            "answer_event": null,
+            "answers": [],
+            "file": "approach/v99999999999999999999.md",
+            "gate": "01a203d0-6a00-7328-9389-3ee233eafe96",
+            "kind": "confirm_approach",
+            "opened": {
+              "dev": "ubuntu-01",
+              "event": "01a203d0-6a00-724d-8b13-6b9506fdc8ae",
+              "hlc": "2026-11-22T15:12:00.000Z#0000"
+            },
+            "options": [],
+            "resolved_by": "ubuntu-01",
+            "state": "resolved",
+            "title": "Confirm the approach",
+            "version": 1
+          }
+        ],
+        "id": "01a203c5-6d80-7428-9915-5705f618bd41",
+        "includes": {
+          "macbook-pro": 2,
+          "ubuntu-01": 4
+        },
+        "key": "AW-21",
+        "key_state": "ok",
+        "last_hlc": "2026-11-22T15:13:00.000Z#0000",
+        "learned": false,
+        "links": [],
+        "moving_to": null,
+        "needs_you": [],
+        "needs_you_lane": false,
+        "needs_you_reasons": [],
+        "open_dependencies": [],
+        "owner": "ubuntu-01",
+        "parent": null,
+        "paused": null,
+        "priority": null,
+        "progress": null,
+        "project": "billing-api",
+        "ready": null,
+        "rekey_by": null,
+        "released_epoch": null,
+        "result": null,
+        "session": null,
+        "session_options": null,
+        "stage": "backlog",
+        "subtasks": [],
+        "test_server": null,
+        "title": "Task AW-21"
+      },
+      {
+        "approach": {
+          "confirmed": null,
+          "latest": 0
+        },
+        "archived": false,
+        "artifacts": [],
+        "assignee": "claude@ubuntu-01",
+        "branch": null,
+        "claim": null,
+        "comments": [],
+        "created": {
+          "dev": "ubuntu-01",
+          "event": "01a203c5-6d80-71d5-940c-45b720662f25",
+          "hlc": "2026-11-22T15:00:00.000Z#0002"
+        },
+        "created_by": "claude@ubuntu-01",
+        "created_key": "AW-22",
+        "credentials": [],
+        "depends_on": [],
+        "event_count": 2,
+        "first_message": "/opsx:explore Task AW-22",
+        "gates": [],
+        "id": "01a203c5-6d80-7428-9915-5b5a12b91ba1",
+        "includes": {
+          "ubuntu-01": 2
+        },
+        "key": "AW-22",
+        "key_state": "ok",
+        "last_hlc": "2026-11-22T15:00:00.000Z#0003",
+        "learned": false,
+        "links": [],
+        "moving_to": null,
+        "needs_you": [],
+        "needs_you_lane": false,
+        "needs_you_reasons": [],
+        "open_dependencies": [],
+        "owner": "ubuntu-01",
+        "parent": "01a2038e-7f00-70eb-b429-fa86d481c263",
+        "paused": null,
+        "priority": null,
+        "progress": null,
+        "project": "billing-api",
+        "ready": null,
+        "rekey_by": null,
+        "released_epoch": null,
+        "result": null,
+        "session": null,
+        "session_options": null,
+        "stage": "backlog",
+        "subtasks": [],
+        "test_server": null,
+        "title": "Task AW-22"
+      },
+      {
+        "approach": {
+          "confirmed": null,
+          "latest": 0
+        },
+        "archived": false,
+        "artifacts": [],
+        "assignee": null,
+        "branch": null,
+        "claim": null,
+        "comments": [],
+        "created": {
+          "dev": "macbook-pro",
+          "event": "01a203c5-6d80-71d5-940c-4a35b0859728",
+          "hlc": "2026-11-22T15:00:00.000Z#0002"
+        },
+        "created_by": "claude@macbook-pro",
+        "created_key": "AW-23",
+        "credentials": [],
+        "depends_on": [],
+        "event_count": 1,
+        "first_message": "/opsx:explore Task AW-23",
+        "gates": [],
+        "id": "01a203c5-6d80-7428-9915-5e8403a66c02",
+        "includes": {
+          "macbook-pro": 1
+        },
+        "key": "AW-23",
+        "key_state": "ok",
+        "last_hlc": "2026-11-22T15:00:00.000Z#0002",
+        "learned": false,
+        "links": [],
+        "moving_to": null,
+        "needs_you": [],
+        "needs_you_lane": true,
+        "needs_you_reasons": [
+          {
+            "reason": "assign"
+          }
+        ],
+        "open_dependencies": [],
+        "owner": "macbook-pro",
+        "parent": "01a2038e-7f00-70eb-b429-fa86d481c263",
+        "paused": null,
+        "priority": null,
+        "progress": null,
+        "project": "billing-api",
+        "ready": null,
+        "rekey_by": null,
+        "released_epoch": null,
+        "result": null,
+        "session": null,
+        "session_options": null,
+        "stage": "backlog",
+        "subtasks": [],
+        "test_server": null,
+        "title": "Task AW-23"
+      }
+    ],
+    "workspace": {
+      "device_order": ["macbook-pro", "ubuntu-01", "pixel-9"],
+      "id": "01a2038e-7f00-721a-b230-e03772a58aff",
+      "key_prefix": "AW",
+      "kind": "workspace",
+      "name": "Example workspace",
+      "new_project_permission_mode": "skip",
+      "schema": 1,
+      "switches": {
+        "community_relays": true
+      }
+    }
+  }
+}

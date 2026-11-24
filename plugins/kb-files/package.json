@@ -1,0 +1,35 @@
+{
+  "name": "@aw/kb-files",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The knowledge store on plain files: history, Undo, learned entries, approval, context.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "prettier": "@aw/config/prettier",
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@aw/core": "workspace:*",
+    "@aw/plugin-api": "workspace:*",
+    "@aw/schema": "workspace:*",
+    "diff": "9.0.0",
+    "yaml": "2.9.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@aw/config": "workspace:*",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

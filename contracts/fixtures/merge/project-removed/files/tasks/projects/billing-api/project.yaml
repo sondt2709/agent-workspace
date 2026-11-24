@@ -1,0 +1,8 @@
+kind: project
+schema: 1
+slug: billing-api
+name: Billing API
+# Added again with the same slug after the remove of 10:00.
+devices: [macbook-pro]
+default_agent: claude
+added_at: "2026-11-24T11:00:00.000Z#0000"

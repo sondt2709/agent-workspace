@@ -1,0 +1,14 @@
+# Signed device record. Fixture values: the keys and the signature are placeholders, not real keys.
+kind: device
+schema: 1
+slug: pixel-9
+name: Pixel 9
+role: mobile
+keys:
+  ed25519: AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwM=
+  x25519: ExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTExM=
+sync_device_id: PIXELSS-AAAAAAA-AAAAAAA-AAAAAAA-AAAAAAA-AAAAAAA-AAAAAAA-AAAAAAA
+seq: 1
+revoked: false
+paired_at: "2026-11-20T10:00:00.000Z"
+signature: IyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIw==

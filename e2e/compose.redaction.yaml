@@ -1,0 +1,10 @@
+# The agent sessions of the redaction test (openspec credential-redaction): awd starts the fake agent
+# of the repository. Use it with e2e/compose.yaml:
+# docker compose -f e2e/compose.yaml -f e2e/compose.redaction.yaml up -d --build
+services:
+  macbook-pro:
+    environment:
+      AW_CLAUDE: /repo/plugins/agent-claude/testing/bin/claude
+  ubuntu-01:
+    environment:
+      AW_CLAUDE: /repo/plugins/agent-claude/testing/bin/claude

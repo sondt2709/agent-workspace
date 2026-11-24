@@ -1,0 +1,34 @@
+kind: task
+schema: 1
+id: 01a2038e-7f00-70eb-b429-fa86d481c263 # folder name
+key: AW-7 # display alias
+project: billing-api
+title: Fix the flaky invoice test
+first_message: "/opsx:explore The invoice test fails 1 time in 5 on CI." # raw text, passed as is
+stage: implement # backlog, discuss, ready, implement, review, done
+needs_you: [] # open gate ids
+paused: null
+assignee: claude@ubuntu-01
+claim:
+  epoch: 1
+  device: ubuntu-01
+  session: 01a20390-53c0-73f3-af1e-cebbd1410ab4
+approach:
+  latest: 1
+  confirmed: 1
+ready:
+  passed_on: ubuntu-01
+  missing: []
+test_server: billing-k3d # a name in secure/test-servers.yaml
+credentials: [stripe-test] # names only, never values
+parent: null
+subtasks: []
+depends_on: []
+links: ["github:example/billing-api#412"]
+branch: aw/AW-7
+# Log lines of each device in this snapshot.
+includes:
+  macbook-pro: 2
+  pixel-9: 3
+  ubuntu-01: 15
+archived: false

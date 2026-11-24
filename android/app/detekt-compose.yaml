@@ -1,0 +1,13 @@
+# detekt rules for the Compose code of :app, on top of android/detekt.yaml. A composable function is
+# named like a type (Compose API guidelines), takes many parameters (state and callbacks) and is
+# read as a layout tree, so these defaults do not fit it.
+naming:
+  FunctionNaming:
+    ignoreAnnotated: ["Composable"]
+complexity:
+  LongParameterList:
+    ignoreAnnotated: ["Composable"]
+  LongMethod:
+    ignoreAnnotated: ["Composable"]
+  CyclomaticComplexMethod:
+    ignoreAnnotated: ["Composable"]

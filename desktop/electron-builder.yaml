@@ -1,0 +1,34 @@
+# The packaging of the desktop app (openspec gap-install, install-packaging: desktop packaging
+# config; docs/phase-1.md 10.5). Run: pnpm --filter @aw/desktop package. electron-vite builds out/
+# first, and scripts/notices.ts writes out/THIRD_PARTY_NOTICES.
+appId: com.agentworkspace.desktop
+productName: Agent Workspace
+directories:
+  output: dist
+  buildResources: resources
+files:
+  - out/**
+  - package.json
+  # The workspace packages are TypeScript sources that electron-vite bundled into out/main.
+  - "!**/node_modules/@aw/**"
+extraResources:
+  - from: out/THIRD_PARTY_NOTICES
+    to: THIRD_PARTY_NOTICES
+asar: true
+mac:
+  category: public.app-category.developer-tools
+  # The app icon: a 1024 px PNG of the AW mark (scripts/icons.ts); electron-builder makes the .icns.
+  icon: icon.png
+  target:
+    - dmg
+    - zip
+  # electron-builder signs only when it finds a Developer ID identity; with none it skips the step.
+  hardenedRuntime: true
+  # scripts/notarize.mjs notarizes after the signature, only with the App Store Connect API key.
+  notarize: false
+  extendInfo:
+    # The action buttons of the notifications show only with the alert style (docs/phase-1.md 10.5).
+    NSUserNotificationAlertStyle: alert
+afterSign: scripts/notarize.mjs
+# The release pipeline (task release-pipeline) publishes the files: no upload from this build.
+publish: null

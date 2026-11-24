@@ -1,0 +1,3 @@
+{"v":1,"id":"01a203a0-ce80-77eb-b63b-a3fcf45694ef","hlc":"2026-11-22T14:20:00.000Z#0000","dev":"pixel-9","type":"device.heartbeat","data":{"boot_time":"2026-11-21T22:40:00.000Z"}}
+{"v":1,"id":"01a203a1-43b0-7769-a688-b0bcb2ccc752","hlc":"2026-11-22T14:20:30.000Z#0000","dev":"pixel-9","type":"device.heartbeat","data":{"boot_time":"2026-11-21T22:40:00.000Z"}}
+{"v":1,"id":"01a203a1-b8e0-77a7-b259-0985a38de3b3","hlc":"2026-11-22T14:21:00.000Z#0000","dev":"pixel-9","type":"device.heartbeat","data":{"boot_time":"2026-11-21T22:40:00.000Z"}}

@@ -1,0 +1,36 @@
+{
+  "id": "80e8e6c7-e5fd-4ef7-9ee2-079afb7cbf1c",
+  "ok": true,
+  "result": {
+    "terminals": [
+      {
+        "handle": "term_6b675faf-af9c-4aa8-a1fc-53f07272b476",
+        "ptyId": "40f6e034-641e-46a2-a01c-340983a89019::/home/user/orca/workspaces/aw-test-repo/aw-01a2038e-7f00-7000-8000-000000000001@@b721feba",
+        "incarnationId": "55e40ed9-8879-4e14-9d12-df3620bff22d",
+        "orphaned": false,
+        "worktreeId": "40f6e034-641e-46a2-a01c-340983a89019::/home/user/orca/workspaces/aw-test-repo/aw-01a2038e-7f00-7000-8000-000000000001",
+        "worktreePath": "/home/user/orca/workspaces/aw-test-repo/aw-01a2038e-7f00-7000-8000-000000000001",
+        "branch": "refs/heads/aw/AW-1",
+        "tabId": "ff8b52aa-d7f8-47d9-a2a0-4de951e19543",
+        "leafId": "be7aa24f-d9d1-46ac-9cf7-7f9ae9912f6d",
+        "title": "aw-01a2038e-7f00-7000-8000-000000000001",
+        "connected": true,
+        "writable": true,
+        "lastOutputAt": 1795397203861,
+        "executionHostId": "local"
+      }
+    ],
+    "hostScope": {
+      "hostIds": ["local"],
+      "omittedHostIds": []
+    },
+    "topologyRevisions": {
+      "40f6e034-641e-46a2-a01c-340983a89019::/home/user/orca/workspaces/aw-test-repo/aw-01a2038e-7f00-7000-8000-000000000001": 4
+    },
+    "totalCount": 1,
+    "truncated": false
+  },
+  "_meta": {
+    "runtimeId": "7c9912a9-7cf5-4083-aa0e-8899e9cc041b"
+  }
+}

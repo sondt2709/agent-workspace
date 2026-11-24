@@ -1,0 +1,31 @@
+# detekt rules on top of the default config (buildUponDefaultConfig). 0 findings allowed
+# (docs/engineering-rules.md 5.1). Each change of a default has its reason.
+
+complexity:
+  TooManyFunctions:
+    # AwChecks has one function per JSON Schema keyword, WorkspaceIndex one per query of the phone
+    # (android-ui added the queries of the screens).
+    allowedFunctionsPerObject: 15
+    allowedFunctionsPerClass: 25
+    excludes: ["**/jvmTest/**", "**/commonTest/**"]
+  LongMethod:
+    excludes: ["**/jvmTest/**", "**/commonTest/**"]
+  CyclomaticComplexMethod:
+    # A `when` over the event types is one decision per type, like the switch of the TypeScript fold.
+    ignoreSimpleWhenEntries: true
+    excludes: ["**/jvmTest/**", "**/commonTest/**"]
+  LongParameterList:
+    excludes: ["**/jvmTest/**", "**/commonTest/**"]
+  LargeClass:
+    excludes: ["**/jvmTest/**", "**/commonTest/**"]
+
+style:
+  ReturnCount:
+    # Guard clauses keep the port close to the TypeScript code of shared/core.
+    max: 4
+    excludeGuardClauses: true
+  MagicNumber:
+    excludes: ["**/jvmTest/**", "**/commonTest/**"]
+  MaxLineLength:
+    # The same width as ktlint (.editorconfig, Kotlin: 120).
+    maxLineLength: 120

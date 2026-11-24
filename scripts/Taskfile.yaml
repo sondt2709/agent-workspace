@@ -1,0 +1,11 @@
+# Checks of the package in scripts/. The root "task check" calls "task scripts:check".
+version: "3"
+
+tasks:
+  check:
+    desc: Check the package in scripts/ (format, lint, typecheck, tests)
+    cmds:
+      - pnpm run format:check
+      - pnpm run lint
+      - pnpm run typecheck
+      - pnpm run test

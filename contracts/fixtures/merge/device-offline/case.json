@@ -1,0 +1,4 @@
+{
+  "description": "ubuntu-01 writes its last heartbeat at 14:21:00; macbook-pro and pixel-9 continue. At 14:25:00 ubuntu-01 is offline since 14:22:30, and its running task AW-7 shows device_offline. The task waits: presence opens no gate and does not move the task.",
+  "now": "2026-11-22T14:25:00.000Z"
+}

@@ -1,0 +1,6 @@
+{
+  "name": "aw",
+  "description": "Agent Workspace: the human is not at this terminal. Questions, answers and the thread go through AW.",
+  "version": "0.0.0",
+  "author": { "name": "The agent-workspace authors" }
+}

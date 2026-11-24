@@ -1,0 +1,58 @@
+{
+  "source": "Replies of the Syncthing v2.1.7 REST API (macOS universal build), captured on 2026-11-23 with 2 engines on 127.0.0.1. The device ids are of throwaway test engines; the times are in UTC.",
+  "completion_valid": {
+    "completion": 100,
+    "globalBytes": 0,
+    "globalItems": 0,
+    "needBytes": 0,
+    "needDeletes": 0,
+    "needItems": 0,
+    "remoteState": "valid",
+    "sequence": 0
+  },
+  "completion_paused_peer": {
+    "completion": 0,
+    "globalBytes": 7,
+    "globalItems": 1,
+    "needBytes": 7,
+    "needDeletes": 0,
+    "needItems": 1,
+    "remoteState": "unknown",
+    "sequence": 2
+  },
+  "connection_lan": {
+    "at": "2026-11-22T20:29:00Z",
+    "inBytesTotal": 166,
+    "outBytesTotal": 166,
+    "startedAt": "2026-11-22T20:28:59Z",
+    "connected": true,
+    "paused": false,
+    "clientVersion": "v2.1.7",
+    "address": "127.0.0.1:22412",
+    "type": "tcp-client",
+    "isLocal": true,
+    "crypto": "TLS1.3-TLS_AES_128_GCM_SHA256"
+  },
+  "connection_paused": {
+    "connected": false,
+    "paused": true,
+    "address": "",
+    "type": "",
+    "isLocal": false
+  },
+  "disk_event_copy": {
+    "id": 4,
+    "globalID": 77,
+    "time": "2026-11-22T20:29:21.424536Z",
+    "type": "LocalChangeDetected",
+    "data": {
+      "action": "modified",
+      "folder": "aw-x-knowledge",
+      "folderID": "aw-x-knowledge",
+      "label": "knowledge",
+      "modifiedBy": "4274L76",
+      "path": "t.sync-conflict-20261123-032921-5NRSCRM.md",
+      "type": "file"
+    }
+  }
+}

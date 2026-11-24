@@ -1,0 +1,4 @@
+{
+  "description": "ubuntu-01 claims the task with epoch 1. A human on pixel-9 moves it to claude@macbook-pro (task.assigned), and macbook-pro claims epoch 2. ubuntu-01 did not see the move: its later stage change does not count, but its comment merges, and its claim with epoch 3 is ignored (not_assignee_device). macbook-pro claims epoch 3; a second claim of macbook-pro with epoch 3 (another session) is stale. A claim with another device in its data is ignored.",
+  "now": "2026-11-22T15:40:00.000Z"
+}

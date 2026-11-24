@@ -1,0 +1,17 @@
+# Local files of coding agents.
+.claude/
+
+# Dependencies, build output and local files. Keep evidence, spikes and private notes in tmp/.
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+tmp/
+.DS_Store
+
+# Gradle (android)
+.gradle/
+.kotlin/
+build/
+local.properties
+google-services.json

@@ -1,0 +1,309 @@
+{
+  "description": "The Activity rule of the task detail (openspec phone-task-focus, task-view-focus, decision 37): places has one entry for each event type of contracts/samples/schema-samples.json; cases are thread rows with the expected in_activity and the line of the Activity row (null: the row uses its usual text). The desktop (desktop/src/renderer/src/activity-model.ts) and the phone (android/control Activity.kt) run the same cases. Synthetic data, written by hand on 2026-11-24.",
+  "clamp_lines": 6,
+  "places": {
+    "approach.proposed": "activity",
+    "artifact.added": "activity",
+    "comment.added": "activity",
+    "credential.added": "session",
+    "credential.imported": "session",
+    "credential.removed": "session",
+    "project.removed": "session",
+    "device.heartbeat": "session",
+    "gate.answered": "activity",
+    "gate.opened": "activity",
+    "gate.resolved": "session",
+    "handoff.written": "session",
+    "knowledge.changed": "session",
+    "knowledge.suggested": "session",
+    "knowledge.suggestion_resolved": "session",
+    "knowledge.undo_requested": "session",
+    "message.agent": "activity",
+    "message.human": "activity",
+    "message.sent": "activity",
+    "queue.reordered": "session",
+    "result.posted": "activity",
+    "session.ended": "activity",
+    "session.resumed": "session",
+    "session.stop_requested": "session",
+    "session.started": "session",
+    "slot.acquired": "session",
+    "slot.released": "session",
+    "slot.renewed": "session",
+    "slot.revoked": "session",
+    "task.archived": "activity",
+    "task.assigned": "activity",
+    "task.claimed": "session",
+    "task.created": "activity",
+    "task.done": "activity",
+    "task.edited": "activity",
+    "task.learned": "activity",
+    "task.paused": "activity",
+    "task.progress": "session",
+    "task.ready": "session",
+    "task.rekeyed": "activity",
+    "task.released": "session",
+    "task.resumed": "activity",
+    "task.stage_changed": "activity",
+    "task.unarchived": "activity"
+  },
+  "cases": [
+    {
+      "name": "first message is the description, not an input row",
+      "type": "message.human",
+      "dev": "ubuntu-01",
+      "by": "human@macbook-pro",
+      "data": {
+        "text": "Add rate limits",
+        "source": "first",
+        "session": "01a2038e-8100-7000-8000-000000000001",
+        "delivery_id": null
+      },
+      "in_activity": false,
+      "line": null
+    },
+    {
+      "name": "text typed in the terminal",
+      "type": "message.human",
+      "dev": "ubuntu-01",
+      "by": "human@ubuntu-01",
+      "data": {
+        "text": "Use cents.",
+        "source": "typed",
+        "session": "01a2038e-8100-7000-8000-000000000001",
+        "delivery_id": null
+      },
+      "in_activity": true,
+      "line": null
+    },
+    {
+      "name": "text typed in the terminal from the phone",
+      "type": "message.human",
+      "dev": "ubuntu-01",
+      "by": "human@pixel-9",
+      "data": {
+        "text": "Use cents.",
+        "source": "phone",
+        "session": "01a2038e-8100-7000-8000-000000000001",
+        "delivery_id": null
+      },
+      "in_activity": true,
+      "line": null
+    },
+    {
+      "name": "delivered message repeats message.sent",
+      "type": "message.human",
+      "dev": "ubuntu-01",
+      "by": "human@pixel-9",
+      "data": {
+        "text": "[AW message] Use cents.",
+        "source": "phone",
+        "session": "01a2038e-8100-7000-8000-000000000001",
+        "delivery_id": "01a2038e-8200-7000-8000-000000000001"
+      },
+      "in_activity": false,
+      "line": null
+    },
+    {
+      "name": "typed input with a delivery id repeats a message",
+      "type": "message.human",
+      "dev": "ubuntu-01",
+      "by": "human@macbook-pro",
+      "data": {
+        "text": "x",
+        "source": "typed",
+        "session": "01a2038e-8100-7000-8000-000000000001",
+        "delivery_id": "01a2038e-8200-7000-8000-000000000001"
+      },
+      "in_activity": false,
+      "line": null
+    },
+    {
+      "name": "answer input repeats gate.answered",
+      "type": "message.human",
+      "dev": "ubuntu-01",
+      "by": "human@pixel-9",
+      "data": {
+        "text": "[AW answer] 100/min",
+        "source": "answer",
+        "session": "01a2038e-8100-7000-8000-000000000001",
+        "delivery_id": "01a2038e-8200-7000-8000-000000000001"
+      },
+      "in_activity": false,
+      "line": null
+    },
+    {
+      "name": "notice input of AW",
+      "type": "message.human",
+      "dev": "ubuntu-01",
+      "by": "aw@ubuntu-01",
+      "data": {
+        "text": "[AW notice] x",
+        "source": "notice",
+        "session": "01a2038e-8100-7000-8000-000000000001",
+        "delivery_id": "01a2038e-8200-7000-8000-000000000001"
+      },
+      "in_activity": false,
+      "line": null
+    },
+    {
+      "name": "session stopped",
+      "type": "session.ended",
+      "dev": "ubuntu-01",
+      "by": "aw@ubuntu-01",
+      "data": {
+        "session": "01a2038e-8100-7000-8000-000000000001",
+        "reason": "stopped"
+      },
+      "in_activity": true,
+      "line": "Session stopped on ubuntu-01: a person stopped it or ended the agent. AW starts no new session until a person starts one."
+    },
+    {
+      "name": "session crashed",
+      "type": "session.ended",
+      "dev": "ubuntu-01",
+      "by": "aw@ubuntu-01",
+      "data": {
+        "session": "01a2038e-8100-7000-8000-000000000001",
+        "reason": "crashed"
+      },
+      "in_activity": true,
+      "line": "Session crashed on ubuntu-01: the agent process ended and AW did not restart it. AW starts no new session until a person starts one."
+    },
+    {
+      "name": "session done",
+      "type": "session.ended",
+      "dev": "ubuntu-01",
+      "by": "aw@ubuntu-01",
+      "data": {
+        "session": "01a2038e-8100-7000-8000-000000000001",
+        "reason": "done"
+      },
+      "in_activity": false,
+      "line": null
+    },
+    {
+      "name": "session moved to another device",
+      "type": "session.ended",
+      "dev": "ubuntu-01",
+      "by": "aw@ubuntu-01",
+      "data": {
+        "session": "01a2038e-8100-7000-8000-000000000001",
+        "reason": "moved"
+      },
+      "in_activity": false,
+      "line": null
+    },
+    {
+      "name": "session replaced",
+      "type": "session.ended",
+      "dev": "ubuntu-01",
+      "by": "aw@ubuntu-01",
+      "data": {
+        "session": "01a2038e-8100-7000-8000-000000000001",
+        "reason": "replaced"
+      },
+      "in_activity": false,
+      "line": null
+    },
+    {
+      "name": "session end with no data",
+      "type": "session.ended",
+      "dev": "ubuntu-01",
+      "by": "aw@ubuntu-01",
+      "data": {},
+      "in_activity": false,
+      "line": null
+    },
+    {
+      "name": "claim",
+      "type": "task.claimed",
+      "dev": "ubuntu-01",
+      "by": "aw@ubuntu-01",
+      "data": {
+        "device": "ubuntu-01",
+        "epoch": 1,
+        "session": "01a2038e-8100-7000-8000-000000000001"
+      },
+      "in_activity": false,
+      "line": null
+    },
+    {
+      "name": "session start",
+      "type": "session.started",
+      "dev": "ubuntu-01",
+      "by": "aw@ubuntu-01",
+      "data": {
+        "session": "01a2038e-8100-7000-8000-000000000001",
+        "host": "tmux",
+        "cwd": "~/code/billing-api"
+      },
+      "in_activity": false,
+      "line": null
+    },
+    {
+      "name": "gate resolved repeats the answer",
+      "type": "gate.resolved",
+      "dev": "ubuntu-01",
+      "by": "aw@ubuntu-01",
+      "data": {
+        "gate": "01a2038e-8200-7000-8000-000000000001",
+        "answer": "100/min"
+      },
+      "in_activity": false,
+      "line": null
+    },
+    {
+      "name": "stage change",
+      "type": "task.stage_changed",
+      "dev": "ubuntu-01",
+      "by": "aw@ubuntu-01",
+      "data": {
+        "from": "discuss",
+        "to": "implement"
+      },
+      "in_activity": true,
+      "line": null
+    },
+    {
+      "name": "agent message",
+      "type": "message.agent",
+      "dev": "ubuntu-01",
+      "by": "claude@ubuntu-01",
+      "data": {
+        "text": "I add a token bucket."
+      },
+      "in_activity": true,
+      "line": null
+    },
+    {
+      "name": "unknown type",
+      "type": "task.teleported",
+      "dev": "ubuntu-01",
+      "by": "aw@ubuntu-01",
+      "data": {},
+      "in_activity": false,
+      "line": null
+    }
+  ],
+  "clamp": [
+    {
+      "name": "6 lines stay",
+      "text": "1\n2\n3\n4\n5\n6",
+      "head": "1\n2\n3\n4\n5\n6",
+      "cut": false
+    },
+    {
+      "name": "7 lines are cut",
+      "text": "1\n2\n3\n4\n5\n6\n7",
+      "head": "1\n2\n3\n4\n5\n6",
+      "cut": true
+    },
+    {
+      "name": "one line",
+      "text": "Got: 100/min.",
+      "head": "Got: 100/min.",
+      "cut": false
+    }
+  ]
+}

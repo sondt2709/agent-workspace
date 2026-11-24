@@ -1,0 +1,2003 @@
+{
+  "description": "The queue rule of openspec queue-and-assign (daemon/src/continuity/queue-view.ts and android/control Queues.kt). Synthetic data, written by hand on 2026-11-23.",
+  "ordinals": [
+    [1, "1st"],
+    [2, "2nd"],
+    [3, "3rd"],
+    [4, "4th"],
+    [11, "11th"],
+    [12, "12th"],
+    [13, "13th"],
+    [21, "21st"],
+    [22, "22nd"],
+    [23, "23rd"],
+    [101, "101st"],
+    [111, "111th"],
+    [112, "112th"]
+  ],
+  "cases": [
+    {
+      "name": "max-working",
+      "description": "2 sessions work, the maximum is 2: both queued tasks wait for them",
+      "now": "2026-11-22T14:30:00.000Z",
+      "tasks": [
+        {
+          "id": "01a2038e-0000-7000-8000-000000000001",
+          "key": "AW-1",
+          "title": "Task 1",
+          "assignee": "claude@ubuntu-01",
+          "stage": "implement",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000001",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:01:00.000Z#0000"
+          },
+          "claim_device": "ubuntu-01",
+          "session": {
+            "device": "ubuntu-01",
+            "state": "running"
+          },
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000002",
+          "key": "AW-2",
+          "title": "Task 2",
+          "assignee": "claude@ubuntu-01",
+          "stage": "implement",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000002",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:02:00.000Z#0000"
+          },
+          "claim_device": "ubuntu-01",
+          "session": {
+            "device": "ubuntu-01",
+            "state": "running"
+          },
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000003",
+          "key": "AW-3",
+          "title": "Task 3",
+          "assignee": "claude@ubuntu-01",
+          "stage": "backlog",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000003",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:03:00.000Z#0000"
+          },
+          "claim_device": null,
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000004",
+          "key": "AW-4",
+          "title": "Task 4",
+          "assignee": "claude@ubuntu-01",
+          "stage": "backlog",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000004",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:04:00.000Z#0000"
+          },
+          "claim_device": null,
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        }
+      ],
+      "orders": [],
+      "devices": [
+        {
+          "slug": "ubuntu-01",
+          "revoked": false,
+          "online": true,
+          "health": {
+            "kind": "health",
+            "schema": 1,
+            "device": "ubuntu-01",
+            "usage": [],
+            "disk": {
+              "used_percentage": 40
+            },
+            "queue": {
+              "max_working": 2,
+              "disk_full_percent": 95,
+              "login_valid": true
+            }
+          }
+        }
+      ],
+      "expected": [
+        {
+          "agent": "claude@ubuntu-01",
+          "device": "ubuntu-01",
+          "max_working": 2,
+          "working": 2,
+          "tasks": [
+            {
+              "task": "01a2038e-0000-7000-8000-000000000003",
+              "key": "AW-3",
+              "title": "Task 3",
+              "position": 1,
+              "text": "Queued · 1st for claude@ubuntu-01",
+              "cause": {
+                "code": "max_working",
+                "text": "2 sessions working"
+              }
+            },
+            {
+              "task": "01a2038e-0000-7000-8000-000000000004",
+              "key": "AW-4",
+              "title": "Task 4",
+              "position": 2,
+              "text": "Queued · 2nd for claude@ubuntu-01",
+              "cause": {
+                "code": "max_working",
+                "text": "2 sessions working"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "reordered",
+      "description": "The newest queue.reordered of the agent puts AW-4 first",
+      "now": "2026-11-22T14:30:00.000Z",
+      "tasks": [
+        {
+          "id": "01a2038e-0000-7000-8000-000000000001",
+          "key": "AW-1",
+          "title": "Task 1",
+          "assignee": "claude@ubuntu-01",
+          "stage": "implement",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000001",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:01:00.000Z#0000"
+          },
+          "claim_device": "ubuntu-01",
+          "session": {
+            "device": "ubuntu-01",
+            "state": "running"
+          },
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000002",
+          "key": "AW-2",
+          "title": "Task 2",
+          "assignee": "claude@ubuntu-01",
+          "stage": "implement",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000002",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:02:00.000Z#0000"
+          },
+          "claim_device": "ubuntu-01",
+          "session": {
+            "device": "ubuntu-01",
+            "state": "running"
+          },
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000003",
+          "key": "AW-3",
+          "title": "Task 3",
+          "assignee": "claude@ubuntu-01",
+          "stage": "backlog",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000003",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:03:00.000Z#0000"
+          },
+          "claim_device": null,
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000004",
+          "key": "AW-4",
+          "title": "Task 4",
+          "assignee": "claude@ubuntu-01",
+          "stage": "backlog",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000004",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:04:00.000Z#0000"
+          },
+          "claim_device": null,
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        }
+      ],
+      "orders": [
+        {
+          "agent": "claude@ubuntu-01",
+          "tasks": ["01a2038e-0000-7000-8000-000000000004", "01a2038e-0000-7000-8000-000000000003"]
+        }
+      ],
+      "devices": [
+        {
+          "slug": "ubuntu-01",
+          "revoked": false,
+          "online": true,
+          "health": {
+            "kind": "health",
+            "schema": 1,
+            "device": "ubuntu-01",
+            "usage": [],
+            "disk": {
+              "used_percentage": 40
+            },
+            "queue": {
+              "max_working": 2,
+              "disk_full_percent": 95,
+              "login_valid": true
+            }
+          }
+        }
+      ],
+      "expected": [
+        {
+          "agent": "claude@ubuntu-01",
+          "device": "ubuntu-01",
+          "max_working": 2,
+          "working": 2,
+          "tasks": [
+            {
+              "task": "01a2038e-0000-7000-8000-000000000004",
+              "key": "AW-4",
+              "title": "Task 4",
+              "position": 1,
+              "text": "Queued · 1st for claude@ubuntu-01",
+              "cause": {
+                "code": "max_working",
+                "text": "2 sessions working"
+              }
+            },
+            {
+              "task": "01a2038e-0000-7000-8000-000000000003",
+              "key": "AW-3",
+              "title": "Task 3",
+              "position": 2,
+              "text": "Queued · 2nd for claude@ubuntu-01",
+              "cause": {
+                "code": "max_working",
+                "text": "2 sessions working"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "free-slot",
+      "description": "1 session works: the first task starts soon, the second waits for 2 sessions",
+      "now": "2026-11-22T14:30:00.000Z",
+      "tasks": [
+        {
+          "id": "01a2038e-0000-7000-8000-000000000001",
+          "key": "AW-1",
+          "title": "Task 1",
+          "assignee": "claude@ubuntu-01",
+          "stage": "implement",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000001",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:01:00.000Z#0000"
+          },
+          "claim_device": "ubuntu-01",
+          "session": {
+            "device": "ubuntu-01",
+            "state": "running"
+          },
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000003",
+          "key": "AW-3",
+          "title": "Task 3",
+          "assignee": "claude@ubuntu-01",
+          "stage": "backlog",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000003",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:03:00.000Z#0000"
+          },
+          "claim_device": null,
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000004",
+          "key": "AW-4",
+          "title": "Task 4",
+          "assignee": "claude@ubuntu-01",
+          "stage": "backlog",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000004",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:04:00.000Z#0000"
+          },
+          "claim_device": null,
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        }
+      ],
+      "orders": [],
+      "devices": [
+        {
+          "slug": "ubuntu-01",
+          "revoked": false,
+          "online": true,
+          "health": {
+            "kind": "health",
+            "schema": 1,
+            "device": "ubuntu-01",
+            "usage": [],
+            "disk": {
+              "used_percentage": 40
+            },
+            "queue": {
+              "max_working": 2,
+              "disk_full_percent": 95,
+              "login_valid": true
+            }
+          }
+        }
+      ],
+      "expected": [
+        {
+          "agent": "claude@ubuntu-01",
+          "device": "ubuntu-01",
+          "max_working": 2,
+          "working": 1,
+          "tasks": [
+            {
+              "task": "01a2038e-0000-7000-8000-000000000003",
+              "key": "AW-3",
+              "title": "Task 3",
+              "position": 1,
+              "text": "Queued · 1st for claude@ubuntu-01",
+              "cause": {
+                "code": "starting",
+                "text": "starts soon"
+              }
+            },
+            {
+              "task": "01a2038e-0000-7000-8000-000000000004",
+              "key": "AW-4",
+              "title": "Task 4",
+              "position": 2,
+              "text": "Queued · 2nd for claude@ubuntu-01",
+              "cause": {
+                "code": "max_working",
+                "text": "2 sessions working"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "gate-and-pause-do-not-count",
+      "description": "A session at a gate and a paused session do not count",
+      "now": "2026-11-22T14:30:00.000Z",
+      "tasks": [
+        {
+          "id": "01a2038e-0000-7000-8000-000000000001",
+          "key": "AW-1",
+          "title": "Task 1",
+          "assignee": "claude@ubuntu-01",
+          "stage": "implement",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000001",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:01:00.000Z#0000"
+          },
+          "claim_device": "ubuntu-01",
+          "session": {
+            "device": "ubuntu-01",
+            "state": "running"
+          },
+          "paused": false,
+          "open_gate": true,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000002",
+          "key": "AW-2",
+          "title": "Task 2",
+          "assignee": "claude@ubuntu-01",
+          "stage": "implement",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000002",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:02:00.000Z#0000"
+          },
+          "claim_device": "ubuntu-01",
+          "session": {
+            "device": "ubuntu-01",
+            "state": "running"
+          },
+          "paused": true,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000003",
+          "key": "AW-3",
+          "title": "Task 3",
+          "assignee": "claude@ubuntu-01",
+          "stage": "backlog",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000003",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:03:00.000Z#0000"
+          },
+          "claim_device": null,
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000004",
+          "key": "AW-4",
+          "title": "Task 4",
+          "assignee": "claude@ubuntu-01",
+          "stage": "backlog",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000004",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:04:00.000Z#0000"
+          },
+          "claim_device": null,
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000005",
+          "key": "AW-5",
+          "title": "Task 5",
+          "assignee": "claude@ubuntu-01",
+          "stage": "backlog",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000005",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:05:00.000Z#0000"
+          },
+          "claim_device": null,
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        }
+      ],
+      "orders": [],
+      "devices": [
+        {
+          "slug": "ubuntu-01",
+          "revoked": false,
+          "online": true,
+          "health": {
+            "kind": "health",
+            "schema": 1,
+            "device": "ubuntu-01",
+            "usage": [],
+            "disk": {
+              "used_percentage": 40
+            },
+            "queue": {
+              "max_working": 2,
+              "disk_full_percent": 95,
+              "login_valid": true
+            }
+          }
+        }
+      ],
+      "expected": [
+        {
+          "agent": "claude@ubuntu-01",
+          "device": "ubuntu-01",
+          "max_working": 2,
+          "working": 0,
+          "tasks": [
+            {
+              "task": "01a2038e-0000-7000-8000-000000000003",
+              "key": "AW-3",
+              "title": "Task 3",
+              "position": 1,
+              "text": "Queued · 1st for claude@ubuntu-01",
+              "cause": {
+                "code": "starting",
+                "text": "starts soon"
+              }
+            },
+            {
+              "task": "01a2038e-0000-7000-8000-000000000004",
+              "key": "AW-4",
+              "title": "Task 4",
+              "position": 2,
+              "text": "Queued · 2nd for claude@ubuntu-01",
+              "cause": {
+                "code": "starting",
+                "text": "starts soon"
+              }
+            },
+            {
+              "task": "01a2038e-0000-7000-8000-000000000005",
+              "key": "AW-5",
+              "title": "Task 5",
+              "position": 3,
+              "text": "Queued · 3rd for claude@ubuntu-01",
+              "cause": {
+                "code": "max_working",
+                "text": "2 sessions working"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "one-max",
+      "description": "AW_MAX_WORKING=1 on the device and 1 session works",
+      "now": "2026-11-22T14:30:00.000Z",
+      "tasks": [
+        {
+          "id": "01a2038e-0000-7000-8000-000000000001",
+          "key": "AW-1",
+          "title": "Task 1",
+          "assignee": "claude@ubuntu-01",
+          "stage": "implement",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000001",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:01:00.000Z#0000"
+          },
+          "claim_device": "ubuntu-01",
+          "session": {
+            "device": "ubuntu-01",
+            "state": "running"
+          },
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000003",
+          "key": "AW-3",
+          "title": "Task 3",
+          "assignee": "claude@ubuntu-01",
+          "stage": "backlog",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000003",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:03:00.000Z#0000"
+          },
+          "claim_device": null,
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        }
+      ],
+      "orders": [],
+      "devices": [
+        {
+          "slug": "ubuntu-01",
+          "revoked": false,
+          "online": true,
+          "health": {
+            "kind": "health",
+            "schema": 1,
+            "device": "ubuntu-01",
+            "usage": [],
+            "disk": {
+              "used_percentage": 40
+            },
+            "queue": {
+              "max_working": 1,
+              "disk_full_percent": 95,
+              "login_valid": true
+            }
+          }
+        }
+      ],
+      "expected": [
+        {
+          "agent": "claude@ubuntu-01",
+          "device": "ubuntu-01",
+          "max_working": 1,
+          "working": 1,
+          "tasks": [
+            {
+              "task": "01a2038e-0000-7000-8000-000000000003",
+              "key": "AW-3",
+              "title": "Task 3",
+              "position": 1,
+              "text": "Queued · 1st for claude@ubuntu-01",
+              "cause": {
+                "code": "max_working",
+                "text": "1 session working"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "offline",
+      "description": "The device is offline by its presence",
+      "now": "2026-11-22T14:30:00.000Z",
+      "tasks": [
+        {
+          "id": "01a2038e-0000-7000-8000-000000000001",
+          "key": "AW-1",
+          "title": "Task 1",
+          "assignee": "claude@ubuntu-01",
+          "stage": "implement",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000001",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:01:00.000Z#0000"
+          },
+          "claim_device": "ubuntu-01",
+          "session": {
+            "device": "ubuntu-01",
+            "state": "running"
+          },
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000002",
+          "key": "AW-2",
+          "title": "Task 2",
+          "assignee": "claude@ubuntu-01",
+          "stage": "implement",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000002",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:02:00.000Z#0000"
+          },
+          "claim_device": "ubuntu-01",
+          "session": {
+            "device": "ubuntu-01",
+            "state": "running"
+          },
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000003",
+          "key": "AW-3",
+          "title": "Task 3",
+          "assignee": "claude@ubuntu-01",
+          "stage": "backlog",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000003",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:03:00.000Z#0000"
+          },
+          "claim_device": null,
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000004",
+          "key": "AW-4",
+          "title": "Task 4",
+          "assignee": "claude@ubuntu-01",
+          "stage": "backlog",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000004",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:04:00.000Z#0000"
+          },
+          "claim_device": null,
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        }
+      ],
+      "orders": [],
+      "devices": [
+        {
+          "slug": "ubuntu-01",
+          "revoked": false,
+          "online": false,
+          "health": {
+            "kind": "health",
+            "schema": 1,
+            "device": "ubuntu-01",
+            "usage": [],
+            "disk": {
+              "used_percentage": 40
+            },
+            "queue": {
+              "max_working": 2,
+              "disk_full_percent": 95,
+              "login_valid": true
+            }
+          }
+        }
+      ],
+      "expected": [
+        {
+          "agent": "claude@ubuntu-01",
+          "device": "ubuntu-01",
+          "max_working": 2,
+          "working": 2,
+          "tasks": [
+            {
+              "task": "01a2038e-0000-7000-8000-000000000003",
+              "key": "AW-3",
+              "title": "Task 3",
+              "position": 1,
+              "text": "Queued · 1st for claude@ubuntu-01",
+              "cause": {
+                "code": "device_offline",
+                "text": "ubuntu-01 offline"
+              }
+            },
+            {
+              "task": "01a2038e-0000-7000-8000-000000000004",
+              "key": "AW-4",
+              "title": "Task 4",
+              "position": 2,
+              "text": "Queued · 2nd for claude@ubuntu-01",
+              "cause": {
+                "code": "device_offline",
+                "text": "ubuntu-01 offline"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "revoked",
+      "description": "The device is revoked",
+      "now": "2026-11-22T14:30:00.000Z",
+      "tasks": [
+        {
+          "id": "01a2038e-0000-7000-8000-000000000003",
+          "key": "AW-3",
+          "title": "Task 3",
+          "assignee": "claude@ubuntu-01",
+          "stage": "backlog",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000003",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:03:00.000Z#0000"
+          },
+          "claim_device": null,
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        }
+      ],
+      "orders": [],
+      "devices": [
+        {
+          "slug": "ubuntu-01",
+          "revoked": true,
+          "online": false,
+          "health": {
+            "kind": "health",
+            "schema": 1,
+            "device": "ubuntu-01",
+            "usage": [],
+            "disk": {
+              "used_percentage": 40
+            },
+            "queue": {
+              "max_working": 2,
+              "disk_full_percent": 95,
+              "login_valid": true
+            }
+          }
+        }
+      ],
+      "expected": [
+        {
+          "agent": "claude@ubuntu-01",
+          "device": "ubuntu-01",
+          "max_working": 2,
+          "working": 0,
+          "tasks": [
+            {
+              "task": "01a2038e-0000-7000-8000-000000000003",
+              "key": "AW-3",
+              "title": "Task 3",
+              "position": 1,
+              "text": "Queued · 1st for claude@ubuntu-01",
+              "cause": {
+                "code": "device_revoked",
+                "text": "ubuntu-01 was revoked"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "login-ended",
+      "description": "The sign-in of the agent ended",
+      "now": "2026-11-22T14:30:00.000Z",
+      "tasks": [
+        {
+          "id": "01a2038e-0000-7000-8000-000000000003",
+          "key": "AW-3",
+          "title": "Task 3",
+          "assignee": "claude@ubuntu-01",
+          "stage": "backlog",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000003",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:03:00.000Z#0000"
+          },
+          "claim_device": null,
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        }
+      ],
+      "orders": [],
+      "devices": [
+        {
+          "slug": "ubuntu-01",
+          "revoked": false,
+          "online": true,
+          "health": {
+            "kind": "health",
+            "schema": 1,
+            "device": "ubuntu-01",
+            "usage": [],
+            "disk": {
+              "used_percentage": 40
+            },
+            "queue": {
+              "max_working": 2,
+              "disk_full_percent": 95,
+              "login_valid": false
+            }
+          }
+        }
+      ],
+      "expected": [
+        {
+          "agent": "claude@ubuntu-01",
+          "device": "ubuntu-01",
+          "max_working": 2,
+          "working": 0,
+          "tasks": [
+            {
+              "task": "01a2038e-0000-7000-8000-000000000003",
+              "key": "AW-3",
+              "title": "Task 3",
+              "position": 1,
+              "text": "Queued · 1st for claude@ubuntu-01",
+              "cause": {
+                "code": "login_ended",
+                "text": "login of claude ended"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "login-ended-more-tasks",
+      "description": "The sign-in ended, 0 sessions work and 3 tasks wait: each task shows the login, not \"2 sessions working\"",
+      "now": "2026-11-22T14:30:00.000Z",
+      "tasks": [
+        {
+          "id": "01a2038e-0000-7000-8000-000000000003",
+          "key": "AW-3",
+          "title": "Task 3",
+          "assignee": "claude@ubuntu-01",
+          "stage": "backlog",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000003",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:03:00.000Z#0000"
+          },
+          "claim_device": null,
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000004",
+          "key": "AW-4",
+          "title": "Task 4",
+          "assignee": "claude@ubuntu-01",
+          "stage": "backlog",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000004",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:04:00.000Z#0000"
+          },
+          "claim_device": null,
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000005",
+          "key": "AW-5",
+          "title": "Task 5",
+          "assignee": "claude@ubuntu-01",
+          "stage": "backlog",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000005",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:05:00.000Z#0000"
+          },
+          "claim_device": null,
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        }
+      ],
+      "orders": [],
+      "devices": [
+        {
+          "slug": "ubuntu-01",
+          "revoked": false,
+          "online": true,
+          "health": {
+            "kind": "health",
+            "schema": 1,
+            "device": "ubuntu-01",
+            "usage": [],
+            "disk": {
+              "used_percentage": 40
+            },
+            "queue": {
+              "max_working": 2,
+              "disk_full_percent": 95,
+              "login_valid": false
+            }
+          }
+        }
+      ],
+      "expected": [
+        {
+          "agent": "claude@ubuntu-01",
+          "device": "ubuntu-01",
+          "max_working": 2,
+          "working": 0,
+          "tasks": [
+            {
+              "task": "01a2038e-0000-7000-8000-000000000003",
+              "key": "AW-3",
+              "title": "Task 3",
+              "position": 1,
+              "text": "Queued · 1st for claude@ubuntu-01",
+              "cause": {
+                "code": "login_ended",
+                "text": "login of claude ended"
+              }
+            },
+            {
+              "task": "01a2038e-0000-7000-8000-000000000004",
+              "key": "AW-4",
+              "title": "Task 4",
+              "position": 2,
+              "text": "Queued · 2nd for claude@ubuntu-01",
+              "cause": {
+                "code": "login_ended",
+                "text": "login of claude ended"
+              }
+            },
+            {
+              "task": "01a2038e-0000-7000-8000-000000000005",
+              "key": "AW-5",
+              "title": "Task 5",
+              "position": 3,
+              "text": "Queued · 3rd for claude@ubuntu-01",
+              "cause": {
+                "code": "login_ended",
+                "text": "login of claude ended"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "usage-limit",
+      "description": "The 5-hour window is at 93 %; a window after its reset does not count",
+      "now": "2026-11-22T14:30:00.000Z",
+      "tasks": [
+        {
+          "id": "01a2038e-0000-7000-8000-000000000003",
+          "key": "AW-3",
+          "title": "Task 3",
+          "assignee": "claude@ubuntu-01",
+          "stage": "backlog",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000003",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:03:00.000Z#0000"
+          },
+          "claim_device": null,
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        }
+      ],
+      "orders": [],
+      "devices": [
+        {
+          "slug": "ubuntu-01",
+          "revoked": false,
+          "online": true,
+          "health": {
+            "kind": "health",
+            "schema": 1,
+            "device": "ubuntu-01",
+            "usage": [
+              {
+                "login": "default",
+                "five_hour": {
+                  "used_percentage": 92.6,
+                  "resets_at": "2026-11-22T17:00:00.000Z"
+                },
+                "seven_day": null,
+                "login_expires_at": null
+              },
+              {
+                "login": "other",
+                "five_hour": {
+                  "used_percentage": 99,
+                  "resets_at": "2026-11-22T14:00:00.000Z"
+                },
+                "seven_day": null,
+                "login_expires_at": null
+              }
+            ],
+            "disk": {
+              "used_percentage": 40
+            },
+            "queue": {
+              "max_working": 2,
+              "disk_full_percent": 95,
+              "login_valid": true
+            }
+          }
+        }
+      ],
+      "expected": [
+        {
+          "agent": "claude@ubuntu-01",
+          "device": "ubuntu-01",
+          "max_working": 2,
+          "working": 0,
+          "tasks": [
+            {
+              "task": "01a2038e-0000-7000-8000-000000000003",
+              "key": "AW-3",
+              "title": "Task 3",
+              "position": 1,
+              "text": "Queued · 1st for claude@ubuntu-01",
+              "cause": {
+                "code": "usage_limit",
+                "text": "5-hour usage at 93 %"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "usage-below-limit",
+      "description": "A 5-hour window at 90 % does not block",
+      "now": "2026-11-22T14:30:00.000Z",
+      "tasks": [
+        {
+          "id": "01a2038e-0000-7000-8000-000000000003",
+          "key": "AW-3",
+          "title": "Task 3",
+          "assignee": "claude@ubuntu-01",
+          "stage": "backlog",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000003",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:03:00.000Z#0000"
+          },
+          "claim_device": null,
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        }
+      ],
+      "orders": [],
+      "devices": [
+        {
+          "slug": "ubuntu-01",
+          "revoked": false,
+          "online": true,
+          "health": {
+            "kind": "health",
+            "schema": 1,
+            "device": "ubuntu-01",
+            "usage": [
+              {
+                "login": "default",
+                "five_hour": {
+                  "used_percentage": 90,
+                  "resets_at": "2026-11-22T17:00:00.000Z"
+                },
+                "seven_day": null,
+                "login_expires_at": null
+              }
+            ],
+            "disk": {
+              "used_percentage": 40
+            },
+            "queue": {
+              "max_working": 2,
+              "disk_full_percent": 95,
+              "login_valid": true
+            }
+          }
+        }
+      ],
+      "expected": [
+        {
+          "agent": "claude@ubuntu-01",
+          "device": "ubuntu-01",
+          "max_working": 2,
+          "working": 0,
+          "tasks": [
+            {
+              "task": "01a2038e-0000-7000-8000-000000000003",
+              "key": "AW-3",
+              "title": "Task 3",
+              "position": 1,
+              "text": "Queued · 1st for claude@ubuntu-01",
+              "cause": {
+                "code": "starting",
+                "text": "starts soon"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "disk-full",
+      "description": "The disk is at the limit of the device",
+      "now": "2026-11-22T14:30:00.000Z",
+      "tasks": [
+        {
+          "id": "01a2038e-0000-7000-8000-000000000003",
+          "key": "AW-3",
+          "title": "Task 3",
+          "assignee": "claude@ubuntu-01",
+          "stage": "backlog",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000003",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:03:00.000Z#0000"
+          },
+          "claim_device": null,
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        }
+      ],
+      "orders": [],
+      "devices": [
+        {
+          "slug": "ubuntu-01",
+          "revoked": false,
+          "online": true,
+          "health": {
+            "kind": "health",
+            "schema": 1,
+            "device": "ubuntu-01",
+            "usage": [],
+            "disk": {
+              "used_percentage": 96.2
+            },
+            "queue": {
+              "max_working": 2,
+              "disk_full_percent": 95,
+              "login_valid": true
+            }
+          }
+        }
+      ],
+      "expected": [
+        {
+          "agent": "claude@ubuntu-01",
+          "device": "ubuntu-01",
+          "max_working": 2,
+          "working": 0,
+          "tasks": [
+            {
+              "task": "01a2038e-0000-7000-8000-000000000003",
+              "key": "AW-3",
+              "title": "Task 3",
+              "position": 1,
+              "text": "Queued · 1st for claude@ubuntu-01",
+              "cause": {
+                "code": "disk_full",
+                "text": "disk 96 % full"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "no-health",
+      "description": "No health file and no presence: the defaults (maximum 2), not offline",
+      "now": "2026-11-22T14:30:00.000Z",
+      "tasks": [
+        {
+          "id": "01a2038e-0000-7000-8000-000000000001",
+          "key": "AW-1",
+          "title": "Task 1",
+          "assignee": "claude@ubuntu-01",
+          "stage": "implement",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000001",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:01:00.000Z#0000"
+          },
+          "claim_device": "ubuntu-01",
+          "session": {
+            "device": "ubuntu-01",
+            "state": "running"
+          },
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000003",
+          "key": "AW-3",
+          "title": "Task 3",
+          "assignee": "claude@ubuntu-01",
+          "stage": "backlog",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000003",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:03:00.000Z#0000"
+          },
+          "claim_device": null,
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000004",
+          "key": "AW-4",
+          "title": "Task 4",
+          "assignee": "claude@ubuntu-01",
+          "stage": "backlog",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000004",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:04:00.000Z#0000"
+          },
+          "claim_device": null,
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        }
+      ],
+      "orders": [],
+      "devices": [],
+      "expected": [
+        {
+          "agent": "claude@ubuntu-01",
+          "device": "ubuntu-01",
+          "max_working": 2,
+          "working": 1,
+          "tasks": [
+            {
+              "task": "01a2038e-0000-7000-8000-000000000003",
+              "key": "AW-3",
+              "title": "Task 3",
+              "position": 1,
+              "text": "Queued · 1st for claude@ubuntu-01",
+              "cause": {
+                "code": "starting",
+                "text": "starts soon"
+              }
+            },
+            {
+              "task": "01a2038e-0000-7000-8000-000000000004",
+              "key": "AW-4",
+              "title": "Task 4",
+              "position": 2,
+              "text": "Queued · 2nd for claude@ubuntu-01",
+              "cause": {
+                "code": "max_working",
+                "text": "2 sessions working"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "old-health",
+      "description": "A health file of an older awd has no queue object: maximum 2",
+      "now": "2026-11-22T14:30:00.000Z",
+      "tasks": [
+        {
+          "id": "01a2038e-0000-7000-8000-000000000001",
+          "key": "AW-1",
+          "title": "Task 1",
+          "assignee": "claude@ubuntu-01",
+          "stage": "implement",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000001",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:01:00.000Z#0000"
+          },
+          "claim_device": "ubuntu-01",
+          "session": {
+            "device": "ubuntu-01",
+            "state": "running"
+          },
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000002",
+          "key": "AW-2",
+          "title": "Task 2",
+          "assignee": "claude@ubuntu-01",
+          "stage": "implement",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000002",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:02:00.000Z#0000"
+          },
+          "claim_device": "ubuntu-01",
+          "session": {
+            "device": "ubuntu-01",
+            "state": "running"
+          },
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000003",
+          "key": "AW-3",
+          "title": "Task 3",
+          "assignee": "claude@ubuntu-01",
+          "stage": "backlog",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000003",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:03:00.000Z#0000"
+          },
+          "claim_device": null,
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        }
+      ],
+      "orders": [],
+      "devices": [
+        {
+          "slug": "ubuntu-01",
+          "revoked": false,
+          "online": true,
+          "health": {
+            "kind": "health",
+            "schema": 1,
+            "device": "ubuntu-01",
+            "usage": [],
+            "disk": {
+              "used_percentage": 40
+            }
+          }
+        }
+      ],
+      "expected": [
+        {
+          "agent": "claude@ubuntu-01",
+          "device": "ubuntu-01",
+          "max_working": 2,
+          "working": 2,
+          "tasks": [
+            {
+              "task": "01a2038e-0000-7000-8000-000000000003",
+              "key": "AW-3",
+              "title": "Task 3",
+              "position": 1,
+              "text": "Queued · 1st for claude@ubuntu-01",
+              "cause": {
+                "code": "max_working",
+                "text": "2 sessions working"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "dependencies",
+      "description": "A task with an open dependency follows with no position",
+      "now": "2026-11-22T14:30:00.000Z",
+      "tasks": [
+        {
+          "id": "01a2038e-0000-7000-8000-000000000001",
+          "key": "AW-1",
+          "title": "Task 1",
+          "assignee": "claude@ubuntu-01",
+          "stage": "implement",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000001",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:01:00.000Z#0000"
+          },
+          "claim_device": "ubuntu-01",
+          "session": {
+            "device": "ubuntu-01",
+            "state": "running"
+          },
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000002",
+          "key": "AW-2",
+          "title": "Task 2",
+          "assignee": "claude@ubuntu-01",
+          "stage": "implement",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000002",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:02:00.000Z#0000"
+          },
+          "claim_device": "ubuntu-01",
+          "session": {
+            "device": "ubuntu-01",
+            "state": "running"
+          },
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000006",
+          "key": "AW-6",
+          "title": "Task 6",
+          "assignee": "claude@ubuntu-01",
+          "stage": "backlog",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000006",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:06:00.000Z#0000"
+          },
+          "claim_device": null,
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": ["01a2038e-0000-7000-8000-000000000003"]
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000003",
+          "key": "AW-3",
+          "title": "Task 3",
+          "assignee": "claude@ubuntu-01",
+          "stage": "backlog",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000003",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:03:00.000Z#0000"
+          },
+          "claim_device": null,
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        }
+      ],
+      "orders": [],
+      "devices": [
+        {
+          "slug": "ubuntu-01",
+          "revoked": false,
+          "online": true,
+          "health": {
+            "kind": "health",
+            "schema": 1,
+            "device": "ubuntu-01",
+            "usage": [],
+            "disk": {
+              "used_percentage": 40
+            },
+            "queue": {
+              "max_working": 2,
+              "disk_full_percent": 95,
+              "login_valid": true
+            }
+          }
+        }
+      ],
+      "expected": [
+        {
+          "agent": "claude@ubuntu-01",
+          "device": "ubuntu-01",
+          "max_working": 2,
+          "working": 2,
+          "tasks": [
+            {
+              "task": "01a2038e-0000-7000-8000-000000000003",
+              "key": "AW-3",
+              "title": "Task 3",
+              "position": 1,
+              "text": "Queued · 1st for claude@ubuntu-01",
+              "cause": {
+                "code": "max_working",
+                "text": "2 sessions working"
+              }
+            },
+            {
+              "task": "01a2038e-0000-7000-8000-000000000006",
+              "key": "AW-6",
+              "title": "Task 6",
+              "position": null,
+              "text": "Queued for claude@ubuntu-01",
+              "cause": {
+                "code": "dependencies",
+                "text": "waits for AW-3"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "members",
+      "description": "Not queued: done, archived, no assignee, not created, claimed on the device; a moved task (claim of another device) is queued",
+      "now": "2026-11-22T14:30:00.000Z",
+      "tasks": [
+        {
+          "id": "01a2038e-0000-7000-8000-000000000001",
+          "key": "AW-1",
+          "title": "Task 1",
+          "assignee": "claude@ubuntu-01",
+          "stage": "implement",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000001",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:01:00.000Z#0000"
+          },
+          "claim_device": "ubuntu-01",
+          "session": {
+            "device": "ubuntu-01",
+            "state": "running"
+          },
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000002",
+          "key": "AW-2",
+          "title": "Task 2",
+          "assignee": "claude@ubuntu-01",
+          "stage": "done",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000002",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:02:00.000Z#0000"
+          },
+          "claim_device": null,
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000003",
+          "key": "AW-3",
+          "title": "Task 3",
+          "assignee": "claude@ubuntu-01",
+          "stage": "backlog",
+          "archived": true,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000003",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:03:00.000Z#0000"
+          },
+          "claim_device": null,
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000004",
+          "key": "AW-4",
+          "title": "Task 4",
+          "assignee": null,
+          "stage": "backlog",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000004",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:04:00.000Z#0000"
+          },
+          "claim_device": null,
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000005",
+          "key": "AW-5",
+          "title": "Task 5",
+          "assignee": "claude@ubuntu-01",
+          "stage": "backlog",
+          "archived": false,
+          "created": null,
+          "claim_device": null,
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000007",
+          "key": "AW-7",
+          "title": "Task 7",
+          "assignee": "claude@ubuntu-01",
+          "stage": "implement",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000007",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:07:00.000Z#0000"
+          },
+          "claim_device": "macbook-pro",
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000008",
+          "key": "AW-8",
+          "title": "Task 8",
+          "assignee": "claude",
+          "stage": "backlog",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000008",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:08:00.000Z#0000"
+          },
+          "claim_device": null,
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        }
+      ],
+      "orders": [],
+      "devices": [
+        {
+          "slug": "ubuntu-01",
+          "revoked": false,
+          "online": true,
+          "health": {
+            "kind": "health",
+            "schema": 1,
+            "device": "ubuntu-01",
+            "usage": [],
+            "disk": {
+              "used_percentage": 40
+            },
+            "queue": {
+              "max_working": 2,
+              "disk_full_percent": 95,
+              "login_valid": true
+            }
+          }
+        }
+      ],
+      "expected": [
+        {
+          "agent": "claude@ubuntu-01",
+          "device": "ubuntu-01",
+          "max_working": 2,
+          "working": 1,
+          "tasks": [
+            {
+              "task": "01a2038e-0000-7000-8000-000000000007",
+              "key": "AW-7",
+              "title": "Task 7",
+              "position": 1,
+              "text": "Queued · 1st for claude@ubuntu-01",
+              "cause": {
+                "code": "starting",
+                "text": "starts soon"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "two-agents",
+      "description": "Each agent has its own queue, sorted by the agent",
+      "now": "2026-11-22T14:30:00.000Z",
+      "tasks": [
+        {
+          "id": "01a2038e-0000-7000-8000-000000000001",
+          "key": "AW-1",
+          "title": "Task 1",
+          "assignee": "claude@ubuntu-01",
+          "stage": "implement",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000001",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:01:00.000Z#0000"
+          },
+          "claim_device": "ubuntu-01",
+          "session": {
+            "device": "ubuntu-01",
+            "state": "running"
+          },
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000002",
+          "key": "AW-2",
+          "title": "Task 2",
+          "assignee": "claude@ubuntu-01",
+          "stage": "implement",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000002",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:02:00.000Z#0000"
+          },
+          "claim_device": "ubuntu-01",
+          "session": {
+            "device": "ubuntu-01",
+            "state": "running"
+          },
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000003",
+          "key": "AW-3",
+          "title": "Task 3",
+          "assignee": "claude@ubuntu-01",
+          "stage": "backlog",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000003",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:03:00.000Z#0000"
+          },
+          "claim_device": null,
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000009",
+          "key": "AW-9",
+          "title": "Task 9",
+          "assignee": "claude@macbook-pro",
+          "stage": "implement",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000009",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:09:00.000Z#0000"
+          },
+          "claim_device": "macbook-pro",
+          "session": {
+            "device": "macbook-pro",
+            "state": "running"
+          },
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        },
+        {
+          "id": "01a2038e-0000-7000-8000-000000000010",
+          "key": "AW-10",
+          "title": "Task 10",
+          "assignee": "claude@macbook-pro",
+          "stage": "backlog",
+          "archived": false,
+          "created": {
+            "event": "01a2038e-0000-7000-9000-000000000010",
+            "dev": "macbook-pro",
+            "hlc": "2026-11-22T14:10:00.000Z#0000"
+          },
+          "claim_device": null,
+          "session": null,
+          "paused": false,
+          "open_gate": false,
+          "open_dependencies": []
+        }
+      ],
+      "orders": [],
+      "devices": [
+        {
+          "slug": "ubuntu-01",
+          "revoked": false,
+          "online": true,
+          "health": {
+            "kind": "health",
+            "schema": 1,
+            "device": "ubuntu-01",
+            "usage": [],
+            "disk": {
+              "used_percentage": 40
+            },
+            "queue": {
+              "max_working": 2,
+              "disk_full_percent": 95,
+              "login_valid": true
+            }
+          }
+        },
+        {
+          "slug": "macbook-pro",
+          "revoked": false,
+          "online": true,
+          "health": null
+        }
+      ],
+      "expected": [
+        {
+          "agent": "claude@macbook-pro",
+          "device": "macbook-pro",
+          "max_working": 2,
+          "working": 1,
+          "tasks": [
+            {
+              "task": "01a2038e-0000-7000-8000-000000000010",
+              "key": "AW-10",
+              "title": "Task 10",
+              "position": 1,
+              "text": "Queued · 1st for claude@macbook-pro",
+              "cause": {
+                "code": "starting",
+                "text": "starts soon"
+              }
+            }
+          ]
+        },
+        {
+          "agent": "claude@ubuntu-01",
+          "device": "ubuntu-01",
+          "max_working": 2,
+          "working": 2,
+          "tasks": [
+            {
+              "task": "01a2038e-0000-7000-8000-000000000003",
+              "key": "AW-3",
+              "title": "Task 3",
+              "position": 1,
+              "text": "Queued · 1st for claude@ubuntu-01",
+              "cause": {
+                "code": "max_working",
+                "text": "2 sessions working"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

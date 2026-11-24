@@ -1,0 +1,23 @@
+{
+  "description": "The recommended option of a question gate (openspec polish-prototype-style, design decision 3): the index of the first option whose label contains \"(Recommended)\" in any case, else 0; -1 for no options. The card shows that option as the filled button. Source: the AskUserQuestion tool description of Claude Code 2.1.331 (\"add (Recommended) at the end of the label\"), read on 2026-11-24. The labels are synthetic. TypeScript (@aw/client/gates recommendedOption) and Kotlin (GateTexts.recommended) run the same cases.",
+  "cases": [
+    {
+      "name": "the label at the end",
+      "options": ["Library A", "Library B (Recommended)", "Library C"],
+      "recommended": 1
+    },
+    {
+      "name": "the first option",
+      "options": ["Use cents (Recommended)", "Use decimals"],
+      "recommended": 0
+    },
+    { "name": "no marked option", "options": ["Yes", "No"], "recommended": 0 },
+    { "name": "another case", "options": ["Keep", "Remove (recommended)"], "recommended": 1 },
+    {
+      "name": "two marked options: the first",
+      "options": ["A", "B (Recommended)", "C (Recommended)"],
+      "recommended": 1
+    },
+    { "name": "no options", "options": [], "recommended": -1 }
+  ]
+}

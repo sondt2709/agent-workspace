@@ -1,0 +1,40 @@
+{
+  "name": "@aw/sync-syncthing",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The Syncthing engine supervisor and REST client.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./testing": "./src/testing.ts"
+  },
+  "prettier": "@aw/config/prettier",
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "engine:fetch": "node scripts/engine.ts fetch",
+    "engine:verify-pins": "node scripts/engine.ts verify-pins"
+  },
+  "dependencies": {
+    "@aw/core": "workspace:*",
+    "@aw/plugin-api": "workspace:*",
+    "axios": "1.21.1",
+    "execa": "10.2.1",
+    "p-queue": "10.0.0",
+    "p-retry": "9.0.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@aw/config": "workspace:*",
+    "@aw/schema": "workspace:*",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

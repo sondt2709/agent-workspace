@@ -1,0 +1,7 @@
+#!/bin/sh
+# The hook command of the AW plugin. It writes the hook event to the spool of the session and
+# exits (docs/phase-1.md 9.3). Outside an AW session it does nothing.
+if [ -z "${AW_NODE:-}" ] || [ -z "${AW_HOOK:-}" ]; then
+  exit 0
+fi
+exec "$AW_NODE" "$AW_HOOK" "$@"

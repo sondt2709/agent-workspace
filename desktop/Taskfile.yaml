@@ -1,0 +1,12 @@
+# Checks of the package in desktop/. The root "task check" calls "task desktop:check".
+version: "3"
+
+tasks:
+  check:
+    desc: Check the package in desktop/ (format, lint, typecheck, tests, electron-vite build)
+    cmds:
+      - pnpm run format:check
+      - pnpm run lint
+      - pnpm run typecheck
+      - pnpm run test
+      - pnpm run build

@@ -1,0 +1,9 @@
+kind: test-servers
+schema: 1
+servers:
+  - name: billing-k3d
+    description: k3d cluster with the billing API and a test database
+    device: ubuntu-01
+    resource: k3d
+    url: https://billing.test.example.com
+    credentials: [stripe-test]

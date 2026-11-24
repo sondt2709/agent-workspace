@@ -1,0 +1,90 @@
+# Git hooks for the monorepo. Install once per clone:
+#   uv tool install pre-commit   (or: brew install pre-commit)
+#   pre-commit install
+# Run "corepack enable" and "pnpm install" before you commit. The hooks use the tools of shared/config:
+# the root has no tool dependencies (docs/decisions/2026-11-23-repo-layout.md). Prettier and ESLint
+# take the config of the package of each file.
+# CI runs the same checks (ci.yaml). A hook only gives the result earlier.
+# The ktlint hook needs a JDK 21 (android/, docs/tech-stack.md 1.5).
+
+minimum_pre_commit_version: "4.0.0"
+default_install_hook_types: [pre-commit, commit-msg, pre-push]
+default_stages: [pre-commit]
+exclude: ^(pnpm-lock\.yaml|contracts/schemas/|contracts/samples/|contracts/openapi\.yaml|android/.*/generated/)
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: end-of-file-fixer
+        # A merge case keeps a log whose last line has no newline on purpose. The engine release
+        # fixture keeps the bytes of the download (no newline at the end).
+        exclude: ^(contracts/fixtures/merge/truncated-log-line/files/|plugins/sync-syncthing/src/fixtures/)
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: check-merge-conflict
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: check-json
+        exclude: (tsconfig.*\.json|\.vscode/.*\.json)$
+      - id: detect-private-key
+        exclude: ^contracts/test-vectors/
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+
+  - repo: local
+    hooks:
+      - id: no-yml-extension
+        name: YAML files use the .yaml extension
+        entry: bash -c 'echo "Rename to .yaml:"; printf "%s\n" "$@"; exit 1' --
+        language: system
+        files: \.yml$
+
+      - id: prettier
+        name: prettier
+        entry: shared/config/node_modules/.bin/prettier --write --ignore-unknown
+        language: system
+        types_or: [ts, tsx, javascript, json, yaml, css]
+
+      - id: eslint
+        name: eslint
+        entry: shared/config/node_modules/.bin/eslint --fix --max-warnings 0 --no-warn-ignored
+        language: system
+        types_or: [ts, tsx, javascript]
+
+      - id: ktlint
+        name: ktlint (Spotless, ktlint_official)
+        entry: bash -c 'cd android && ./gradlew --quiet spotlessCheck'
+        language: system
+        files: ^android/.*\.kts?$
+        pass_filenames: false
+
+      - id: typecheck
+        name: typecheck
+        entry: pnpm typecheck
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+
+      - id: leakcheck
+        name: leak check (generic patterns and the private terms file)
+        entry: scripts/leakcheck.sh
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+
+  # Local commit messages follow the rule of the PR title check (pr-title.yaml).
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v4.5.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+        args: [--strict, feat, fix, perf, revert, refactor, docs, test, chore, ci, build]

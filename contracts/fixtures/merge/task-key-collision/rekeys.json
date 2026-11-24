@@ -1,0 +1,15 @@
+{
+  "description": "The rekey plan of each device for the merged view of this case (openspec offline-task-keys). Only pixel-9 has a duplicate: its AW-8 task gets the next free key, above AW-10 of its rekeyed task.",
+  "prefix": "AW",
+  "plans": {
+    "macbook-pro": [],
+    "pixel-9": [
+      {
+        "from": "AW-8",
+        "task": "01a203c5-e2b0-7000-8000-51c62b90f55a",
+        "to": "AW-11"
+      }
+    ],
+    "ubuntu-01": []
+  }
+}

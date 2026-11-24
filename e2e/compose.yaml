@@ -1,0 +1,37 @@
+# 2 computers with awd and the sync engine on a private network with no internet
+# (docs/phase-1.md 11). Community discovery and relays are off.
+# Run the suite: task e2e. Start by hand: docker compose -f e2e/compose.yaml up -d --build
+name: aw-sync-e2e
+
+x-device: &device
+  build:
+    context: ..
+    dockerfile: e2e/docker/Dockerfile
+  # AW_E2E_IMAGE_TAG keeps the image of a parallel run apart (default: local).
+  image: aw-e2e-device:${AW_E2E_IMAGE_TAG:-local}
+  networks: [lan]
+  init: true
+  # The project remote that both devices reach: a bare git repository on a shared volume.
+  volumes:
+    - remote:/remote
+
+services:
+  macbook-pro:
+    <<: *device
+    hostname: macbook-pro
+    environment:
+      AW_E2E_DEVICE: macbook-pro
+      AW_E2E_ROLE: local
+  ubuntu-01:
+    <<: *device
+    hostname: ubuntu-01
+    environment:
+      AW_E2E_DEVICE: ubuntu-01
+      AW_E2E_ROLE: remote
+
+networks:
+  lan:
+    internal: true
+
+volumes:
+  remote:

@@ -1,0 +1,27 @@
+{
+  "id": "4d3ee57f-1a2a-4acd-ab3e-311beae2e679",
+  "ok": false,
+  "error": {
+    "code": "terminal_not_writable",
+    "message": "terminal_not_writable Terminal prompt request ID: baf3ae28-eb17-484a-80a6-ec7158f798fd. Re-issue the exact command with --retry-request baf3ae28-eb17-484a-80a6-ec7158f798fd --wait-submit <seconds>; do not retry it without that ID.",
+    "data": {
+      "orchestrationRequestId": "baf3ae28-eb17-484a-80a6-ec7158f798fd",
+      "originalCommand": [
+        "orca-ide",
+        "terminal",
+        "send",
+        "--terminal",
+        "term_6b675faf-af9c-4aa8-a1fc-53f07272b476",
+        "--text",
+        "hi",
+        "--enter",
+        "--wait-submit",
+        "2",
+        "--json"
+      ]
+    }
+  },
+  "_meta": {
+    "runtimeId": "7c9912a9-7cf5-4083-aa0e-8899e9cc041b"
+  }
+}

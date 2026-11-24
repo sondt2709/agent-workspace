@@ -1,0 +1,14 @@
+# Signed device record. Fixture values: the keys and the signature are placeholders, not real keys.
+kind: device
+schema: 1
+slug: macbook-pro
+name: MacBook Pro
+role: local
+keys:
+  ed25519: AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=
+  x25519: ERERERERERERERERERERERERERERERERERERERERERE=
+sync_device_id: MACBOOK-PRO2AAA-AAAAAAA-AAAAAAA-AAAAAAA-AAAAAAA-AAAAAAA-AAAAAAA
+seq: 1
+revoked: false
+paired_at: "2026-11-20T09:00:00.000Z"
+signature: ISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhISEhIQ==

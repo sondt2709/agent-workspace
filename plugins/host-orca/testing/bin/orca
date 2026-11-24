@@ -1,0 +1,4 @@
+#!/bin/sh
+# The fake Orca CLI of the tests (src/testing/fake-orca.ts).
+here=$(cd "$(dirname "$0")" && pwd)
+exec "${FAKE_ORCA_NODE:-node}" "$here/../../src/testing/fake-orca.ts" "$@"

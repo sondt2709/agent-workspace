@@ -1,0 +1,15 @@
+* text=auto eol=lf
+gradlew text eol=lf
+*.bat text eol=crlf
+*.png binary
+*.jpg binary
+*.webp binary
+*.icns binary
+*.jks binary
+*.aab binary
+*.apk binary
+pnpm-lock.yaml -diff linguist-generated
+contracts/schemas/** linguist-generated
+contracts/openapi.yaml linguist-generated
+contracts/samples/** linguist-generated
+android/shared/generated/** linguist-generated

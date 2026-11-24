@@ -1,0 +1,11 @@
+{"v":1,"id":"01a203a0-ce80-77eb-b63b-a3fcf45694ef","hlc":"2026-11-22T14:20:00.000Z#0000","dev":"pixel-9","type":"device.heartbeat","data":{"boot_time":"2026-11-21T22:40:00.000Z"}}
+{"v":1,"id":"01a203a1-43b0-7769-a688-b0bcb2ccc752","hlc":"2026-11-22T14:20:30.000Z#0000","dev":"pixel-9","type":"device.heartbeat","data":{"boot_time":"2026-11-21T22:40:00.000Z"}}
+{"v":1,"id":"01a203a1-b8e0-77a7-b259-0985a38de3b3","hlc":"2026-11-22T14:21:00.000Z#0000","dev":"pixel-9","type":"device.heartbeat","data":{"boot_time":"2026-11-21T22:40:00.000Z"}}
+{"v":1,"id":"01a203a2-2e10-7000-8000-db1075da3fa4","hlc":"2026-11-22T14:21:30.000Z#0000","dev":"pixel-9","type":"device.heartbeat","data":{"boot_time":"2026-11-21T22:40:00.000Z"}}
+{"v":1,"id":"01a203a2-a340-7000-8000-dc65ca2f94f9","hlc":"2026-11-22T14:22:00.000Z#0000","dev":"pixel-9","type":"device.heartbeat","data":{"boot_time":"2026-11-21T22:40:00.000Z"}}
+{"v":1,"id":"01a203a3-1870-7000-8000-e1ba1f84e94e","hlc":"2026-11-22T14:22:30.000Z#0000","dev":"pixel-9","type":"device.heartbeat","data":{"boot_time":"2026-11-21T22:40:00.000Z"}}
+{"v":1,"id":"01a203a3-8da0-7000-8000-e60f74d93ea3","hlc":"2026-11-22T14:23:00.000Z#0000","dev":"pixel-9","type":"device.heartbeat","data":{"boot_time":"2026-11-21T22:40:00.000Z"}}
+{"v":1,"id":"01a203a4-02d0-7000-8000-eb64c92e93f8","hlc":"2026-11-22T14:23:30.000Z#0000","dev":"pixel-9","type":"device.heartbeat","data":{"boot_time":"2026-11-21T22:40:00.000Z"}}
+{"v":1,"id":"01a203a4-7800-7000-8000-ecb91e83e84d","hlc":"2026-11-22T14:24:00.000Z#0000","dev":"pixel-9","type":"device.heartbeat","data":{"boot_time":"2026-11-21T22:40:00.000Z"}}
+{"v":1,"id":"01a203a4-ed30-7000-8000-f10e73d83da2","hlc":"2026-11-22T14:24:30.000Z#0000","dev":"pixel-9","type":"device.heartbeat","data":{"boot_time":"2026-11-21T22:40:00.000Z"}}
+{"v":1,"id":"01a203a5-6260-7000-8000-f663c82d92f7","hlc":"2026-11-22T14:25:00.000Z#0000","dev":"pixel-9","type":"device.heartbeat","data":{"boot_time":"2026-11-21T22:40:00.000Z"}}

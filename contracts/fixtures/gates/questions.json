@@ -1,0 +1,142 @@
+{
+  "description": "The answer text of a gate with questions (openspec gate-context, design decision 6): the format of the AskUserQuestion tool result of Claude Code 2.1.331 (\"<question>\"=\"<labels>\" joined by \", \"; multi-select labels joined by \", \"; (no option selected) for a question with no pick). picks[i] are the labels that the person picked for question i, in any order; the answer keeps the order of the options. mode is how the card shows the questions. TypeScript (@aw/client/gates) and Kotlin (GateTexts.kt) run the same cases. Source: the format string of mapToolResultToToolResultBlockParam in the Claude Code 2.1.331 binary, read on 2026-11-24; the questions are synthetic (the first case is the PreToolUse.AskUserQuestion capture of plugins/agent-claude/fixtures/hooks-2.1.330.json).",
+  "cases": [
+    {
+      "name": "one single-choice question",
+      "questions": [
+        {
+          "question": "Which color?",
+          "header": "Color",
+          "multi_select": false,
+          "options": [
+            {
+              "label": "red",
+              "description": "Use red"
+            },
+            {
+              "label": "blue",
+              "description": "Use blue"
+            }
+          ]
+        }
+      ],
+      "mode": "buttons",
+      "picks": [["blue"]],
+      "answer": "\"Which color?\"=\"blue\""
+    },
+    {
+      "name": "two questions, multi-select second",
+      "questions": [
+        {
+          "question": "Which queue library do we use?",
+          "header": "Library",
+          "multi_select": false,
+          "options": [
+            {
+              "label": "Library A",
+              "description": "Runs in the same process. No new port."
+            },
+            {
+              "label": "Library B",
+              "description": "A separate service. Retries after a restart."
+            }
+          ]
+        },
+        {
+          "question": "Which checks must run before the release?",
+          "header": "Checks",
+          "multi_select": true,
+          "options": [
+            {
+              "label": "Unit tests",
+              "description": "Vitest of each package"
+            },
+            {
+              "label": "E2E",
+              "description": "The Docker suite with 2 devices"
+            },
+            {
+              "label": "Leak check",
+              "description": "task leakcheck"
+            }
+          ]
+        }
+      ],
+      "mode": "list",
+      "picks": [["Library B"], ["Leak check", "Unit tests"]],
+      "answer": "\"Which queue library do we use?\"=\"Library B\", \"Which checks must run before the release?\"=\"Unit tests, Leak check\""
+    },
+    {
+      "name": "a question with no pick",
+      "questions": [
+        {
+          "question": "Which queue library do we use?",
+          "header": "Library",
+          "multi_select": false,
+          "options": [
+            {
+              "label": "Library A",
+              "description": "Runs in the same process. No new port."
+            },
+            {
+              "label": "Library B",
+              "description": "A separate service. Retries after a restart."
+            }
+          ]
+        },
+        {
+          "question": "Which checks must run before the release?",
+          "header": "Checks",
+          "multi_select": true,
+          "options": [
+            {
+              "label": "Unit tests",
+              "description": "Vitest of each package"
+            },
+            {
+              "label": "E2E",
+              "description": "The Docker suite with 2 devices"
+            },
+            {
+              "label": "Leak check",
+              "description": "task leakcheck"
+            }
+          ]
+        }
+      ],
+      "mode": "list",
+      "picks": [["Library A"], []],
+      "answer": "\"Which queue library do we use?\"=\"Library A\", \"Which checks must run before the release?\"=(no option selected)"
+    },
+    {
+      "name": "one multi-select question",
+      "questions": [
+        {
+          "question": "Which platforms?",
+          "header": null,
+          "multi_select": true,
+          "options": [
+            {
+              "label": "macOS",
+              "description": ""
+            },
+            {
+              "label": "Linux",
+              "description": ""
+            }
+          ]
+        }
+      ],
+      "mode": "list",
+      "picks": [["Linux", "macOS"]],
+      "answer": "\"Which platforms?\"=\"macOS, Linux\""
+    },
+    {
+      "name": "no questions",
+      "questions": [],
+      "mode": "none",
+      "picks": [],
+      "answer": ""
+    }
+  ]
+}

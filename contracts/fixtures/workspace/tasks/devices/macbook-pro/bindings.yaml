@@ -1,0 +1,10 @@
+kind: bindings
+schema: 1
+device: macbook-pro
+may_run: true
+checkouts:
+  - project: billing-api
+    path: ~/code/billing-api
+plugins: [agent-claude, host-tmux, sync-syncthing, kb-files]
+skills: [my-team:implement]
+resources: {}

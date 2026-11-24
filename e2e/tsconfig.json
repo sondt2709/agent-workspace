@@ -1,0 +1,9 @@
+{
+  "extends": "@aw/config/tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowJs": true,
+    "checkJs": true
+  },
+  "include": ["src", "docker", "eslint.config.js", "vitest.config.ts", "vitest.docker.config.ts"]
+}

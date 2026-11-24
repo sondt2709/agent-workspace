@@ -1,0 +1,39 @@
+{
+  "name": "@aw/ui",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The design tokens and the MUI theme of the desktop app (docs/design.md): light and dark, dense defaults.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./tokens": "./src/tokens.ts"
+  },
+  "prettier": "@aw/config/prettier",
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "@emotion/react": "11.14.0",
+    "@emotion/styled": "11.14.1",
+    "@mui/material": "9.5.0",
+    "react": "19.3.1"
+  },
+  "devDependencies": {
+    "@aw/config": "workspace:*",
+    "@emotion/react": "11.14.0",
+    "@emotion/styled": "11.14.1",
+    "@mui/material": "9.5.0",
+    "@types/node": "catalog:",
+    "@types/react": "19.3.0",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "react": "19.3.1",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

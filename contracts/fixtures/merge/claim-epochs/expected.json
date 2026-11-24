@@ -1,0 +1,416 @@
+{
+  "presence": {
+    "devices": [
+      {
+        "device": "macbook-pro",
+        "last_heartbeat_hlc": "2026-11-22T14:21:00.000Z#0000",
+        "offline_since": "2026-11-22T14:22:30.000Z",
+        "online": false,
+        "received_at": "2026-11-22T14:21:00.000Z"
+      },
+      {
+        "device": "pixel-9",
+        "last_heartbeat_hlc": "2026-11-22T14:21:00.000Z#0000",
+        "offline_since": "2026-11-22T14:22:30.000Z",
+        "online": false,
+        "received_at": "2026-11-22T14:21:00.000Z"
+      },
+      {
+        "device": "ubuntu-01",
+        "last_heartbeat_hlc": "2026-11-22T14:21:00.000Z#0000",
+        "offline_since": "2026-11-22T14:22:30.000Z",
+        "online": false,
+        "received_at": "2026-11-22T14:21:00.000Z"
+      }
+    ],
+    "now": "2026-11-22T15:40:00.000Z",
+    "offline_tasks": [
+      {
+        "cause": "device_offline",
+        "device": "ubuntu-01",
+        "since": "2026-11-22T14:22:30.000Z",
+        "task": "01a2038e-7f00-70eb-b429-fa86d481c263"
+      },
+      {
+        "cause": "device_offline",
+        "device": "macbook-pro",
+        "since": "2026-11-22T14:22:30.000Z",
+        "task": "01a203c5-6d80-7000-8000-76e348ad1277"
+      }
+    ]
+  },
+  "view": {
+    "credentials": [
+      {
+        "added": {
+          "dev": "macbook-pro",
+          "event": "01a20385-5740-7a66-89d0-a2958dab0177",
+          "hlc": "2026-11-22T13:50:00.000Z#0000"
+        },
+        "imported_on": ["ubuntu-01"],
+        "name": "stripe-test"
+      }
+    ],
+    "devices": [
+      {
+        "health": {
+          "boot_time": "2026-11-22T08:00:00.000Z",
+          "disk_used_percentage": 61,
+          "updated": "2026-11-22T14:21:00.000Z#0000"
+        },
+        "heartbeat": {
+          "boot_time": "2026-11-22T08:00:00.000Z",
+          "count": 3,
+          "last_hlc": "2026-11-22T14:21:00.000Z#0000"
+        },
+        "may_run": true,
+        "name": "MacBook Pro",
+        "priority": 0,
+        "resources": {},
+        "revoked": false,
+        "role": "local",
+        "slug": "macbook-pro"
+      },
+      {
+        "health": {
+          "boot_time": "2026-11-19T03:12:00.000Z",
+          "disk_used_percentage": 48,
+          "updated": "2026-11-22T14:21:00.000Z#0000"
+        },
+        "heartbeat": {
+          "boot_time": "2026-11-19T03:12:00.000Z",
+          "count": 3,
+          "last_hlc": "2026-11-22T14:21:00.000Z#0000"
+        },
+        "may_run": true,
+        "name": "ubuntu-01",
+        "priority": 1,
+        "resources": {
+          "k3d": 1
+        },
+        "revoked": false,
+        "role": "remote",
+        "slug": "ubuntu-01"
+      },
+      {
+        "health": {
+          "boot_time": "2026-11-21T22:40:00.000Z",
+          "disk_used_percentage": 72,
+          "updated": "2026-11-22T14:21:00.000Z#0000"
+        },
+        "heartbeat": {
+          "boot_time": "2026-11-21T22:40:00.000Z",
+          "count": 3,
+          "last_hlc": "2026-11-22T14:21:00.000Z#0000"
+        },
+        "may_run": false,
+        "name": "Pixel 9",
+        "priority": 2,
+        "resources": {},
+        "revoked": false,
+        "role": "mobile",
+        "slug": "pixel-9"
+      }
+    ],
+    "issues": [
+      {
+        "code": "ignored",
+        "event": "01a203e0-fc30-7000-8000-a5d2c6e9b14f",
+        "line": 5,
+        "message": "task.claimed of macbook-pro not applied: stale_claim",
+        "path": "tasks/01a203c5-6d80-7000-8000-76e348ad1277/log/macbook-pro.jsonl",
+        "reason": "stale_claim",
+        "task": "01a203c5-6d80-7000-8000-76e348ad1277"
+      },
+      {
+        "code": "ignored",
+        "event": "01a203cf-7fa0-7000-8000-a6bf2489ee53",
+        "line": 2,
+        "message": "task.claimed of pixel-9 not applied: claim_device_mismatch",
+        "path": "tasks/01a203c5-6d80-7000-8000-76e348ad1277/log/pixel-9.jsonl",
+        "reason": "claim_device_mismatch",
+        "task": "01a203c5-6d80-7000-8000-76e348ad1277"
+      },
+      {
+        "code": "ignored",
+        "event": "01a203dc-50e0-7000-8000-ac49ae1378dd",
+        "line": 3,
+        "message": "task.stage_changed of ubuntu-01 not applied: not_owner",
+        "path": "tasks/01a203c5-6d80-7000-8000-76e348ad1277/log/ubuntu-01.jsonl",
+        "reason": "not_owner",
+        "task": "01a203c5-6d80-7000-8000-76e348ad1277"
+      },
+      {
+        "code": "ignored",
+        "event": "01a203e0-e4c0-7000-8000-b673d83da207",
+        "line": 5,
+        "message": "task.claimed of ubuntu-01 not applied: not_assignee_device",
+        "path": "tasks/01a203c5-6d80-7000-8000-76e348ad1277/log/ubuntu-01.jsonl",
+        "reason": "not_assignee_device",
+        "task": "01a203c5-6d80-7000-8000-76e348ad1277"
+      }
+    ],
+    "last_hlc": "2026-11-22T15:31:00.000Z#0000",
+    "projects": [
+      {
+        "added_at": null,
+        "archived": false,
+        "default_agent": "claude",
+        "devices": ["ubuntu-01", "macbook-pro"],
+        "kind": "project",
+        "links": ["github:example/billing-api"],
+        "main_repo": null,
+        "name": "Billing API",
+        "permission_mode": "skip",
+        "schema": 1,
+        "slug": "billing-api",
+        "switches": {
+          "assign_new_subtasks_to_default_device": false
+        },
+        "tasks": ["01a2038e-7f00-70eb-b429-fa86d481c263", "01a203c5-6d80-7000-8000-76e348ad1277"],
+        "test_servers": ["billing-k3d"]
+      }
+    ],
+    "queues": [
+      {
+        "agent": "claude@ubuntu-01",
+        "dev": "macbook-pro",
+        "event": "01a2038f-de90-7588-96d6-8769d32ddc61",
+        "hlc": "2026-11-22T14:01:30.000Z#0000",
+        "tasks": ["01a2038e-7f00-70eb-b429-fa86d481c263"]
+      }
+    ],
+    "removed_projects": [],
+    "removed_tasks": [],
+    "slots": [],
+    "tasks": [
+      {
+        "approach": {
+          "confirmed": 1,
+          "latest": 1
+        },
+        "archived": false,
+        "artifacts": [],
+        "assignee": "claude@ubuntu-01",
+        "branch": "aw/AW-7",
+        "claim": {
+          "device": "ubuntu-01",
+          "epoch": 1,
+          "event": "01a20390-53c0-7d86-9882-e3491cbd3235",
+          "session": "01a20390-53c0-73f3-af1e-cebbd1410ab4"
+        },
+        "comments": [
+          {
+            "by": "human@pixel-9",
+            "dev": "pixel-9",
+            "event": "01a203a2-a340-7844-9cfa-16e686340e68",
+            "gate": null,
+            "hlc": "2026-11-22T14:22:00.000Z#0000",
+            "source": "comment",
+            "text": "Also check the refund test, please."
+          }
+        ],
+        "created": {
+          "dev": "macbook-pro",
+          "event": "01a2038e-7f00-7ce5-a904-0a1e60c3ed48",
+          "hlc": "2026-11-22T14:00:00.000Z#0000"
+        },
+        "created_by": "human@macbook-pro",
+        "created_key": "AW-7",
+        "credentials": ["stripe-test"],
+        "depends_on": [],
+        "event_count": 20,
+        "first_message": "/opsx:explore The invoice test fails 1 time in 5 on CI.",
+        "gates": [
+          {
+            "answer": "Fake clock in the test",
+            "answer_event": "01a20394-7270-7675-90a8-c5dd35e24e72",
+            "answers": [
+              {
+                "answer": "Fake clock in the test",
+                "by": "human@pixel-9",
+                "comment": null,
+                "dev": "pixel-9",
+                "event": "01a20394-7270-7675-90a8-c5dd35e24e72",
+                "hlc": "2026-11-22T14:06:30.000Z#0000",
+                "use": "used",
+                "version": 1
+              }
+            ],
+            "file": null,
+            "gate": "01a20393-12e0-78a6-a158-03674c770697",
+            "kind": "question",
+            "opened": {
+              "dev": "ubuntu-01",
+              "event": "01a20393-12e0-788f-8b89-62da8cc4ab87",
+              "hlc": "2026-11-22T14:05:00.000Z#0000"
+            },
+            "options": ["Fake clock in the test", "Retry the test"],
+            "resolved_by": "ubuntu-01",
+            "state": "resolved",
+            "title": "Which fix?",
+            "version": 1
+          },
+          {
+            "answer": "confirm",
+            "answer_event": "01a20399-7b80-73e6-b93e-974147ddfe38",
+            "answers": [
+              {
+                "answer": "confirm",
+                "by": "human@macbook-pro",
+                "comment": null,
+                "dev": "macbook-pro",
+                "event": "01a20399-7b80-73e6-b93e-974147ddfe38",
+                "hlc": "2026-11-22T14:12:00.000Z#0000",
+                "use": "used",
+                "version": 1
+              }
+            ],
+            "file": "approach/v1.md",
+            "gate": "01a20397-a6c0-7e6c-bb4d-77006b2cc4c0",
+            "kind": "confirm_approach",
+            "opened": {
+              "dev": "ubuntu-01",
+              "event": "01a20397-a6c0-77fa-97ab-af0d3aeaca24",
+              "hlc": "2026-11-22T14:10:00.000Z#0001"
+            },
+            "options": ["Confirm", "Request changes"],
+            "resolved_by": "ubuntu-01",
+            "state": "resolved",
+            "title": "Confirm approach v1",
+            "version": 1
+          }
+        ],
+        "id": "01a2038e-7f00-70eb-b429-fa86d481c263",
+        "includes": {
+          "macbook-pro": 2,
+          "pixel-9": 3,
+          "ubuntu-01": 15
+        },
+        "key": "AW-7",
+        "key_state": "ok",
+        "last_hlc": "2026-11-22T14:22:00.000Z#0000",
+        "learned": false,
+        "links": ["github:example/billing-api#412"],
+        "moving_to": null,
+        "needs_you": [],
+        "needs_you_lane": false,
+        "needs_you_reasons": [],
+        "open_dependencies": [],
+        "owner": "ubuntu-01",
+        "parent": null,
+        "paused": null,
+        "priority": null,
+        "progress": "Run the tests",
+        "project": "billing-api",
+        "ready": {
+          "missing": [],
+          "passed_on": "ubuntu-01"
+        },
+        "rekey_by": null,
+        "released_epoch": null,
+        "result": null,
+        "session": {
+          "agent_teams": null,
+          "branch": "aw/AW-7",
+          "cwd": "~/code/billing-api/.worktrees/aw-01a2038e-7f00-70eb-b429-fa86d481c263",
+          "device": "ubuntu-01",
+          "host": "tmux",
+          "permission_mode": null,
+          "reason": null,
+          "session": "01a20390-53c0-73f3-af1e-cebbd1410ab4",
+          "state": "running",
+          "work_in": null
+        },
+        "session_options": null,
+        "stage": "implement",
+        "subtasks": [],
+        "test_server": "billing-k3d",
+        "title": "Fix the flaky invoice test"
+      },
+      {
+        "approach": {
+          "confirmed": null,
+          "latest": 0
+        },
+        "archived": false,
+        "artifacts": [],
+        "assignee": "claude@macbook-pro",
+        "branch": null,
+        "claim": {
+          "device": "macbook-pro",
+          "epoch": 3,
+          "event": "01a203e0-f848-7000-8000-9bf85dc2278c",
+          "session": "01a203e0-f848-7000-8000-8c89ee53b81d"
+        },
+        "comments": [
+          {
+            "by": "claude@ubuntu-01",
+            "dev": "ubuntu-01",
+            "event": "01a203dd-3b40-7000-8000-b1ce3398fd62",
+            "gate": null,
+            "hlc": "2026-11-22T15:26:00.000Z#0000",
+            "source": "comment",
+            "text": "The export now streams rows; 3 tests added."
+          }
+        ],
+        "created": {
+          "dev": "macbook-pro",
+          "event": "01a203c5-6d80-7000-8000-91e64bb0157a",
+          "hlc": "2026-11-22T15:00:00.000Z#0000"
+        },
+        "created_by": "human@macbook-pro",
+        "created_key": "AW-8",
+        "credentials": [],
+        "depends_on": [],
+        "event_count": 13,
+        "first_message": "/opsx:explore Speed up the invoice export.",
+        "gates": [],
+        "id": "01a203c5-6d80-7000-8000-76e348ad1277",
+        "includes": {
+          "macbook-pro": 6,
+          "pixel-9": 2,
+          "ubuntu-01": 5
+        },
+        "key": "AW-8",
+        "key_state": "ok",
+        "last_hlc": "2026-11-22T15:31:00.000Z#0000",
+        "learned": false,
+        "links": [],
+        "moving_to": null,
+        "needs_you": [],
+        "needs_you_lane": false,
+        "needs_you_reasons": [],
+        "open_dependencies": [],
+        "owner": "macbook-pro",
+        "parent": null,
+        "paused": null,
+        "priority": null,
+        "progress": null,
+        "project": "billing-api",
+        "ready": null,
+        "rekey_by": null,
+        "released_epoch": null,
+        "result": null,
+        "session": null,
+        "session_options": null,
+        "stage": "implement",
+        "subtasks": [],
+        "test_server": null,
+        "title": "Speed up the invoice export"
+      }
+    ],
+    "workspace": {
+      "device_order": ["macbook-pro", "ubuntu-01", "pixel-9"],
+      "id": "01a2038e-7f00-721a-b230-e03772a58aff",
+      "key_prefix": "AW",
+      "kind": "workspace",
+      "name": "Example workspace",
+      "new_project_permission_mode": "skip",
+      "schema": 1,
+      "switches": {
+        "community_relays": true
+      }
+    }
+  }
+}

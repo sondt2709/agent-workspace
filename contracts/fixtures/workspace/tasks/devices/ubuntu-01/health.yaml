@@ -1,0 +1,39 @@
+kind: health
+schema: 1
+device: ubuntu-01
+updated: "2026-11-22T14:21:00.000Z#0000"
+boot_time: "2026-11-19T03:12:00.000Z"
+versions:
+  awd: 0.0.0
+  engine: v2.1.7
+sessions:
+  - session: 01a20390-53c0-73f3-af1e-cebbd1410ab4
+    task: 01a2038e-7f00-70eb-b429-fa86d481c263
+    state: running
+usage:
+  - login: claude@ubuntu-01
+    five_hour:
+      used_percentage: 34
+      resets_at: "2026-11-22T17:00:00.000Z"
+    seven_day:
+      used_percentage: 12.5
+      resets_at: "2026-11-27T09:00:00.000Z"
+    login_expires_at: "2026-12-20T00:00:00.000Z"
+disk:
+  used_percentage: 48
+sync:
+  - peer: macbook-pro
+    connected: true
+    last_seen: "2026-11-22T14:21:00.000Z"
+    route: lan
+    need_items: 0
+    need_bytes: 0
+    errors: []
+  - peer: pixel-9
+    connected: true
+    last_seen: "2026-11-22T14:21:00.000Z"
+    route: tailscale
+    need_items: 0
+    need_bytes: 0
+    errors: []
+repairs: []

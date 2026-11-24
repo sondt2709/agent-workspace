@@ -1,0 +1,17 @@
+{
+  "extends": "@aw/config/tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowJs": true,
+    "checkJs": true
+  },
+  "include": [
+    "src/main",
+    "src/preload",
+    "src/shared",
+    "scripts",
+    "electron.vite.config.ts",
+    "vitest.config.ts",
+    "eslint.config.js"
+  ]
+}

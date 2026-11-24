@@ -1,0 +1,19 @@
+# Checks of the package in daemon/. The root "task check" calls "task daemon:check".
+version: "3"
+
+tasks:
+  check:
+    desc: Check the package in daemon/ (format, lint, typecheck, tests, the npm package build)
+    cmds:
+      - pnpm run format:check
+      - pnpm run lint
+      - pnpm run typecheck
+      - pnpm run test
+      - task: package
+
+  package:
+    desc: Build the npm package folder dist/npm/ (JS only) and run the built aw from it
+    cmds:
+      - node scripts/build.ts --out dist/npm-check --link-deps
+      - node dist/npm-check/daemon/src/bin/aw.js --version
+      - rm -rf dist/npm-check

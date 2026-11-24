@@ -1,0 +1,4 @@
+{
+  "description": "pixel-9 had a wrong clock for one line: its HLC is 1 year ahead. The merge holds the line back and reports future_hlc. The last merged HLC stays below it, and includes stops before it. The next line of pixel-9 merges.",
+  "now": "2026-11-22T14:30:00.000Z"
+}

@@ -1,0 +1,8 @@
+#!/bin/sh
+# aw-launch <session>: the fixed launcher of an AW session (docs/phase-1.md 9.1). awd opens each
+# tmux window with this file and the session id only. It runs src/bin/aw-launch.ts with the node of
+# awd (AW_NODE), which replaces itself with the agent. The npm package has aw-launch.js (tsc).
+here=$(cd "$(dirname "$0")" && pwd)
+entry="$here/../src/bin/aw-launch.js"
+[ -f "$entry" ] || entry="$here/../src/bin/aw-launch.ts"
+exec "${AW_NODE:-node}" "$entry" "$@"

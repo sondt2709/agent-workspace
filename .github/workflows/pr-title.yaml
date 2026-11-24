@@ -1,0 +1,32 @@
+name: pr-title
+
+# The PR title becomes the squash commit subject on main.
+# The release (added by the task release-pipeline) reads that subject to pick the next version:
+#   "!" before the colon or a BREAKING CHANGE footer: major. feat: minor.
+#   fix, perf, revert: patch. All other types: no release.
+# "edited" is in the trigger list, so a corrected title runs the check again.
+# The check uses no third-party action and no token.
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions: {}
+
+jobs:
+  pr-title:
+    name: PR title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Conventional Commits
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          set -eu
+          re='^(feat|fix|perf|revert|refactor|docs|test|chore|ci|build)(\([a-z0-9._/-]+\))?!?: [^ ].*$'
+          if printf '%s' "$TITLE" | grep -Eq "$re" && [ "${#TITLE}" -le 100 ]; then
+            echo "OK: $TITLE"
+          else
+            echo "::error::Use a Conventional Commits title of 100 characters or fewer, for example 'feat(host-tmux): add the resume message'."
+            echo "Types: feat, fix, perf, revert, refactor, docs, test, chore, ci, build. Title (${#TITLE} characters): $TITLE"
+            exit 1
+          fi

@@ -1,0 +1,8 @@
+kind: bindings
+schema: 1
+device: pixel-9
+may_run: false
+checkouts: []
+plugins: []
+skills: []
+resources: {}

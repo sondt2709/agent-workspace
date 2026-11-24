@@ -1,0 +1,303 @@
+{
+  "description": "The context of a gate with no body (openspec gate-context, design decisions 2 and 3). has_body: the trimmed text is not empty, not the trimmed title, and not the listing of the questions (the text of AskUserQuestion that toolGate of plugins/agent-claude writes: each question with \"Options: a | b\", joined by an empty line). context: the texts of the message.agent events after the last event by human@... before the gate.opened event gate_event, oldest first, at most 5 (the newest). The events are in merge order. TypeScript (@aw/client/gates) and Kotlin (GateTexts.kt) run the same cases. Source: the event order of the desktop journey of gate-context on 2026-11-24 (an agent runs aw message, then aw ask in the same turn); the texts are synthetic.",
+  "body": [
+    {
+      "name": "question only",
+      "title": "Which option? (see the gate message above)",
+      "text": "Which option? (see the gate message above)",
+      "has_body": false,
+      "questions": []
+    },
+    {
+      "name": "empty text",
+      "title": "Which option?",
+      "text": "  ",
+      "has_body": false,
+      "questions": []
+    },
+    {
+      "name": "details",
+      "title": "Which queue library?",
+      "text": "## Options\n- A\n- B",
+      "has_body": true,
+      "questions": []
+    },
+    {
+      "name": "title with spaces",
+      "title": " Which? ",
+      "text": "Which?\n",
+      "has_body": false,
+      "questions": []
+    },
+    {
+      "name": "multi-line question",
+      "title": "Which option?",
+      "text": "Which option?\nA or B",
+      "has_body": true,
+      "questions": []
+    },
+    {
+      "name": "AskUserQuestion listing",
+      "title": "Which queue library do we use?",
+      "text": "Which queue library do we use?\nOptions: Library A | Library B\n\nWhich checks must run?\nOptions: Unit tests | E2E",
+      "questions": [
+        {
+          "question": "Which queue library do we use?",
+          "header": "Library",
+          "multi_select": false,
+          "options": [
+            {
+              "label": "Library A",
+              "description": "Same process"
+            },
+            {
+              "label": "Library B",
+              "description": "A separate service"
+            }
+          ]
+        },
+        {
+          "question": "Which checks must run?",
+          "header": "Checks",
+          "multi_select": true,
+          "options": [
+            {
+              "label": "Unit tests",
+              "description": "Vitest"
+            },
+            {
+              "label": "E2E",
+              "description": "Docker"
+            }
+          ]
+        }
+      ],
+      "has_body": false
+    },
+    {
+      "name": "details with questions",
+      "title": "Which queue library?",
+      "text": "## Options\n- A\n- B",
+      "questions": [
+        {
+          "question": "Which queue library do we use?",
+          "header": "Library",
+          "multi_select": false,
+          "options": [
+            {
+              "label": "Library A",
+              "description": "Same process"
+            },
+            {
+              "label": "Library B",
+              "description": "A separate service"
+            }
+          ]
+        }
+      ],
+      "has_body": true
+    }
+  ],
+  "context": [
+    {
+      "name": "analysis before the question",
+      "events": [
+        {
+          "id": "e1",
+          "type": "task.created",
+          "by": "human@macbook-pro",
+          "text": null
+        },
+        {
+          "id": "e2",
+          "type": "message.human",
+          "by": "human@macbook-pro",
+          "text": "Pick a queue library"
+        },
+        {
+          "id": "e3",
+          "type": "message.agent",
+          "by": "claude@ubuntu-01",
+          "text": "Gate: queue library A or queue library B\n\n1. Solution\nLibrary A runs in the same process."
+        },
+        {
+          "id": "e4",
+          "type": "gate.opened",
+          "by": "claude@ubuntu-01",
+          "text": null
+        },
+        {
+          "id": "e5",
+          "type": "message.agent",
+          "by": "claude@ubuntu-01",
+          "text": "The command ended."
+        }
+      ],
+      "gate_event": "e4",
+      "context": [
+        "Gate: queue library A or queue library B\n\n1. Solution\nLibrary A runs in the same process."
+      ]
+    },
+    {
+      "name": "stops at the last person event",
+      "events": [
+        {
+          "id": "e1",
+          "type": "message.agent",
+          "by": "claude@ubuntu-01",
+          "text": "old analysis"
+        },
+        {
+          "id": "e2",
+          "type": "gate.answered",
+          "by": "human@pixel-9",
+          "text": null
+        },
+        {
+          "id": "e3",
+          "type": "task.progress",
+          "by": "claude@ubuntu-01",
+          "text": null
+        },
+        {
+          "id": "e4",
+          "type": "message.agent",
+          "by": "claude@ubuntu-01",
+          "text": "new analysis"
+        },
+        {
+          "id": "e5",
+          "type": "session.started",
+          "by": "aw@ubuntu-01",
+          "text": null
+        },
+        {
+          "id": "e6",
+          "type": "message.agent",
+          "by": "claude@ubuntu-01",
+          "text": "second part"
+        },
+        {
+          "id": "e7",
+          "type": "gate.opened",
+          "by": "claude@ubuntu-01",
+          "text": null
+        }
+      ],
+      "gate_event": "e7",
+      "context": ["new analysis", "second part"]
+    },
+    {
+      "name": "at most 5, the newest",
+      "events": [
+        {
+          "id": "e1",
+          "type": "message.agent",
+          "by": "claude@ubuntu-01",
+          "text": "m1"
+        },
+        {
+          "id": "e2",
+          "type": "message.agent",
+          "by": "claude@ubuntu-01",
+          "text": "m2"
+        },
+        {
+          "id": "e3",
+          "type": "message.agent",
+          "by": "claude@ubuntu-01",
+          "text": "m3"
+        },
+        {
+          "id": "e4",
+          "type": "message.agent",
+          "by": "claude@ubuntu-01",
+          "text": "m4"
+        },
+        {
+          "id": "e5",
+          "type": "message.agent",
+          "by": "claude@ubuntu-01",
+          "text": "m5"
+        },
+        {
+          "id": "e6",
+          "type": "message.agent",
+          "by": "claude@ubuntu-01",
+          "text": "m6"
+        },
+        {
+          "id": "e7",
+          "type": "message.agent",
+          "by": "claude@ubuntu-01",
+          "text": "m7"
+        },
+        {
+          "id": "e8",
+          "type": "gate.opened",
+          "by": "claude@ubuntu-01",
+          "text": null
+        }
+      ],
+      "gate_event": "e8",
+      "context": ["m3", "m4", "m5", "m6", "m7"]
+    },
+    {
+      "name": "no message",
+      "events": [
+        {
+          "id": "e1",
+          "type": "message.human",
+          "by": "human@macbook-pro",
+          "text": "Go"
+        },
+        {
+          "id": "e2",
+          "type": "gate.opened",
+          "by": "claude@ubuntu-01",
+          "text": null
+        }
+      ],
+      "gate_event": "e2",
+      "context": []
+    },
+    {
+      "name": "gate not in the events",
+      "events": [
+        {
+          "id": "e1",
+          "type": "message.agent",
+          "by": "claude@ubuntu-01",
+          "text": "x"
+        }
+      ],
+      "gate_event": "e9",
+      "context": []
+    },
+    {
+      "name": "skips an empty message",
+      "events": [
+        {
+          "id": "e1",
+          "type": "message.agent",
+          "by": "claude@ubuntu-01",
+          "text": ""
+        },
+        {
+          "id": "e2",
+          "type": "message.agent",
+          "by": "claude@ubuntu-01",
+          "text": "y"
+        },
+        {
+          "id": "e3",
+          "type": "gate.opened",
+          "by": "claude@ubuntu-01",
+          "text": null
+        }
+      ],
+      "gate_event": "e3",
+      "context": ["y"]
+    }
+  ]
+}

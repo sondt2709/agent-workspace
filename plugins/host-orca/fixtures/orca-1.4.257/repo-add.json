@@ -1,0 +1,28 @@
+{
+  "id": "82b7f784-0e8d-4358-b8a5-0161415c336a",
+  "ok": true,
+  "result": {
+    "repo": {
+      "id": "40f6e034-641e-46a2-a01c-340983a89019",
+      "path": "/home/user/src/aw-test-repo",
+      "displayName": "aw-test-repo",
+      "badgeColor": "#737373",
+      "addedAt": 1795397200531,
+      "kind": "git",
+      "externalWorktreeVisibilityLegacy": false,
+      "hookSettings": {
+        "mode": "auto",
+        "setupRunPolicy": "run-by-default",
+        "setupAgentStartupPolicy": "start-immediately",
+        "scripts": {
+          "setup": "",
+          "archive": ""
+        }
+      },
+      "externalWorktreeVisibility": "hide"
+    }
+  },
+  "_meta": {
+    "runtimeId": "7c9912a9-7cf5-4083-aa0e-8899e9cc041b"
+  }
+}

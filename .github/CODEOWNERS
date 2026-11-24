@@ -1,0 +1,21 @@
+# Owners of each path. The ruleset of main requires a review from them (engineering-rules 9.4).
+# The last matching line wins. Replace @aw-maintainers with the real team.
+# Add the security code and the engine version file when their tasks create them.
+*                       @aw-maintainers
+
+/contracts/             @aw-maintainers
+/shared/schema/         @aw-maintainers
+/shared/core/           @aw-maintainers
+/shared/config/         @aw-maintainers
+/android/shared/         @aw-maintainers
+/plugins/sync-syncthing/ @aw-maintainers
+# Identity, pairing and credentials (security code).
+/shared/identity/        @aw-maintainers
+/daemon/src/service/identity.ts @aw-maintainers
+/daemon/src/service/devices.ts @aw-maintainers
+/daemon/src/service/pairing.ts @aw-maintainers
+/daemon/src/service/credentials.ts @aw-maintainers
+/scripts/               @aw-maintainers
+/.github/               @aw-maintainers
+/.github/workflows/     @aw-maintainers
+/.github/CODEOWNERS     @aw-maintainers

@@ -1,0 +1,49 @@
+{
+  "name": "@aw/client",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The typed client of the awd local API.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schemas": "./src/schemas.ts",
+    "./knowledge": "./src/knowledge.ts",
+    "./identity": "./src/identity.ts",
+    "./types": "./src/types.ts",
+    "./desktop": "./src/desktop.ts",
+    "./views": "./src/views.ts",
+    "./setup": "./src/setup.ts",
+    "./doctor": "./src/doctor.ts",
+    "./doctor-types": "./src/doctor-types.ts",
+    "./pause": "./src/pause.ts",
+    "./pause-load": "./src/pause-load.ts",
+    "./queues": "./src/queues.ts",
+    "./terminal": "./src/terminal.ts",
+    "./gates": "./src/gates.ts"
+  },
+  "prettier": "@aw/config/prettier",
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@aw/plugin-api": "workspace:*",
+    "@aw/schema": "workspace:*",
+    "axios": "1.21.1",
+    "ws": "8.23.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@aw/config": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/ws": "8.18.2",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "extends": "@aw/config/tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowJs": true,
+    "checkJs": true,
+    "lib": ["ES2022", "DOM"]
+  },
+  "include": ["src", "eslint.config.js"]
+}

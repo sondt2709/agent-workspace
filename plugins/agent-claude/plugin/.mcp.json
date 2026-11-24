@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "aw": {
+      "type": "http",
+      "url": "${AW_MCP_URL:-http://aw-mcp-url-not-set.invalid/mcp}",
+      "headers": {
+        "Authorization": "Bearer ${AW_MCP_TOKEN:-none}"
+      }
+    }
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "description": "Offline, macbook-pro (local) and pixel-9 (mobile) both create AW-8, and ubuntu-01 (remote) and pixel-9 both create AW-9. The local and the remote task keep their keys. The AW-8 task of pixel-9 is a duplicate until pixel-9 rekeys it; the AW-9 task of pixel-9 is already rekeyed to AW-10. A rekey by another device is ignored. The agent of ubuntu-01 set an assignee in task.created, which is ignored.",
+  "now": "2026-11-22T15:20:00.000Z"
+}

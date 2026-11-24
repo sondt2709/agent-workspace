@@ -1,0 +1,16 @@
+# Checks of the package in e2e/. The root "task check" calls "task e2e:check".
+version: "3"
+
+tasks:
+  check:
+    desc: Check the package in e2e/ (format, lint, typecheck, tests)
+    cmds:
+      - pnpm run format:check
+      - pnpm run lint
+      - pnpm run typecheck
+      - pnpm run test
+
+  docker:
+    desc: Run the Docker suite (e2e/compose.yaml, 2 devices with awd and the sync engine)
+    cmds:
+      - pnpm run test:docker

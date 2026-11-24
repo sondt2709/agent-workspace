@@ -1,0 +1,31 @@
+{
+  "id": "9744fc56-7654-4012-a8cc-d1756da67502",
+  "ok": true,
+  "result": {
+    "terminal": {
+      "handle": "term_5a8da4b6-4cba-40bc-a218-f3e978e9e214",
+      "ptyId": "40f6e034-641e-46a2-a01c-340983a89019::/home/user/orca/workspaces/aw-test-repo/aw-01a2038e-7f00-7000-8000-000000000001@@0370c5b1",
+      "incarnationId": "0d44cbd5-9a42-4837-a37b-832495d9e55d",
+      "orphaned": false,
+      "worktreeId": "40f6e034-641e-46a2-a01c-340983a89019::/home/user/orca/workspaces/aw-test-repo/aw-01a2038e-7f00-7000-8000-000000000001",
+      "worktreePath": "/home/user/orca/workspaces/aw-test-repo/aw-01a2038e-7f00-7000-8000-000000000001",
+      "branch": "refs/heads/aw/AW-1",
+      "tabId": "2c05a8c2-e3c2-48ca-94b1-7bebb3b24c41",
+      "leafId": "29451a7c-80d2-405b-831e-896609b5bb59",
+      "title": "user@ubuntu-01: ~/orca/workspaces/aw-test-repo/aw-01a2038e-7f00-7000-8000-000000000001",
+      "connected": false,
+      "writable": false,
+      "lastOutputAt": 1795397211810,
+      "exitCause": {
+        "kind": "exited",
+        "exitCode": 3
+      },
+      "executionHostId": "local",
+      "paneRuntimeId": -1,
+      "rendererGraphEpoch": 0
+    }
+  },
+  "_meta": {
+    "runtimeId": "7c9912a9-7cf5-4083-aa0e-8899e9cc041b"
+  }
+}

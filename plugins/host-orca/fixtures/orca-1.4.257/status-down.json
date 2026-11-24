@@ -1,0 +1,14 @@
+{
+  "id": "local",
+  "ok": false,
+  "error": {
+    "code": "runtime_unavailable",
+    "message": "This terminal could not connect to Orca.",
+    "data": {
+      "nextSteps": ["Check that Orca is open and that this terminal can access it."]
+    }
+  },
+  "_meta": {
+    "runtimeId": null
+  }
+}

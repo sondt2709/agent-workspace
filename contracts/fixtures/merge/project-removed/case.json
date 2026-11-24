@@ -1,0 +1,4 @@
+{
+  "description": "Remove a project (openspec project-remove). macbook-pro removes billing-api at 10:00 and a person adds billing-api again at 11:00 (added_at). pixel-9 removes web-app at 10:00; it is not added again. An agent on ubuntu-01 tries to remove docs-site (not_human). billing-api: the base task AW-7 and AW-20 (ubuntu-01, 09:59, offline) sort before the remove and are removed; AW-21 (10:30) and AW-22 (11:30) sort after it and show in the project added again. web-app: AW-23 (09:00) and AW-24 (ubuntu-01 at 10:10, after the remove) are removed, because web-app is not live. docs-site and AW-25 stay. AW-25 depends on AW-23: a removed task is not an open dependency, so AW-25 does not wait for it. The next free key counts the removed tasks.",
+  "now": "2026-11-24T12:00:00.000Z"
+}

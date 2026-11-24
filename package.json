@@ -1,0 +1,25 @@
+{
+  "name": "agent-workspace",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Manage the work of AI coding agents from the desktop app or the phone.",
+  "license": "MIT",
+  "type": "module",
+  "packageManager": "pnpm@12.21.0",
+  "engines": {
+    "node": ">=24.15"
+  },
+  "prettier": "./shared/config/prettier.js",
+  "scripts": {
+    "format": "pnpm -r run format",
+    "format:check": "pnpm -r run format:check",
+    "lint": "pnpm -r run lint",
+    "typecheck": "pnpm -r run typecheck",
+    "test": "pnpm -r --workspace-concurrency=1 run test",
+    "leakcheck": "scripts/leakcheck.sh",
+    "rules": "scripts/check-yaml-ext.sh",
+    "schema:generate": "pnpm --filter @aw/schema generate",
+    "api:generate": "pnpm --filter @aw/daemon api:generate",
+    "icons:generate": "pnpm --filter @aw/scripts icons"
+  }
+}
