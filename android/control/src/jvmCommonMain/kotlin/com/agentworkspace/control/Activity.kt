@@ -81,7 +81,9 @@ object ActivityRule {
     /**
      * True when the event shows in Activity. A `message.human` shows only when the person typed it in
      * the terminal (source `typed` or `phone` with no delivery id); each other input repeats a text that
-     * Activity has. A `session.ended` shows only when the session stopped or crashed.
+     * Activity has. A `session.ended` shows only when the session stopped or crashed. The text of an
+     * agent turn (`message.agent` source `turn`) and a nudge notice show only in Session (openspec
+     * agent-pushes-updates).
      */
     fun inActivity(
         type: String,
@@ -94,6 +96,14 @@ object ActivityRule {
 
             type == "session.ended" -> {
                 data.text("reason") in STOPS
+            }
+
+            type == "message.agent" -> {
+                data.text("source") != "turn"
+            }
+
+            type == "message.sent" -> {
+                data.text("kind") != "nudge"
             }
 
             type == "message.human" -> {

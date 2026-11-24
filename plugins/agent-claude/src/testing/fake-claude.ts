@@ -15,6 +15,8 @@
 //   mcp <tool> <json>           calls a tool of the AW MCP server of the plugin `.mcp.json`, with the
 //                               variables of this process, and ends the turn with the result
 //   reply <text>                ends the turn with this text
+//   message-then-reply <m> | <r> runs `aw message <task> <m>` (the Bash tool), then ends the turn
+//                               with <r>; `\n` in <r> is a line break (a long turn text)
 //   use-credential <name> <n>   reads $AW_CREDENTIALS_DIR/<name> and writes the value into
 //                               approach.md, notes.txt, result.md, handoff.md, build.log, ps.txt and image.bin (bytes
 //                               that are not UTF-8) in its folder, then ends the turn with a reply
@@ -558,6 +560,23 @@ async function turn(text: string): Promise<boolean> {
     case "reply":
       await stop(rest);
       return true;
+    case "message-then-reply": {
+      const [message = "", reply = ""] = rest.split(" | ");
+      const task = env.AW_TASK ?? "";
+      await tool(
+        "Bash",
+        { command: `aw message ${task} "${message}"`, description: "Run a command" },
+        async () => {
+          // The plugin bin/ is first in PATH (aw-launch); the text is an argument, not shell text.
+          const r = await execa("aw", ["message", task, message], { reject: false, env });
+          return (
+            `${String(r.stdout ?? "")}${String(r.stderr ?? "")}`.trim() || `(exit ${r.exitCode})`
+          );
+        },
+      );
+      await stop(reply.replaceAll("\\n", "\n"));
+      return true;
+    }
     case "use-credential": {
       const [name = "", size = "40000"] = rest.split(" ");
       const dir = env.AW_CREDENTIALS_DIR ?? "";

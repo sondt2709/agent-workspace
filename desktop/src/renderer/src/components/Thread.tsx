@@ -161,11 +161,13 @@ function Row({
     );
   }
   if (row.type === "message.agent") {
+    // The source (openspec agent-pushes-updates): a turn text shows only in Session.
+    const source = d.source === "turn" ? "turn text · " : d.source === "tool" ? "message · " : "";
     return (
       <MessageRow
         who={by}
         tone="agent"
-        meta={when}
+        meta={mode === "session" ? `${source}${when}` : when}
         text={str(d.text)}
         clamp={mode === "activity"}
         markdown={mode === "activity"}
@@ -177,7 +179,7 @@ function Row({
     return (
       <MessageRow
         who={by}
-        meta={`${done ? "sent" : "not delivered yet"} · ${when}`}
+        meta={`${d.kind === "nudge" ? "nudge · " : ""}${done ? "sent" : "not delivered yet"} · ${when}`}
         text={str(d.text)}
       />
     );

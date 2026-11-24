@@ -210,3 +210,10 @@ Inside a session, the CLI SHALL have `aw slot acquire <resource>` (prints the sl
 - **WHEN** the agent runs `aw ask AW-7 "Which?" --options "a|b" --option "c::d"`
 - **THEN** `aw` exits 2 and no gate opens
 
+### Requirement: Source of a CLI agent message
+`aw message <task> <text>` SHALL write `message.agent` with the source `tool`.
+
+#### Scenario: Message through the CLI
+- **WHEN** the session of AW-7 runs `aw message AW-7 "Tests pass"`
+- **THEN** AW-7 has `message.agent` with the source `tool`
+

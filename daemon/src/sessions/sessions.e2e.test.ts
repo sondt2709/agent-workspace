@@ -43,10 +43,12 @@ describe.skipIf(!TEST_TMUX)("sessions with tmux and the fake agent", () => {
     );
     expect(data(human)).toMatchObject({ delivery_id: gate, text: `[AW answer ${gate}] 1000/min` });
     expect(human.event).toMatchObject({ by: "human@pixel-9" });
-    await awd.waitRow(
+    const reply = await awd.waitRow(
       task.id,
       (r) => r.type === "message.agent" && text(r).includes("Got: 1000/min"),
     );
+    // The text of a turn is Session only (openspec agent-pushes-updates).
+    expect(data(reply).source).toBe("turn");
 
     // A second delivery of a confirmed answer would come at the next checks (every 500 ms): wait
     // 3 checks, then count.

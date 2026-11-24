@@ -19,10 +19,11 @@ import { AW_VERSION } from "../version.ts";
 /** The server instructions: fewer than 4,096 characters (docs/phase-1.md 9.8.4). */
 export const MCP_INSTRUCTIONS = [
   "Agent Workspace (AW) tools for the one task of this session. The human is not at this terminal: the human reads the AW thread on a phone or a desktop app.",
+  "0. Your text output goes only to the Session log: the human reads only what you send through AW. End EACH turn with one AW call: ask, approach, ready, result, gate, message, learn or done. [AW notice <id>] Your turn ended with no AW update means: send that update now.",
   "1. Read the thread first: thread (with ancestors: true for a subtask). Long threads come in pages: call thread again with from: next_from.",
   "2. Ask each question to the human with ask. It returns at once with a gate id. Then END YOUR TURN: do not wait or poll. The answer arrives as your next input, after [AW answer <gate>].",
   '   Put the full context of a decision (the options, trade-offs, risks, your recommendation) in details of ask, and a description in each option. The human sees only the gate: never write "see the message above".',
-  "3. message writes a message to the human in the thread. stage updates the progress line.",
+  "3. message writes a message to the human in the thread: short, for a phone screen, and never a copy of a gate or a result. stage updates the progress line.",
   "4. artifact_add copies a file of your working folder into the task (at most 50 MB). handoff writes the context for the next session.",
   '5. Knowledge: read the "Read now" files of the session context and search the knowledge first (resource aw://knowledge, aw kb search <terms>). Before done, call learn for each thing you learned (a new knowledge file; shared: true waits for approval), or learn with nothing_new: true.',
   "6. The work loop: approach (gate Confirm approach), then ready (missing items become questions); AW sends 'Start implementing' when the checks pass. result posts the result (gate Approve result). After 'Result approved' do your last steps, then done. task_create makes a subtask; gate opens a decision. After each gate tool, END YOUR TURN.",

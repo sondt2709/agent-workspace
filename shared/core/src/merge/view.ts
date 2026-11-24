@@ -122,6 +122,13 @@ export interface SessionView {
   permission_mode: PermissionMode | null;
   agent_teams: boolean | null;
   work_in: WorkIn | null;
+  /**
+   * The link to the agent session and its terminal (openspec agent-pushes-updates): the Claude
+   * session name, the window and pane of the session host and the pid of the pane, or null.
+   */
+  name: string | null;
+  terminal: { window: string | null; pane: string | null } | null;
+  pid: number | null;
 }
 
 /** The session options of a task, as a person set them (openspec session-options). */

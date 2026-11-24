@@ -122,6 +122,29 @@ describe("Session summary", () => {
     expect(summary.textContent).toContain("Ended (stopped) on macbook-pro · tmux");
     expect(summary.textContent).toContain("session 01a20a1c");
   });
+
+  it("links the task to the Claude session and the terminal (agent-pushes-updates)", async () => {
+    const task = {
+      ...makeTask({}),
+      session: {
+        session: "01a20a1c-5e55-7000-8000-000000000009",
+        device: "macbook-pro",
+        host: "tmux",
+        state: "running",
+        reason: null,
+        name: "AW-7",
+        terminal: { window: "aw-01a2", pane: "%12" },
+        pid: 4242,
+      },
+      claim: null,
+    } as Task;
+    show(task, { ...AW8, events: [], ancestors: [] });
+    await userEvent.click(await screen.findByRole("tab", { name: "Session" }));
+    const link = await screen.findByLabelText("Session link");
+    expect(link.textContent).toBe(
+      "Claude session 01a20a1c-5e55-7000-8000-000000000009 · name AW-7 · tmux window aw-01a2 · pane %12 · pid 4242",
+    );
+  });
 });
 
 describe("Task actions menu (openspec task-actions)", () => {

@@ -140,6 +140,17 @@ data class SessionView(
     @SerialName("permission_mode") val permissionMode: String? = null,
     @SerialName("agent_teams") val agentTeams: Boolean? = null,
     @SerialName("work_in") val workIn: String? = null,
+    /** The link to the agent session and its terminal (openspec agent-pushes-updates), or null. */
+    val name: String? = null,
+    val terminal: TerminalView? = null,
+    val pid: Long? = null,
+)
+
+/** The window and pane of the session host (openspec agent-pushes-updates). */
+@Serializable
+data class TerminalView(
+    val window: String?,
+    val pane: String?,
 )
 
 /** The session options of a task, as a person set them (openspec session-options). */

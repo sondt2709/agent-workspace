@@ -318,10 +318,13 @@
           "cwd": "~/code/billing-api/.worktrees/aw-01a2038e-7f00-70eb-b429-fa86d481c263",
           "device": "ubuntu-01",
           "host": "tmux",
+          "name": null,
           "permission_mode": null,
+          "pid": 41250,
           "reason": null,
           "session": "01a20390-53c0-73f3-af1e-cebbd1410ab4",
           "state": "running",
+          "terminal": null,
           "work_in": null
         },
         "session_options": null,

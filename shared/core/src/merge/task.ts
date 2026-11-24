@@ -276,6 +276,11 @@ export class TaskFold {
           permission_mode: e.data.permission_mode ?? null,
           agent_teams: e.data.agent_teams ?? null,
           work_in: e.data.work_in ?? null,
+          name: e.data.name ?? null,
+          terminal: e.data.terminal
+            ? { window: e.data.terminal.window, pane: e.data.terminal.pane }
+            : null,
+          pid: e.data.pids.pane,
         };
         if (!this.sessionStarted) this.branch ??= e.data.branch;
         this.sessionStarted = true;
@@ -293,6 +298,11 @@ export class TaskFold {
           permission_mode: same?.permission_mode ?? null,
           agent_teams: same?.agent_teams ?? null,
           work_in: same?.work_in ?? null,
+          name: same?.name ?? null,
+          terminal: e.data.terminal
+            ? { window: e.data.terminal.window, pane: e.data.terminal.pane }
+            : (same?.terminal ?? null),
+          pid: e.data.pids ? e.data.pids.pane : (same?.pid ?? null),
         };
         return ok;
       }

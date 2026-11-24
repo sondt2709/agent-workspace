@@ -23,6 +23,7 @@ import {
   ALLOWED_TOOLS,
   ClaudeAdapter,
   hookOutput,
+  hookSessionId,
   isCoveredVersion,
   launchArgv,
   packageName,
@@ -112,6 +113,13 @@ describe("@aw/agent-claude plugin directory", () => {
     );
     expect(text).toMatch(/Before `done`, record what you learned: `learn`.*`nothing_new: true`/);
     expect(text).toContain("`aw learn <TASK> --nothing-new`");
+  });
+
+  it("tells the agent to send its updates through AW (agent-pushes-updates)", async () => {
+    const text = await plugin("skills/aw/SKILL.md");
+    expect(text).toContain("Your text output goes only to the Session log.");
+    expect(text).toMatch(/End EACH turn with one AW call: `ask`.*`message`.*`done`\./);
+    expect(text).toContain("`[AW notice <id>] Your turn ended with no AW update` means");
   });
 
   it("tells the agent to put the decision context in the question (gate-context)", async () => {
@@ -246,6 +254,14 @@ describe("Claude adapter", () => {
     });
     expect(JSON.stringify(status)).not.toContain("example.com");
     expect(parseAuthStatus("not json")).toEqual({ loggedIn: false, method: null, expiresAt: null });
+  });
+
+  it("reads the session id of each captured hook payload", () => {
+    for (const value of Object.values(capturedPayloads)) {
+      expect(hookSessionId(value)).toBe("0193a7d1-0000-7000-8000-000000000001");
+    }
+    expect(hookSessionId({})).toBeNull();
+    expect(hookSessionId("not an object")).toBeNull();
   });
 
   it("parses each captured hook payload", () => {

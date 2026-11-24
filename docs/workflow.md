@@ -107,7 +107,7 @@ The task shows "Works in <folder> · branch aw/<key>" with Copy, and Open on the
 ### 4.3 Thread and delivery
 1. The session device writes each message to the thread as raw text:
    - `message.human` from the `UserPromptSubmit` hook, with its source (`first`, `typed`, `answer`, `phone`) and the `delivery_id` of a delivered text.
-   - `message.agent` from the `Stop` hook (`last_assistant_message`).
+   - `message.agent` from the `Stop` hook (`last_assistant_message`) with `source: turn`. It shows only in the Session tab. The agent sends its updates through AW: a turn with no update gets one notice `message.sent {kind: nudge}` (`decisions/2026-11-25-agent-pushes-updates.md`).
 2. AW reads agent output only from the hooks and the transcript. It never reads the terminal screen (an Orca terminal can be 2 columns wide).
 3. A device that sends an answer or a message writes it to its own log first: `gate.answered`, or `message.sent {id, text, to_session}`. Only the session device writes `message.human`, so the thread has each text once. `aw thread` shows an undelivered `message.sent` as "Not delivered yet".
 4. The session device delivers the text to the session with one function:
@@ -231,7 +231,7 @@ Each MCP tool and its `aw` command call the same awd code and write the same eve
 | `ask` | `aw ask <key> <text> [--details <text> \| --details-file <path>] [--options "a\|b" \| --option "<label>::<description>"...]` | `gate.opened` (question) | Opens the gate "Answer question" with the question as the title and the details as the text |
 | `approach` | `aw approach <key> --file` | `approach.proposed`, `gate.opened` | Opens the gate "Confirm approach" |
 | `task_create` | `aw task create … [--from-parent] [--test-server] [--credential] [--link]` | `task.created` | A new task or subtask |
-| `message` | `aw message <key> <text>` | `message.agent` | A message to the human in the thread |
+| `message` | `aw message <key> <text>` | `message.agent` (`source: tool`) | A short update to the human in Activity |
 | `gate` | `aw gate open <key> --file gate.md [--decisions <json>] [--options]` | `gate.opened` (kind `custom`) | Opens a gate with any Markdown and optional decisions, each with a recommendation |
 | `ready` | `aw ready <key> [--missing]` | `task.ready` / `gate.opened` | Starts the ready checks |
 | `stage` | `aw stage <key> <text>` | `task.progress` | Updates the progress line |
