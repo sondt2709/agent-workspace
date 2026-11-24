@@ -307,7 +307,20 @@ describe.skipIf(!tmux)("the Orca host with the fake Orca CLI", () => {
   it("checks out a free branch of the task, and refuses a branch that another folder has", async () => {
     await execa("git", ["-C", checkout, "branch", "aw/AW-2"]);
     const commit = async (args: string[]) => execa("git", args);
-    await commit(["-C", checkout, "commit", "-q", "--allow-empty", "-m", "on main only"]);
+    // CI runners have no git identity: give one for this commit.
+    await commit([
+      "-C",
+      checkout,
+      "-c",
+      "user.name=t",
+      "-c",
+      "user.email=t@example.com",
+      "commit",
+      "-q",
+      "--allow-empty",
+      "-m",
+      "on main only",
+    ]);
     const base = (await commit(["-C", checkout, "rev-parse", "aw/AW-2"])).stdout;
     const made = await host.worktree({ name: "aw-task-2", checkout, branch: "aw/AW-2" });
     // The branch of the task, with its work: no new branch `aw/AW-2-2`.
