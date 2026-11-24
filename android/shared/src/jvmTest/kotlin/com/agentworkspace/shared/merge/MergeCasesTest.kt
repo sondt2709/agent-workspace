@@ -37,6 +37,7 @@ class MergeCasesTest {
                 "far-future-hlc",
                 "gate-answered-twice",
                 "project-removed",
+                "session-link",
                 "session-options",
                 "task-key-collision",
                 "task-rules",

@@ -1046,6 +1046,90 @@
       "invalid_path": null
     },
     {
+      "name": "message.agent with no source (an older event)",
+      "value": {
+        "v": 1,
+        "id": "01a2038e-7f00-7000-8000-000000000001",
+        "hlc": "2026-11-22T14:20:01.123Z#0000",
+        "dev": "ubuntu-01",
+        "type": "message.agent",
+        "by": "claude@ubuntu-01",
+        "data": { "text": "Done.", "session": null }
+      },
+      "invalid_path": null
+    },
+    {
+      "name": "message.agent with the source turn",
+      "value": {
+        "v": 1,
+        "id": "01a2038e-7f00-7000-8000-000000000001",
+        "hlc": "2026-11-22T14:20:01.123Z#0000",
+        "dev": "ubuntu-01",
+        "type": "message.agent",
+        "by": "claude@ubuntu-01",
+        "data": {
+          "text": "Done.",
+          "session": "01a2038e-7f00-7000-8000-000000000001",
+          "source": "turn"
+        }
+      },
+      "invalid_path": null
+    },
+    {
+      "name": "message.agent with an unknown source",
+      "value": {
+        "v": 1,
+        "id": "01a2038e-7f00-7000-8000-000000000001",
+        "hlc": "2026-11-22T14:20:01.123Z#0000",
+        "dev": "ubuntu-01",
+        "type": "message.agent",
+        "by": "claude@ubuntu-01",
+        "data": {
+          "text": "Done.",
+          "session": "01a2038e-7f00-7000-8000-000000000001",
+          "source": "other"
+        }
+      },
+      "invalid_path": "data.source"
+    },
+    {
+      "name": "message.sent nudge notice",
+      "value": {
+        "v": 1,
+        "id": "01a2038e-7f00-7000-8000-000000000001",
+        "hlc": "2026-11-22T14:20:01.123Z#0000",
+        "dev": "ubuntu-01",
+        "type": "message.sent",
+        "by": "claude@ubuntu-01",
+        "data": {
+          "id": "01a2038e-7f00-7000-8000-000000000001",
+          "text": "Send the update.",
+          "to_session": "01a2038e-7f00-7000-8000-000000000002",
+          "kind": "nudge"
+        }
+      },
+      "invalid_path": null
+    },
+    {
+      "name": "session.started with the name and the terminal",
+      "value": {
+        "v": 1,
+        "id": "01a2038e-7f00-7000-8000-000000000001",
+        "hlc": "2026-11-22T14:20:01.123Z#0000",
+        "dev": "ubuntu-01",
+        "type": "session.started",
+        "by": "claude@ubuntu-01",
+        "data": {
+          "session": "01a2038e-7f00-7000-8000-000000000001",
+          "host": "tmux",
+          "cwd": "/work/billing-api",
+          "name": "AW-7",
+          "terminal": { "window": "aw-AW-7", "pane": "%12" }
+        }
+      },
+      "invalid_path": null
+    },
+    {
       "name": "task.assigned with the session host orca",
       "value": {
         "v": 1,
@@ -1712,7 +1796,8 @@
         "by": "claude@ubuntu-01",
         "data": {
           "text": "Done. 50 runs passed.",
-          "session": "01a2038e-7f00-7000-8000-000000000001"
+          "session": "01a2038e-7f00-7000-8000-000000000001",
+          "source": "tool"
         }
       },
       "data_null": {

@@ -125,6 +125,59 @@ describe("Thread", () => {
     expect(await screen.findByText(/Use \*\*cents\*\*/)).toBeTruthy();
     expect(screen.queryByRole("listitem")).toBeNull();
   });
+
+  it("keeps a turn text and a nudge in Session only, with their source (agent-pushes-updates)", async () => {
+    const task = makeTask({ key: "AW-1" });
+    const row = (
+      id: string,
+      type: string,
+      by: string,
+      data: Record<string, unknown>,
+    ): EventRow => ({
+      ...rekeyRow(task.id),
+      id,
+      type,
+      event: { v: 1, id, hlc: HLC, dev: "ubuntu-01", type, by, data },
+    });
+    const S = "01a2038e-8100-7000-8000-000000000001";
+    const events = [
+      row("r1", "message.agent", "claude@ubuntu-01", {
+        text: "Long turn text",
+        session: S,
+        source: "turn",
+      }),
+      row("r2", "message.agent", "claude@ubuntu-01", {
+        text: "Tests pass.",
+        session: S,
+        source: "tool",
+      }),
+      row("r3", "message.sent", "aw@ubuntu-01", {
+        id: "n1",
+        text: "Your turn ended with no AW update.",
+        to_session: S,
+        kind: "nudge",
+      }),
+    ];
+    installBridge({
+      thread: () => ({
+        task: { id: task.id, key: task.key, title: task.title },
+        events,
+        next: null,
+        ancestors: [],
+      }),
+    });
+    const clock = fixedClock(Date.parse("2026-11-23T10:01:00.000Z"));
+    renderApp(<Thread ws="ws-1" task={task} mode="activity" />, { clock });
+    expect(await screen.findByText("Tests pass.")).toBeTruthy();
+    expect(screen.queryByText("Long turn text")).toBeNull();
+    expect(screen.queryByText("Your turn ended with no AW update.")).toBeNull();
+    cleanup();
+    renderApp(<Thread ws="ws-1" task={task} mode="session" />, { clock });
+    expect(await screen.findByText("Long turn text")).toBeTruthy();
+    expect(screen.getByText(/· turn text · /)).toBeTruthy();
+    expect(screen.getByText(/· message · /)).toBeTruthy();
+    expect(screen.getByText(/· nudge · not delivered yet · /)).toBeTruthy();
+  });
 });
 
 describe("Thread: person messages and agent messages (task-review-layout)", () => {

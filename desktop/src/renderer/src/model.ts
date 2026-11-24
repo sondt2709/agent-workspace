@@ -29,6 +29,31 @@ export interface SessionView {
   host: string;
   state: "running" | "ended";
   reason: string | null;
+  /** The link to the agent session and its terminal (openspec agent-pushes-updates). */
+  name?: string | null;
+  terminal?: { window: string | null; pane: string | null } | null;
+  pid?: number | null;
+}
+
+/**
+ * The link lines of the session summary: the Claude session id (the AW session id is the
+ * `--session-id`), the session name, the terminal and the pid (openspec agent-pushes-updates).
+ */
+export function sessionLink(session: SessionView): string[] {
+  const lines = [`Claude session ${session.session}`];
+  if (session.name) lines.push(`name ${session.name}`);
+  const t = session.terminal;
+  if (t && (t.window || t.pane)) {
+    lines.push(
+      session.host === "orca"
+        ? `Orca terminal ${t.pane ?? t.window}`
+        : [t.window ? `tmux window ${t.window}` : null, t.pane ? `pane ${t.pane}` : null]
+            .filter(Boolean)
+            .join(" · "),
+    );
+  }
+  if (session.pid) lines.push(`pid ${session.pid}`);
+  return lines;
 }
 
 export interface TaskDetails {

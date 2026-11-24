@@ -218,7 +218,7 @@ The notification title SHALL come from the preview `kind`: the gate label for `g
 - **THEN** the phone shows "AW-12 · Done" with "Done: Add rate limits"
 
 ### Requirement: Phone task activity
-The Activity tab of the phone SHALL show the open gate cards, the late answers and the Assign card first; then the first message once as the description, as Markdown; then the activity rows in merge order. The phone SHALL use the Activity rule of the desktop ("Task activity" of desktop-app): one table with an entry for each event type of the contract, tested against the shared fixture `contracts/fixtures/activity/cases.json`, with the same `message.human` rule and the same `session.ended` lines. `task.created` SHALL show as "Created by <by>". An agent message and a person message SHALL show as Markdown; a message longer than 6 lines SHALL show its first 6 lines and "Show more". A subagent report SHALL show as on the desktop, tested against `contracts/fixtures/activity/agent-message.json`. A message row SHALL be a line with a 2 dp coloured edge, as on the desktop, and not a filled card. The Session tab SHALL show the raw text.
+The Activity tab of the phone SHALL show the open gate cards, the late answers and the Assign card first; then the first message once as the description, as Markdown; then the activity rows in merge order. The phone SHALL use the Activity rule of the desktop ("Task activity" of desktop-app): one table with an entry for each event type of the contract, tested against the shared fixture `contracts/fixtures/activity/cases.json`, with the same `message.human` rule, the same `message.agent` source rule, the same nudge rule and the same `session.ended` lines. `task.created` SHALL show as "Created by <by>". An agent message and a person message SHALL show as Markdown; a message longer than 6 lines SHALL show its first 6 lines and "Show more". A subagent report SHALL show as on the desktop, tested against `contracts/fixtures/activity/agent-message.json`. A message row SHALL be a line with a 2 dp coloured edge, as on the desktop, and not a filled card. The Session tab SHALL show the raw text.
 
 #### Scenario: Activity of a task with a session
 - **WHEN** the thread of AW-1 has `task.created`, `task.claimed`, `session.started`, a `message.human` with source `first`, a `message.agent`, a `gate.opened` and a `gate.answered`
@@ -235,6 +235,10 @@ The Activity tab of the phone SHALL show the open gate cards, the late answers a
 #### Scenario: Subagent report on the phone
 - **WHEN** the thread has the typed `message.human` of the subagent report fixture
 - **THEN** the phone Activity shows "Subagent report · arrived in the terminal" and the report as Markdown
+
+#### Scenario: Turn text on the phone
+- **WHEN** the thread has `message.agent` with the source `turn` and `message.agent` "Tests pass" with the source `tool`
+- **THEN** the phone Activity shows "Tests pass" only, and the Session view shows both
 
 ### Requirement: Question details and context on phone gate cards
 A phone gate card SHALL show the gate body as Markdown above the choices, clamped to 6 lines with "Show more". A `question` or `reply` gate with no body SHALL show "Context" with the same rule and the same fixture as the desktop (`contracts/fixtures/gates/context.json`), each message as Markdown. When `gate.opened` has `questions`, the card SHALL show each option description, and a gate with 2 or more questions or a multiSelect question SHALL show each question with its options as full-width choices and "Send answers", with the answer text of `contracts/fixtures/gates/questions.json`.
@@ -275,4 +279,11 @@ The phone New task SHALL have each field of the desktop New task: first message,
 #### Scenario: All fields
 - **WHEN** the person writes "Add a CSV export", the title "CSV export", picks a parent task and the credentials staging-db and github-token, and taps "Create task"
 - **THEN** `task.created` has the title "CSV export", the parent, both credential names and `session_options.permission_mode: skip`
+
+### Requirement: Session link in the phone summary
+The session summary of the phone Session view SHALL show the session id, the session name, the terminal and the pid as the desktop ("Session link in the summary" of desktop-app), from the session view of the Kotlin merge.
+
+#### Scenario: Link on the phone
+- **WHEN** `session.started` of AW-7 has the name `AW-7`, the window `aw-01a2`, the pane `%12` and the pid 4242
+- **THEN** the phone session summary has the rows "Name" `AW-7`, "Terminal" "tmux window aw-01a2 · pane %12" and "Pid" 4242
 

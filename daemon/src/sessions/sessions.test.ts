@@ -98,6 +98,10 @@ describe("session texts", () => {
     const small = sessionContext(task(), knowledge);
     expect(small).toContain("Read `aw thread AW-7 --ancestors` before you act.");
     expect(small).toContain("- Credentials: stripe-test");
+    // The agent sends its updates through AW (openspec agent-pushes-updates).
+    expect(small).toContain("Your text output goes only to the Session log");
+    expect(small).toContain("End EACH turn with one AW call");
+    expect(small).toContain("Your turn ended with no AW update");
     expect(small.endsWith(knowledge)).toBe(true);
     const many = [
       knowledge,
@@ -324,6 +328,17 @@ describe("spool and records", () => {
     expect((await stat(paths.record)).mode & 0o777).toBe(0o600);
     expect((await readRecord(dir, record.id))?.epoch).toBe(1);
     expect(JSON.parse(await readFile(paths.record, "utf8"))).toMatchObject({ kind: "aw-session" });
+    // An older record has no foreign session ids; awd keeps the ids after a restart, so it warns
+    // once for each (openspec agent-pushes-updates).
+    const loaded = (await readRecord(dir, record.id))!;
+    expect(loaded.foreign_sessions).toEqual([]);
+    await saveRecord(dir, {
+      ...loaded,
+      foreign_sessions: ["0193a7d1-9999-7000-8000-000000000002"],
+    });
+    expect((await readRecord(dir, record.id))?.foreign_sessions).toEqual([
+      "0193a7d1-9999-7000-8000-000000000002",
+    ]);
   });
 });
 

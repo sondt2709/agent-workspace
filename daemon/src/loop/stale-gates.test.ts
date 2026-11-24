@@ -75,6 +75,9 @@ function view(gates: GateView[], session: string | null = S1, state = "running")
             permission_mode: null,
             agent_teams: null,
             work_in: null,
+            name: null,
+            terminal: null,
+            pid: null,
           },
   };
 }

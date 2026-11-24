@@ -177,6 +177,19 @@ export const ORCA_DETECT_MS = 60_000;
 export const HOST_NOTICE_MS = 120_000;
 /** The gates that wait for an answer to the turn of the agent: one of them stops a Reply gate. */
 const TURN_GATES = new Set(["question", "confirm_approach", "reply"]);
+/** The events of an agent that count as an update of its turn (openspec agent-pushes-updates). */
+const UPDATE_TYPES = new Set([
+  "message.agent",
+  "gate.opened",
+  "approach.proposed",
+  "task.ready",
+  "result.posted",
+  "task.done",
+  "task.learned",
+]);
+/** The text of the notice after a turn with no AW update. */
+export const NUDGE_TEXT =
+  "Your turn ended with no AW update, and the human reads only AW. Send the update now: `message` (short), or `ask`, `approach`, `result` or `gate`. Then end your turn.";
 const DONE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 export interface SessionTools {
@@ -253,12 +266,11 @@ interface Attempt {
  * The write of one event of a hook. `step` names the event in its spool file: a retry of the file
  * skips the steps that are in the log already.
  */
-type HookWrite = <T extends EventType>(
-  step: string,
-  type: T,
-  data: EventData<T>,
-  by: string,
-) => Promise<void>;
+interface HookWrite {
+  <T extends EventType>(step: string, type: T, data: EventData<T>, by: string): Promise<void>;
+  /** The event id of a step: the same id at each retry of the spool file. */
+  eventId(step: string): string;
+}
 
 function data(row: EventRow): Record<string, unknown> {
   return (row.event as { data?: Record<string, unknown> }).data ?? {};
@@ -1401,6 +1413,7 @@ export class SessionManager {
       first_delivery: notice?.id ?? null,
       rules: [],
       approvals: [],
+      foreign_sessions: [],
     };
     const paths = sessionPaths(this.#settings.home, id);
     await prepareSessionFolder(paths);
@@ -2319,10 +2332,16 @@ export class SessionManager {
    * the event of the first try in the log and does not write it again.
    */
   #hookWrite(record: SessionRecord, file: string, at: number): HookWrite {
-    return async (step, type, data, by) => {
+    const eventId = (step: string) => hookEventId(at, `${record.id}/${file}/${step}`);
+    const write = async <T extends EventType>(
+      step: string,
+      type: T,
+      data: EventData<T>,
+      by: string,
+    ): Promise<void> => {
       const steps = this.#spoolSteps.get(file) ?? new Set<string>();
       if (steps.has(step)) return;
-      const id = hookEventId(at, `${record.id}/${file}/${step}`);
+      const id = eventId(step);
       const written = this.service.index
         .find<EventRow>("events", { task: record.task })
         .some((r) => r.id === id);
@@ -2337,6 +2356,26 @@ export class SessionManager {
       steps.add(step);
       this.#spoolSteps.set(file, steps);
     };
+    return Object.assign(write, { eventId });
+  }
+
+  /**
+   * Warns once for each agent session id that is not the id of this session: the hook events of
+   * another Claude session (a child process with `AW_SESSION`, a new conversation) come into this
+   * task. awd keeps the events (openspec agent-pushes-updates, the decision of the maintainer).
+   */
+  async #checkHookSession(record: SessionRecord, payload: unknown, write: HookWrite) {
+    const id = this.#tools.adapter.hookSessionId?.(payload) ?? null;
+    if (id === null || id === record.id || record.foreign_sessions.includes(id)) return;
+    await write(
+      `foreign-session/${id}`,
+      "comment.added",
+      {
+        text: `Hook events of another Claude session (${id.slice(0, 8)}) arrive in this session. AW keeps them. Check the terminal of this task.`,
+      },
+      this.#aw,
+    );
+    record.foreign_sessions.push(id);
   }
 
   async #hook(
@@ -2350,6 +2389,7 @@ export class SessionManager {
     const parsed: AgentHookEvent = this.#tools.adapter.parseHook(event, payload);
     const task = record.task;
     const agent = this.#agentActor(record);
+    await this.#checkHookSession(record, payload, write);
     if (parsed.kind !== "notification" && parsed.kind !== "permission") record.notification = null;
     // The agent works again: a usage or agent-error pause ends (add-continuity, decision 8).
     if (parsed.kind === "prompt" || parsed.kind === "tool_start" || parsed.kind === "tool_end") {
@@ -2398,6 +2438,9 @@ export class SessionManager {
               permission_mode: permissionModeOf(record.launch.permission_mode),
               agent_teams: record.launch.agent_teams ?? false,
               work_in: record.work_in ?? "worktree",
+              // The link of the task to its agent session and terminal (agent-pushes-updates).
+              name: record.launch.name || null,
+              terminal: { window: record.pane?.window || null, pane: record.pane?.pane || null },
             },
             this.#aw,
           );
@@ -2458,7 +2501,14 @@ export class SessionManager {
           record.agent_retry = null;
           await this.#unpause(task, ["agent_error"]);
         }
-        await write("message", "message.agent", { text: parsed.text, session: record.id }, agent);
+        // The text of the turn: Session only. The agent sends its updates with AW calls (openspec
+        // agent-pushes-updates).
+        await write(
+          "message",
+          "message.agent",
+          { text: parsed.text, session: record.id, source: "turn" },
+          agent,
+        );
         this.#checkpoint(record);
         // Done at the first Stop after "Result approved", or after `aw done` (docs/workflow.md 4.10).
         const ended = await this.#work.stopped(record, write);
@@ -2478,7 +2528,9 @@ export class SessionManager {
             },
             agent,
           );
+          return;
         }
+        await this.#nudge(record, write);
         return;
       }
       case "stop_failure":
@@ -2637,6 +2689,55 @@ export class SessionManager {
   }
 
   /**
+   * The notice after a turn with no AW update (openspec agent-pushes-updates, design D3 and D4):
+   * the text of a turn goes only to the Session tab, so the agent sends its update through AW. At
+   * most one per turn, never after the turn of a nudge, and not when a person typed in the terminal
+   * (that person reads the terminal) or an open gate already waits for the person.
+   */
+  async #nudge(record: SessionRecord, write: HookWrite): Promise<void> {
+    const task = this.#task(record.task);
+    if (!task || task.stage === "done" || task.archived) return;
+    if (task.gates.some((g) => g.state === "open")) return;
+    const rows = this.#rows(task.id);
+    let at = rows.length - 1;
+    while (at >= 0) {
+      const r = rows[at]!;
+      if (
+        (r.type === "message.human" || r.type === "session.resumed") &&
+        data(r).session === record.id
+      )
+        break;
+      at--;
+    }
+    if (at < 0) return;
+    const start = rows[at]!;
+    if (start.type === "message.human") {
+      const { source, delivery_id: delivery } = data(start);
+      if (source === "typed" && (delivery === null || delivery === undefined)) return;
+      const nudged = (r: EventRow) =>
+        r.type === "message.sent" && data(r).id === delivery && data(r).kind === "nudge";
+      if (source === "notice" && rows.some(nudged)) return;
+    }
+    const actor = this.#agentActor(record);
+    const updated = rows
+      .slice(at + 1)
+      .some(
+        (r) =>
+          (r.event as { by?: string }).by === actor &&
+          UPDATE_TYPES.has(r.type) &&
+          (r.type !== "message.agent" || data(r).source === "tool"),
+      );
+    if (updated) return;
+    const id = write.eventId("nudge");
+    await write(
+      "nudge",
+      "message.sent",
+      { id, text: NUDGE_TEXT, to_session: record.id, kind: "nudge" },
+      this.#aw,
+    );
+  }
+
+  /**
    * True when a gate that waits for the answer to this turn is open: a question, an approach or a
    * reply of this session, opened after its last `message.human` (the start of the turn). An
    * "Approve command" gate after its timeout, or a gate that the human answered in the terminal,
@@ -2661,7 +2762,22 @@ export class SessionManager {
     const wasBusy = record.busy;
     record.busy = true;
     if (text.startsWith(RESUME_PREFIX)) {
-      await write("resumed", "session.resumed", { session: record.id, text }, this.#aw);
+      await write(
+        "resumed",
+        "session.resumed",
+        {
+          session: record.id,
+          text,
+          // The new pane of the resume (agent-pushes-updates).
+          terminal: { window: record.pane?.window || null, pane: record.pane?.pane || null },
+          pids: {
+            pane: record.pane?.pid ?? null,
+            claude: record.pane?.pid ?? null,
+            pgid: record.pane?.pgid ?? null,
+          },
+        },
+        this.#aw,
+      );
       return;
     }
     const answer = /^\[AW answer ([0-9a-f-]{36})\]/.exec(text);
@@ -3582,7 +3698,7 @@ export class SessionManager {
     const event = this.#buffer.later(
       task.id,
       "message.agent",
-      { text: input.text, session: record.id },
+      { text: input.text, session: record.id, source: "tool" },
       this.#agentActor(record),
     );
     return { event, buffered: true, path: null };

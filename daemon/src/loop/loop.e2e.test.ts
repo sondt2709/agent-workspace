@@ -71,11 +71,19 @@ describe.skipIf(!TEST_TMUX)("the work loop", () => {
     expect((await awd.task(task.id)).stage).toBe("ready");
     await awd.answerFrom("pixel-9", task.id, String(data(missing).gate), "Use the role tester");
 
+    // The fake agent ends the answer turns with text only: each such turn got one nudge notice
+    // (openspec agent-pushes-updates), so the wait looks for "Start implementing" by its text.
     const start = await awd.waitRow(
       task.id,
-      (r) => r.type === "message.human" && data(r).source === "notice",
+      (r) =>
+        r.type === "message.human" &&
+        data(r).source === "notice" &&
+        text(r).includes("] Start implementing "),
       30_000,
     );
+    expect(
+      (await awd.rows(task.id)).some((r) => r.type === "message.sent" && data(r).kind === "nudge"),
+    ).toBe(true);
     expect(text(start)).toMatch(/^\[AW notice [0-9a-f-]{36}\] Start implementing /);
     expect(by(start)).toBe("aw@macbook-pro");
     expect((await awd.task(task.id)).stage).toBe("implement");
@@ -289,7 +297,10 @@ describe.skipIf(!TEST_TMUX)("the work loop", () => {
     await awd.aw(["task", "assign", parent.id, "claude@macbook-pro"]);
     const notice = await awd.waitRow(
       parent.id,
-      (r) => r.type === "message.human" && data(r).source === "notice",
+      (r) =>
+        r.type === "message.human" &&
+        data(r).source === "notice" &&
+        text(r).includes(`] Subtask ${a.task.key} done`),
       30_000,
     );
     expect(text(notice)).toMatch(

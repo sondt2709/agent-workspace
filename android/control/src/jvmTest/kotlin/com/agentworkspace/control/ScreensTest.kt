@@ -5,6 +5,7 @@ import com.agentworkspace.control.TestWorkspace.Companion.GATE
 import com.agentworkspace.engine.PeerStatus
 import com.agentworkspace.engine.SyncRules
 import com.agentworkspace.shared.merge.NeedsYouReason
+import com.agentworkspace.shared.merge.TerminalView
 import com.agentworkspace.shared.model.IsoTime
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -144,6 +145,20 @@ class ScreensTest {
                 assertEquals(task.session?.session ?: task.claim!!.session, summary["Session id"])
                 assertEquals(task.id, summary["Task id"])
                 assertTrue(summary.getValue("Session").contains("on ubuntu-01"))
+                // The link to the Claude session and its terminal (openspec agent-pushes-updates).
+                val linked =
+                    task.copy(
+                        session =
+                            task.session!!.copy(
+                                name = "AW-7",
+                                terminal = TerminalView("aw-01a2", "%12"),
+                                pid = 4242,
+                            ),
+                    )
+                val link = TaskDetail.sessionSummary(linked).toMap()
+                assertEquals("AW-7", link["Name"])
+                assertEquals("tmux window aw-01a2 · pane %12", link["Terminal"])
+                assertEquals("4242", link["Pid"])
                 // An open gate or Assign shows as one line on the other tabs (the gate of AW-7 is answered).
                 val gate = task.gates.first()
                 val none = task.copy(needsYouReasons = emptyList())

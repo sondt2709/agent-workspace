@@ -24,18 +24,20 @@ private val VALUES_10 = setOf("backlog", "discuss", "ready", "implement", "revie
 private val VALUES_11 = setOf("usage_limit", "usage_limit_weekly", "continue_cap", "device_offline", "device_restart", "device_revoked", "network_lost", "waiting_for_sync", "task_moving", "agent_error", "login_expired")
 private val PATTERN_12 = Regex("^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))\\z")
 private val VALUES_13 = setOf("first", "typed", "answer", "phone", "notice")
-private val VALUES_14 = setOf("question", "reply", "confirm_approach", "assign", "approve_command", "approve_result", "approve_knowledge", "approve_device", "continue_after_limit", "take_over_terminal", "fix_file", "custom")
-private val PATTERN_15 = Regex("^p-[0-9a-f-]{36}\\z")
-private val PATTERN_16 = Regex("^[0-9a-f]{64}\\z")
-private val VALUES_17 = setOf("tmux", "orca", "pty")
-private val VALUES_18 = setOf("done", "moved", "stopped", "crashed", "replaced")
-private val VALUES_19 = setOf("expired", "reboot", "human")
-private val PATTERN_20 = Regex("^[a-z][a-z0-9-]*\\z")
-private val PATTERN_21 = Regex("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z#\\d{4}\\z")
-private val VALUES_22 = setOf("learned", "edit", "undo", "replaced", "delete")
-private val VALUES_23 = setOf("learned", "edit", "undo", "delete")
-private val VALUES_24 = setOf("rule", "locked", "shared", "other_person")
-private val VALUES_25 = setOf("accepted", "rejected")
+private val VALUES_14 = setOf("turn", "tool")
+private val VALUES_15 = setOf("nudge")
+private val VALUES_16 = setOf("question", "reply", "confirm_approach", "assign", "approve_command", "approve_result", "approve_knowledge", "approve_device", "continue_after_limit", "take_over_terminal", "fix_file", "custom")
+private val PATTERN_17 = Regex("^p-[0-9a-f-]{36}\\z")
+private val PATTERN_18 = Regex("^[0-9a-f]{64}\\z")
+private val VALUES_19 = setOf("tmux", "orca", "pty")
+private val VALUES_20 = setOf("done", "moved", "stopped", "crashed", "replaced")
+private val VALUES_21 = setOf("expired", "reboot", "human")
+private val PATTERN_22 = Regex("^[a-z][a-z0-9-]*\\z")
+private val PATTERN_23 = Regex("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z#\\d{4}\\z")
+private val VALUES_24 = setOf("learned", "edit", "undo", "replaced", "delete")
+private val VALUES_25 = setOf("learned", "edit", "undo", "delete")
+private val VALUES_26 = setOf("rule", "locked", "shared", "other_person")
+private val VALUES_27 = setOf("accepted", "rejected")
 
 /** The data of an event of a known type: AW event (one JSON Lines line). */
 sealed interface EventDataV1
@@ -329,10 +331,14 @@ data class MessageHumanV1(
 data class MessageAgentV1(
     @SerialName("text") val text: String,
     @SerialName("session") val session: String? = null,
+    @AwOptional @EncodeDefault(EncodeDefault.Mode.NEVER) @SerialName("source") val source: String? = null,
 ) : EventDataV1 {
     init {
         if (session != null) {
             AwChecks.pattern(session, PATTERN_3, "session")
+        }
+        if (source != null) {
+            AwChecks.oneOf(source, VALUES_14, "source")
         }
     }
 }
@@ -343,10 +349,14 @@ data class MessageSentV1(
     @SerialName("id") val id: String,
     @SerialName("text") val text: String,
     @SerialName("to_session") val toSession: String,
+    @AwOptional @EncodeDefault(EncodeDefault.Mode.NEVER) @SerialName("kind") val kind: String? = null,
 ) : EventDataV1 {
     init {
         AwChecks.pattern(id, PATTERN_3, "id")
         AwChecks.pattern(toSession, PATTERN_3, "to_session")
+        if (kind != null) {
+            AwChecks.oneOf(kind, VALUES_15, "kind")
+        }
     }
 }
 
@@ -372,14 +382,14 @@ data class GateOpenedV1(
 ) : EventDataV1 {
     init {
         AwChecks.pattern(gate, PATTERN_3, "gate")
-        AwChecks.oneOf(kind, VALUES_14, "kind")
+        AwChecks.oneOf(kind, VALUES_16, "kind")
         AwChecks.atLeast(version, 1L, "version")
         AwChecks.atMost(version, 9007199254740991L, "version")
         options.forEachIndexed { index, item ->
             AwChecks.minLength(item, 1, "options" + "." + index)
         }
         if (requestId != null) {
-            AwChecks.pattern(requestId, PATTERN_15, "request_id")
+            AwChecks.pattern(requestId, PATTERN_17, "request_id")
         }
         if (file != null) {
             AwChecks.minLength(file, 1, "file")
@@ -496,7 +506,7 @@ data class ArtifactAddedV1(
         AwChecks.relativePath(path, "path")
         AwChecks.atLeast(size, 0L, "size")
         AwChecks.atMost(size, 9007199254740991L, "size")
-        AwChecks.pattern(sha256, PATTERN_16, "sha256")
+        AwChecks.pattern(sha256, PATTERN_18, "sha256")
     }
 }
 
@@ -540,13 +550,15 @@ data class SessionStartedV1(
     @SerialName("branch") val branch: String? = null,
     @SerialName("credentials") val credentials: List<String> = emptyList(),
     @SerialName("pids") val pids: Pids = Pids(pane = null, claude = null, pgid = null),
+    @SerialName("name") val name: String? = null,
+    @AwOptional @EncodeDefault(EncodeDefault.Mode.NEVER) @SerialName("terminal") val terminal: Terminal? = null,
     @AwOptional @EncodeDefault(EncodeDefault.Mode.NEVER) @SerialName("permission_mode") val permissionMode: String? = null,
     @AwOptional @EncodeDefault(EncodeDefault.Mode.NEVER) @SerialName("agent_teams") val agentTeams: Boolean? = null,
     @AwOptional @EncodeDefault(EncodeDefault.Mode.NEVER) @SerialName("work_in") val workIn: String? = null,
 ) : EventDataV1 {
     init {
         AwChecks.pattern(session, PATTERN_3, "session")
-        AwChecks.oneOf(host, VALUES_17, "host")
+        AwChecks.oneOf(host, VALUES_19, "host")
         AwChecks.minLength(cwd, 1, "cwd")
         if (pluginDir != null) {
             AwChecks.minLength(pluginDir, 1, "plugin_dir")
@@ -557,6 +569,9 @@ data class SessionStartedV1(
         credentials.forEachIndexed { index, item ->
             AwChecks.pattern(item, PATTERN_4, "credentials" + "." + index)
             AwChecks.maxLength(item, 63, "credentials" + "." + index)
+        }
+        if (name != null) {
+            AwChecks.minLength(name, 1, "name")
         }
         if (permissionMode != null) {
             AwChecks.oneOf(permissionMode, VALUES_6, "permission_mode")
@@ -587,6 +602,21 @@ data class SessionStartedV1(
             }
         }
     }
+
+    @Serializable
+    data class Terminal(
+        @SerialName("window") val window: String?,
+        @SerialName("pane") val pane: String?,
+    ) {
+        init {
+            if (window != null) {
+                AwChecks.minLength(window, 1, "window")
+            }
+            if (pane != null) {
+                AwChecks.minLength(pane, 1, "pane")
+            }
+        }
+    }
 }
 
 /** The data of `session.resumed`. */
@@ -594,9 +624,48 @@ data class SessionStartedV1(
 data class SessionResumedV1(
     @SerialName("session") val session: String,
     @SerialName("text") val text: String = "",
+    @AwOptional @EncodeDefault(EncodeDefault.Mode.NEVER) @SerialName("terminal") val terminal: Terminal? = null,
+    @AwOptional @EncodeDefault(EncodeDefault.Mode.NEVER) @SerialName("pids") val pids: Pids? = null,
 ) : EventDataV1 {
     init {
         AwChecks.pattern(session, PATTERN_3, "session")
+    }
+
+    @Serializable
+    data class Terminal(
+        @SerialName("window") val window: String?,
+        @SerialName("pane") val pane: String?,
+    ) {
+        init {
+            if (window != null) {
+                AwChecks.minLength(window, 1, "window")
+            }
+            if (pane != null) {
+                AwChecks.minLength(pane, 1, "pane")
+            }
+        }
+    }
+
+    @Serializable
+    data class Pids(
+        @SerialName("pane") val pane: Long? = null,
+        @SerialName("claude") val claude: Long? = null,
+        @SerialName("pgid") val pgid: Long? = null,
+    ) {
+        init {
+            if (pane != null) {
+                AwChecks.atLeast(pane, 1L, "pane")
+                AwChecks.atMost(pane, 9007199254740991L, "pane")
+            }
+            if (claude != null) {
+                AwChecks.atLeast(claude, 1L, "claude")
+                AwChecks.atMost(claude, 9007199254740991L, "claude")
+            }
+            if (pgid != null) {
+                AwChecks.atLeast(pgid, 1L, "pgid")
+                AwChecks.atMost(pgid, 9007199254740991L, "pgid")
+            }
+        }
     }
 }
 
@@ -618,7 +687,7 @@ data class SessionEndedV1(
 ) : EventDataV1 {
     init {
         AwChecks.pattern(session, PATTERN_3, "session")
-        AwChecks.oneOf(reason, VALUES_18, "reason")
+        AwChecks.oneOf(reason, VALUES_20, "reason")
     }
 }
 
@@ -698,7 +767,7 @@ data class SlotRevokedV1(
         AwChecks.atMost(slot, 9007199254740991L, "slot")
         AwChecks.atLeast(fencingToken, 1L, "fencing_token")
         AwChecks.atMost(fencingToken, 9007199254740991L, "fencing_token")
-        AwChecks.oneOf(reason, VALUES_19, "reason")
+        AwChecks.oneOf(reason, VALUES_21, "reason")
     }
 }
 
@@ -798,7 +867,7 @@ data class ProjectRemovedV1(
                 AwChecks.pattern(item, PATTERN_1, "devices" + "." + index)
                 AwChecks.maxLength(item, 63, "devices" + "." + index)
             }
-            AwChecks.pattern(defaultAgent, PATTERN_20, "default_agent")
+            AwChecks.pattern(defaultAgent, PATTERN_22, "default_agent")
             testServers.forEachIndexed { index, item ->
                 AwChecks.pattern(item, PATTERN_4, "test_servers" + "." + index)
                 AwChecks.maxLength(item, 63, "test_servers" + "." + index)
@@ -810,7 +879,7 @@ data class ProjectRemovedV1(
                 AwChecks.minLength(mainRepo, 1, "main_repo")
             }
             if (addedAt != null) {
-                AwChecks.pattern(addedAt, PATTERN_21, "added_at")
+                AwChecks.pattern(addedAt, PATTERN_23, "added_at")
                 AwChecks.hlc(addedAt, "added_at")
             }
             AwChecks.oneOf(permissionMode, VALUES_6, "permission_mode")
@@ -839,17 +908,17 @@ data class KnowledgeChangedV1(
         AwChecks.maxLength(path, 1024, "path")
         AwChecks.relativePath(path, "path")
         if (hash != null) {
-            AwChecks.pattern(hash, PATTERN_16, "hash")
+            AwChecks.pattern(hash, PATTERN_18, "hash")
         }
         if (base != null) {
-            AwChecks.pattern(base, PATTERN_16, "base")
+            AwChecks.pattern(base, PATTERN_18, "base")
         }
         AwChecks.pattern(author, PATTERN_2, "author")
         AwChecks.maxLength(author, 127, "author")
         if (task != null) {
             AwChecks.pattern(task, PATTERN_3, "task")
         }
-        AwChecks.oneOf(kind, VALUES_22, "kind")
+        AwChecks.oneOf(kind, VALUES_24, "kind")
         if (suggestion != null) {
             AwChecks.pattern(suggestion, PATTERN_3, "suggestion")
         }
@@ -866,7 +935,7 @@ data class KnowledgeUndoRequestedV1(
         AwChecks.minLength(path, 1, "path")
         AwChecks.maxLength(path, 1024, "path")
         AwChecks.relativePath(path, "path")
-        AwChecks.pattern(hash, PATTERN_16, "hash")
+        AwChecks.pattern(hash, PATTERN_18, "hash")
     }
 }
 
@@ -889,19 +958,19 @@ data class KnowledgeSuggestedV1(
         AwChecks.maxLength(path, 1024, "path")
         AwChecks.relativePath(path, "path")
         if (hash != null) {
-            AwChecks.pattern(hash, PATTERN_16, "hash")
+            AwChecks.pattern(hash, PATTERN_18, "hash")
         }
         if (base != null) {
-            AwChecks.pattern(base, PATTERN_16, "base")
+            AwChecks.pattern(base, PATTERN_18, "base")
         }
         AwChecks.pattern(author, PATTERN_2, "author")
         AwChecks.maxLength(author, 127, "author")
         if (task != null) {
             AwChecks.pattern(task, PATTERN_3, "task")
         }
-        AwChecks.oneOf(kind, VALUES_23, "kind")
+        AwChecks.oneOf(kind, VALUES_25, "kind")
         reasons.forEachIndexed { index, item ->
-            AwChecks.oneOf(item, VALUES_24, "reasons" + "." + index)
+            AwChecks.oneOf(item, VALUES_26, "reasons" + "." + index)
         }
     }
 }
@@ -915,7 +984,7 @@ data class KnowledgeSuggestionResolvedV1(
 ) : EventDataV1 {
     init {
         AwChecks.pattern(suggestion, PATTERN_3, "suggestion")
-        AwChecks.oneOf(decision, VALUES_25, "decision")
+        AwChecks.oneOf(decision, VALUES_27, "decision")
     }
 }
 

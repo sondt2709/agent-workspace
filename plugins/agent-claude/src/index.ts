@@ -8,6 +8,7 @@ export {
   PLUGIN_DIR,
   PLUGIN_NAME,
   hookOutput,
+  hookSessionId,
   isCoveredVersion,
   launchArgs,
   launchArgv,

@@ -210,6 +210,21 @@ describe("gate full context across 2 devices", () => {
     expect(work.events.every((e) => e.type === "gate.opened")).toBe(true);
     expect(opened.event.data.decisions).toEqual(DECISIONS);
     evidence("approach-v1", { gate: gate.gate, decisions: opened.event.data.decisions });
+    // The session device wrote the turn text as Session only, and the link to its Claude session
+    // and terminal; both reach macbook-pro (openspec agent-pushes-updates).
+    const synced = await awJson<ThreadReply>(A, ["thread", task.id, "--limit", "1000"]);
+    const turns = synced.events.filter((e) => e.type === "message.agent" && e.dev === B);
+    expect(turns.length).toBeGreaterThan(0);
+    expect(turns.every((e) => e.event.data.source === "turn")).toBe(true);
+    const started = synced.events.find((e) => e.type === "session.started")!;
+    expect(started.dev).toBe(B);
+    expect(started.event.data.name).toBe(task.key);
+    expect(String((started.event.data.terminal as { pane: unknown }).pane)).toMatch(/^%\d+$/);
+    evidence("session-link", {
+      turn_sources: turns.map((e) => e.event.data.source),
+      name: started.event.data.name,
+      terminal: started.event.data.terminal,
+    });
     const answered = await aw(A, ["gate", "answer", gate.gate, "Confirm"]);
     expect(answered.code, answered.stderr).toBe(0);
   }, 200_000);

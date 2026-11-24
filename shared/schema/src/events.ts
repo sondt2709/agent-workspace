@@ -43,6 +43,11 @@ const text = z.string();
 /** The longest lease of a test slot: 24 h, in ms. */
 export const MAX_LEASE_TTL_MS = 24 * 60 * 60 * 1000;
 const leaseTtlMs = z.int().min(1).max(MAX_LEASE_TTL_MS);
+/** The window and pane of the session host (openspec agent-pushes-updates). */
+const sessionTerminal = z.looseObject({
+  window: z.string().min(1).nullable(),
+  pane: z.string().min(1).nullable(),
+});
 const sessionPids = z.looseObject({
   pane: z.int().min(1).nullable().default(null),
   claude: z.int().min(1).nullable().default(null),
@@ -151,8 +156,23 @@ export const eventDataV1 = {
     session: uuidv7,
     delivery_id: z.string().min(1).nullable().default(null),
   }),
-  "message.agent": z.looseObject({ text, session: uuidv7.nullable().default(null) }),
-  "message.sent": z.looseObject({ id: uuidv7, text, to_session: uuidv7 }),
+  /**
+   * `source` (openspec agent-pushes-updates): `turn` is the text of an agent turn (the Stop hook,
+   * Session only), `tool` a message that the agent sent with `aw message` or the MCP tool. An older
+   * event has no source.
+   */
+  "message.agent": z.looseObject({
+    text,
+    session: uuidv7.nullable().default(null),
+    source: z.enum(["turn", "tool"]).optional(),
+  }),
+  /** `kind: nudge`: the notice after a turn with no AW update (Session only). */
+  "message.sent": z.looseObject({
+    id: uuidv7,
+    text,
+    to_session: uuidv7,
+    kind: z.enum(["nudge"]).optional(),
+  }),
   "comment.added": z.looseObject({ text }),
 
   // Gates (docs/workflow.md 3).
@@ -211,12 +231,21 @@ export const eventDataV1 = {
     branch: z.string().min(1).nullable().default(null),
     credentials: z.array(entryName).default([]),
     pids: sessionPids.default({ pane: null, claude: null, pgid: null }),
+    /** The Claude session name (`-n`) and the terminal of the session host (agent-pushes-updates). */
+    name: z.string().min(1).nullable().optional(),
+    terminal: sessionTerminal.optional(),
     /** The options of this session (openspec session-options; no default: older events). */
     permission_mode: permissionMode.optional(),
     agent_teams: z.boolean().optional(),
     work_in: workIn.optional(),
   }),
-  "session.resumed": z.looseObject({ session: uuidv7, text: z.string().default("") }),
+  "session.resumed": z.looseObject({
+    session: uuidv7,
+    text: z.string().default(""),
+    /** The new pane of a resume (agent-pushes-updates); none for "Resume again". */
+    terminal: sessionTerminal.optional(),
+    pids: sessionPids.optional(),
+  }),
   /** A person asks the session device to stop the session (the phone "Stop session"). */
   "session.stop_requested": z.looseObject({ session: uuidv7 }),
   "session.ended": z.looseObject({

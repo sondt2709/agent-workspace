@@ -148,6 +148,11 @@ export function toolGate(tool: string, input: Record<string, unknown>): ToolGate
   return null;
 }
 
+/** The `session_id` of each hook payload of Claude Code, or null (openspec agent-pushes-updates). */
+export function hookSessionId(payload: unknown): string | null {
+  return text(record(payload).session_id) || null;
+}
+
 /** Parses one hook payload of Claude Code (fields of the capture of 2026-11-22, version 2.1.330). */
 export function parseHook(event: string, payload: unknown): AgentHookEvent {
   const p = record(payload);
@@ -393,6 +398,10 @@ export class ClaudeAdapter implements AgentRuntimeAdapter {
 
   sessionSettings(input: SessionSettingsInput): string {
     return sessionSettings(input);
+  }
+
+  hookSessionId(payload: unknown): string | null {
+    return hookSessionId(payload);
   }
 
   parseHook(event: string, payload: unknown): AgentHookEvent {

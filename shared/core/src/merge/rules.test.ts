@@ -595,6 +595,56 @@ describe("fields and assignment", () => {
     ]);
   });
 
+  it("keeps the link to the Claude session and takes the new pane of a resume (agent-pushes-updates)", async () => {
+    const task = newTask();
+    const s = session();
+    await ws.task(
+      task,
+      event(
+        "macbook-pro",
+        "task.created",
+        at("15:00:00"),
+        createdData("AW-21", { assignee: "claude@ubuntu-01" }),
+        human("macbook-pro"),
+      ),
+      event("ubuntu-01", "task.claimed", at("15:01:00"), {
+        epoch: 1,
+        device: "ubuntu-01",
+        session: s,
+        based_on: null,
+      }),
+      event("ubuntu-01", "session.started", at("15:01:01"), {
+        session: s,
+        host: "tmux",
+        cwd: "/w",
+        pids: { pane: 4242, claude: 4242, pgid: 4242 },
+        name: "AW-21",
+        terminal: { window: "aw-01a2", pane: "%12" },
+      }),
+    );
+    expect((await taskOf(task)).session).toMatchObject({
+      name: "AW-21",
+      terminal: { window: "aw-01a2", pane: "%12" },
+      pid: 4242,
+    });
+    // A resume opens a new pane; "Resume again" names none and keeps the values.
+    await ws.task(
+      task,
+      event("ubuntu-01", "session.resumed", at("15:05:00"), {
+        session: s,
+        text: "[AW resume] …",
+        terminal: { window: "aw-01a2", pane: "%15" },
+        pids: { pane: 5151, claude: 5151, pgid: 5151 },
+      }),
+      event("ubuntu-01", "session.resumed", at("15:06:00"), { session: s, text: "" }),
+    );
+    expect((await taskOf(task)).session).toMatchObject({
+      name: "AW-21",
+      terminal: { window: "aw-01a2", pane: "%15" },
+      pid: 5151,
+    });
+  });
+
   it("accepts a human assignment and refuses an agent assignment with the switch off", async () => {
     const task = newTask();
     await ws.task(

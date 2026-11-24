@@ -1,6 +1,7 @@
 package com.agentworkspace.control
 
 import com.agentworkspace.shared.merge.TaskView
+import com.agentworkspace.shared.merge.TerminalView
 
 /** The parts of the phone task detail that the desktop also has (openspec phone-task-focus). */
 object TaskDetail {
@@ -25,8 +26,24 @@ object TaskDetail {
             task.movingTo?.let { add("Moving to" to it) }
             task.claim?.let { add("Claim epoch" to it.epoch.toString()) }
             (session?.session ?: task.claim?.session)?.let { add("Session id" to it) }
+            // The link to the Claude session and its terminal (openspec agent-pushes-updates).
+            session?.name?.let { add("Name" to it) }
+            session?.terminal?.let { add("Terminal" to terminalLine(session.host, it)) }
+            session?.pid?.let { add("Pid" to it.toString()) }
             task.branch?.let { add("Branch" to it) }
             add("Task id" to task.id)
+        }
+
+    /** "tmux window <w> · pane <p>", or "Orca terminal <p>", as the desktop. */
+    private fun terminalLine(
+        host: String,
+        terminal: TerminalView,
+    ): String =
+        if (host == "orca") {
+            "Orca terminal ${terminal.pane ?: terminal.window.orEmpty()}"
+        } else {
+            listOfNotNull(terminal.window?.let { "tmux window $it" }, terminal.pane?.let { "pane $it" })
+                .joinToString(" · ")
         }
 
     /**

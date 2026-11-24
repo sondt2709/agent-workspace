@@ -1,0 +1,4 @@
+{
+  "description": "The link of a task to its Claude session and terminal (openspec agent-pushes-updates). AW-40: session.started names the session, the tmux window and pane and the pane pid; the session.resumed of an [AW resume] input names the new pane and pid; a later session.resumed with no terminal (Resume again) keeps them. The agent messages have the sources turn and tool, and the nudge notice has kind nudge: the merge applies each one. Synthetic data, written by hand on 2026-11-25.",
+  "now": "2026-11-25T10:00:00.000Z"
+}
