@@ -38,5 +38,5 @@
 - [x] 7.2 Run `task check` and `task leakcheck`
 - [x] 7.3 Run `task e2e`. Read the thread on the second device: the turn message has the source `turn`, the tool message has `tool`
 - [x] 7.4 Run awd with `AW_HOME=/tmp/aw-after` and the fake agent. Take screenshots of the desktop Activity and Session tabs
-- [x] 7.5 Run 1 or 2 short tasks with real Claude Code (haiku) on nuc-remote. Count `message.agent` by source and the nudge notices
-- [ ] 7.6 Take a screenshot of the phone Activity on nuc-android
+- [x] 7.5 Run 1 or 2 short tasks with real Claude Code (haiku) on the Linux test server (device ubuntu-01). Count `message.agent` by source and the nudge notices
+- [ ] 7.6 Take a screenshot of the phone Activity on the Android emulator of the test server
