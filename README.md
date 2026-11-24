@@ -38,10 +38,10 @@ Read `docs/README.md` for the design, and `docs/phase-1.md` for the phase 1 scop
 
 ## Build and check
 
-You need Node 24.15 or later (the exact version is in `.nvmrc`), go-task 3 and pre-commit 4.
+You need Node 26.13 or later, the current LTS (the exact version is in `.nvmrc`), go-task 3 and pre-commit 4.
 
 1. Select the Node version: `nvm use`.
-2. Enable pnpm through corepack: `corepack enable`.
+2. Install corepack and enable pnpm through it (Node 26 ships no corepack): `npm install -g corepack && corepack enable`.
 3. Install the dependencies: `pnpm install --frozen-lockfile`.
 4. Install the git hooks: `pre-commit install`.
 5. Run all checks: `task check`.

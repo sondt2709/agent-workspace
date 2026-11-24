@@ -16,7 +16,7 @@ Agent Workspace (AW) lets a person manage the work of AI coding agents from the 
 
 ## Commands
 ```sh
-corepack enable && pnpm install  # once per clone: pnpm from packageManager, then the dependencies
+npm i -g corepack && corepack enable && pnpm install  # once: Node 26 has no corepack; pnpm from packageManager
 pre-commit install               # once per clone: hooks for pre-commit, commit-msg, pre-push
 task check                       # YAML extension, then the check of each folder (scripts, shared, daemon, desktop,
                                  # plugins, e2e: format, lint, typecheck, tests; android: task android:check), then the leak check

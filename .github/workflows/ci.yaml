@@ -37,7 +37,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        node: ["24", "26"]
+        node: ["26"]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -75,7 +75,7 @@ jobs:
       # docs/tech-stack.md 1.2: the engine pins must match the sums that the Syncthing release key
       # signed (plugins/sync-syncthing/engine/engine.json). Needs the network and gpg.
       - name: Engine pins match the signed release
-        if: matrix.os == 'ubuntu-latest' && matrix.node == '24'
+        if: matrix.os == 'ubuntu-latest' && matrix.node == '26'
         run: pnpm --filter @aw/sync-syncthing engine:verify-pins
       - run: pnpm format:check
       - run: pnpm lint

@@ -1,5 +1,5 @@
 // `pnpm schema:generate`: writes the generated files of each target (docs/phase-1.md 3.4).
-// Node 24 runs this file with type stripping. CI runs it, then fails on a git diff.
+// Node runs this file with type stripping. CI runs it, then fails on a git diff.
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { renderAll, repoRoot, targets } from "./render.ts";

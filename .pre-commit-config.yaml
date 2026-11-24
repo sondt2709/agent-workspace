@@ -1,7 +1,7 @@
 # Git hooks for the monorepo. Install once per clone:
 #   uv tool install pre-commit   (or: brew install pre-commit)
 #   pre-commit install
-# Run "corepack enable" and "pnpm install" before you commit. The hooks use the tools of shared/config:
+# Run "npm install -g corepack", "corepack enable" and "pnpm install" before you commit. The hooks use the tools of shared/config:
 # the root has no tool dependencies (docs/decisions/2026-11-23-repo-layout.md). Prettier and ESLint
 # take the config of the package of each file.
 # CI runs the same checks (ci.yaml). A hook only gives the result earlier.

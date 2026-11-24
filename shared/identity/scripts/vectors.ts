@@ -1,5 +1,5 @@
 // `pnpm --filter @aw/identity vectors`: writes contracts/test-vectors/identity.json (openspec
-// add-android-pairing). Node 24 runs this file with type stripping. The deterministic part is
+// add-android-pairing). Node runs this file with type stripping. The deterministic part is
 // written again on each run. The age files sealed by TypeScript have random bytes, so a run keeps
 // the files that exist (`--new-age` makes new ones). The files sealed by Kotlin come from the Kotlin
 // test android/identity AgeVectorsTest; this script keeps them.

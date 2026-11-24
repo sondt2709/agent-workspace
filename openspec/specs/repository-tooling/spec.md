@@ -90,7 +90,7 @@ The pre-commit hook `no-yml-extension` and the CI step "YAML files use the .yaml
 - **THEN** each hook passes
 
 ### Requirement: CI checks workflow
-`.github/workflows/ci.yaml` SHALL run the repository rules, the Node checks on ubuntu and macOS with Node 24 and 26, the dependency audit and the gitleaks scan of the full history. One job named "CI OK" SHALL fail when one of these jobs fails. Each third-party action SHALL be pinned by commit SHA. The workflow SHALL have no release job.
+`.github/workflows/ci.yaml` SHALL run the repository rules, the Node checks on ubuntu and macOS with Node 26 (the current LTS), the dependency audit and the gitleaks scan of the full history. One job named "CI OK" SHALL fail when one of these jobs fails. Each third-party action SHALL be pinned by commit SHA. The workflow SHALL have no release job.
 
 #### Scenario: Workflow syntax
 - **WHEN** a contributor runs actionlint on `.github/workflows/*.yaml`
@@ -158,3 +158,4 @@ The repository root SHALL have no source code and no tool config file of one lan
 #### Scenario: No Android SDK
 - **WHEN** `task android:check` runs on a computer with a JDK 21 and no Android SDK
 - **THEN** the check runs the JVM tests of `:shared`, `:identity`, `:engine` and `:control` and lints `:app`, and passes
+

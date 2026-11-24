@@ -1,13 +1,14 @@
 # One image for each e2e device: awd, the aw CLI and the pinned sync engine (docs/phase-1.md 11).
 # Build from the repository root: docker compose -f e2e/compose.yaml build
-FROM node:24.22.3-bookworm-slim
+FROM node:26.13.1-bookworm-slim
 
 # procps: ps for the engine supervisor (exact pids). ca-certificates: the engine download.
 # git and tmux: the agent sessions (the worktree and the session host).
 RUN apt-get update \
   && apt-get install -y --no-install-recommends ca-certificates git procps tmux \
   && rm -rf /var/lib/apt/lists/*
-RUN corepack enable
+# Node 25 and later ship no corepack: install the pinned one from npm.
+RUN npm install -g corepack@0.34.6 && corepack enable
 
 WORKDIR /repo
 COPY . .

@@ -34,7 +34,7 @@ Obey these rules for every change. When a rule blocks you, add an entry to the e
 7. Name an upstream project by its public repository, for example `syncthing/syncthing`, never by a local path. Remove paths, host names and session ids from captured fixtures (transcripts, statusline JSON, hook events).
 
 ## 4. Repository and toolchain
-1. Pin the toolchain: `.nvmrc` (Node 24), `packageManager` (pnpm 10.16 or later through corepack), the JDK 21 toolchain for Android. Older pnpm ignores `minimumReleaseAge` with no warning (4.12). CI reads both files and installs with `--frozen-lockfile`.
+1. Pin the toolchain: `.nvmrc` (Node 26, the current LTS), `packageManager` (pnpm 10.16 or later through corepack), the JDK 21 toolchain for Android. Older pnpm ignores `minimumReleaseAge` with no warning (4.12). CI reads both files and installs with `--frozen-lockfile`.
 2. Pin the sync engine in one version file: the Syncthing tag, the sha256 of each binary, the Go and NDK versions of the Android build.
 3. Use `.yaml` for YAML files, also for workflows. A pre-commit hook and a CI step reject `*.yml`. Keep `.editorconfig` (UTF-8, LF, 2 spaces, width 100; Kotlin 4 spaces, width 120) and `.gitattributes` (`* text=auto eol=lf`, binary types, generated files marked). Install the hooks once per clone with `pre-commit install`. They run the standard set (private keys, files over 1 MB, merge markers, YAML and JSON syntax), gitleaks, Prettier, ESLint, ktlint, and the commit message check.
 4. Keep each deliverable in its own top-level folder: `daemon/`, `desktop/`, `android/`, `e2e/`. Keep each shared TypeScript library in `shared/`, each plugin in `plugins/`, and the language-neutral contract (JSON Schemas, OpenAPI file, fixtures, test vectors) in `contracts/`. A folder never imports from another deliverable folder. Share TypeScript code only through `shared/`; Kotlin reads only `contracts/`. The root holds only repo-wide files and no tool config of one language (`decisions/2026-11-23-repo-layout.md`). The TypeScript tool config is in `shared/config`.
@@ -94,7 +94,7 @@ Obey these rules for every change. When a rule blocks you, add an entry to the e
 ## 7. Tests
 ### 7.1 General
 1. Write a test that fails before the fix. Show that it can fail.
-2. Put unit tests next to the code (`*.test.ts`). CI runs them on ubuntu and macOS, on Node 24 and 26. CI also runs `npm pack --dry-run` on the awd package, and a test keeps each plugin `SKILL.md` below 6,000 characters.
+2. Put unit tests next to the code (`*.test.ts`). CI runs them on ubuntu and macOS, on Node 26 (the current LTS only). CI also runs `npm pack --dry-run` on the awd package, and a test keeps each plugin `SKILL.md` below 6,000 characters.
 3. Use the fake agent runtime and fake platforms in tests. Never call a paid API in CI.
 4. Copy fixtures from real responses. Write the source and the date of the capture next to the fixture.
 5. Read the time only through the clock module. Use the fake clock in tests. Never sleep in a test to wait for a timer.

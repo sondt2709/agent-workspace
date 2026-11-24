@@ -128,7 +128,7 @@ export function packageManifest(input: {
     license: "MIT",
     type: "module",
     bin: { aw: "daemon/src/bin/aw.js", awd: "daemon/src/bin/awd.js" },
-    engines: { node: ">=24.15" },
+    engines: { node: ">=26.13" },
     os: ["darwin", "linux"],
     dependencies: input.dependencies,
   };
