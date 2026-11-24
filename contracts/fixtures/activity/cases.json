@@ -1,5 +1,5 @@
 {
-  "description": "The Activity rule of the task detail (openspec phone-task-focus, task-view-focus, decision 37): places has one entry for each event type of contracts/samples/schema-samples.json; cases are thread rows with the expected in_activity and the line of the Activity row (null: the row uses its usual text). The desktop (desktop/src/renderer/src/activity-model.ts) and the phone (android/control Activity.kt) run the same cases. Synthetic data, written by hand on 2026-11-24.",
+  "description": "The Activity rule of the task detail (openspec phone-task-focus, task-view-focus, decision 37): places has one entry for each event type of contracts/samples/schema-samples.json; cases are thread rows with the expected in_activity and the line of the Activity row (null: the row uses its usual text). The desktop (desktop/src/renderer/src/activity-model.ts) and the phone (android/control Activity.kt) run the same cases. Synthetic data, written by hand on 2026-11-24; the message.agent source and the nudge cases on 2026-11-25 (agent-pushes-updates).",
   "clamp_lines": 6,
   "places": {
     "approach.proposed": "activity",
@@ -283,6 +283,71 @@
       "by": "aw@ubuntu-01",
       "data": {},
       "in_activity": false,
+      "line": null
+    },
+    {
+      "name": "agent message with the source tool",
+      "type": "message.agent",
+      "dev": "ubuntu-01",
+      "by": "claude@ubuntu-01",
+      "data": {
+        "text": "Tests pass: 50 runs.",
+        "session": "01a2038e-8100-7000-8000-000000000001",
+        "source": "tool"
+      },
+      "in_activity": true,
+      "line": null
+    },
+    {
+      "name": "text of an agent turn stays in Session",
+      "type": "message.agent",
+      "dev": "ubuntu-01",
+      "by": "claude@ubuntu-01",
+      "data": {
+        "text": "## Summary\n\nI changed 2 files.",
+        "session": "01a2038e-8100-7000-8000-000000000001",
+        "source": "turn"
+      },
+      "in_activity": false,
+      "line": null
+    },
+    {
+      "name": "older agent message with no source",
+      "type": "message.agent",
+      "dev": "ubuntu-01",
+      "by": "claude@ubuntu-01",
+      "data": {
+        "text": "Done.",
+        "session": "01a2038e-8100-7000-8000-000000000001"
+      },
+      "in_activity": true,
+      "line": null
+    },
+    {
+      "name": "nudge notice stays in Session",
+      "type": "message.sent",
+      "dev": "ubuntu-01",
+      "by": "aw@ubuntu-01",
+      "data": {
+        "id": "01a2038e-8200-7000-8000-000000000001",
+        "text": "Your turn ended with no AW update.",
+        "to_session": "01a2038e-8100-7000-8000-000000000001",
+        "kind": "nudge"
+      },
+      "in_activity": false,
+      "line": null
+    },
+    {
+      "name": "notice of AW with no kind",
+      "type": "message.sent",
+      "dev": "ubuntu-01",
+      "by": "aw@ubuntu-01",
+      "data": {
+        "id": "01a2038e-8200-7000-8000-000000000001",
+        "text": "Start implementing AW-7.",
+        "to_session": "01a2038e-8100-7000-8000-000000000001"
+      },
+      "in_activity": true,
       "line": null
     }
   ],

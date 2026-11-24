@@ -127,6 +127,8 @@ describe.skipIf(!TEST_TMUX)("the MCP server of awd", () => {
     expect(tools.find((t) => t.name === "ask")?.annotations?.idempotentHint).toBe(true);
     expect(client.getInstructions()).toBe(MCP_INSTRUCTIONS);
     expect(MCP_INSTRUCTIONS.length).toBeLessThan(4096);
+    expect(MCP_INSTRUCTIONS).toContain("Your text output goes only to the Session log");
+    expect(MCP_INSTRUCTIONS).toContain("End EACH turn with one AW call");
 
     // thread: the same events as GET .../thread, word for word, in pages.
     const thread = await call(client, "thread", { limit: 2 });
@@ -217,6 +219,8 @@ describe.skipIf(!TEST_TMUX)("the MCP server of awd", () => {
       (r) => r.type === "message.agent" && text(r) === "Tests pass.",
     );
     expect(by(message)).toBe("claude@macbook-pro");
+    // A message that the agent sends to AW shows in Activity (openspec agent-pushes-updates).
+    expect(data(message).source).toBe("tool");
     await d.waitRow(task.id, (r) => r.type === "task.progress" && text(r) === "Running the tests");
 
     // artifact_add with a path relative to the working folder; a repeat copies nothing more.

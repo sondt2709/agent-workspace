@@ -73,11 +73,15 @@ const STOPS = new Set(["stopped", "crashed"]);
  * answer (`gate.answered`), a notice of AW, or a delivered message (`message.sent`).
  * A `session.ended` shows only when the session stopped or crashed (decision 37); a done, moved or
  * replaced session shows its effect in other rows (Done, the assignment).
+ * The text of an agent turn (`message.agent` source `turn`) and the nudge notice show only in
+ * Session: Activity has what the agent sent to AW (openspec agent-pushes-updates).
  */
 export function inActivity(row: EventRow): boolean {
   if (ACTIVITY[row.type] !== "activity") return false;
   const data = row.event.data;
   if (row.type === "session.ended") return STOPS.has(String(data.reason));
+  if (row.type === "message.agent") return data.source !== "turn";
+  if (row.type === "message.sent") return data.kind !== "nudge";
   if (row.type !== "message.human") return true;
   const { source, delivery_id: delivery } = data;
   return (

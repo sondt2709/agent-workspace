@@ -45,7 +45,7 @@ export const validData: Record<EventType, Record<string, unknown>> = {
   "task.archived": {},
   "task.unarchived": {},
   "message.human": { text: "Use 1000/min.", source: "phone", session: ID, delivery_id: "m-1" },
-  "message.agent": { text: "Done. 50 runs passed.", session: ID },
+  "message.agent": { text: "Done. 50 runs passed.", session: ID, source: "tool" },
   "message.sent": { id: ID, text: "Also check the refunds.", to_session: ID2 },
   "comment.added": { text: "Looks good." },
   "gate.opened": {
@@ -460,6 +460,38 @@ export const docLine = {
 /** Valid and invalid samples of `event.v1`. */
 export const eventSamples: { name: string; value: unknown; invalidPath?: string }[] = [
   { name: "gate.answered line of docs/workflow.md 9", value: docLine },
+  {
+    name: "message.agent with no source (an older event)",
+    value: event("message.agent", { text: "Done.", session: null }),
+  },
+  {
+    name: "message.agent with the source turn",
+    value: event("message.agent", { text: "Done.", session: ID, source: "turn" }),
+  },
+  {
+    name: "message.agent with an unknown source",
+    value: event("message.agent", { text: "Done.", session: ID, source: "other" }),
+    invalidPath: "data.source",
+  },
+  {
+    name: "message.sent nudge notice",
+    value: event("message.sent", {
+      id: ID,
+      text: "Send the update.",
+      to_session: ID2,
+      kind: "nudge",
+    }),
+  },
+  {
+    name: "session.started with the name and the terminal",
+    value: event("session.started", {
+      session: ID,
+      host: "tmux",
+      cwd: "/work/billing-api",
+      name: "AW-7",
+      terminal: { window: "aw-AW-7", pane: "%12" },
+    }),
+  },
   {
     name: "task.assigned with the session host orca",
     value: event("task.assigned", { assignee: "claude@ubuntu-01", session_host: "orca" }),

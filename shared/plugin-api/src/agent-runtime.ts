@@ -124,6 +124,11 @@ export interface AgentRuntimeAdapter {
   sessionSettings(input: SessionSettingsInput): string;
   /** Parses one hook payload. Unknown fields stay out of the result; nothing throws. */
   parseHook(event: string, payload: unknown): AgentHookEvent;
+  /**
+   * The agent session id of one hook payload (Claude Code `session_id`), or null. awd compares it
+   * with the AW session id (openspec agent-pushes-updates).
+   */
+  hookSessionId?(payload: unknown): string | null;
   /** The stdout JSON of a hook that answers, or null. */
   hookOutput(
     event: string,

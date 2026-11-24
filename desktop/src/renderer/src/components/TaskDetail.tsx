@@ -31,6 +31,7 @@ import {
   approachVersions,
   details,
   pauseLabel,
+  sessionLink,
   stageLabel,
   STAGES,
   taskLabel,
@@ -320,6 +321,16 @@ function SessionSummary({ task }: { task: Task }) {
         {d.branch ? `branch ${d.branch} · ` : ""}
         task {task.id}
       </Typography>
+      {d.session ? (
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          aria-label="Session link"
+          sx={{ fontFamily: "var(--aw-font-mono)", overflowWrap: "anywhere" }}
+        >
+          {sessionLink(d.session).join(" · ")}
+        </Typography>
+      ) : null}
     </Stack>
   );
 }

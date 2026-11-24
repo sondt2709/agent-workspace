@@ -106,6 +106,11 @@ export const sessionRecord = z.looseObject({
    * gets a text only after the SessionStart of its current pane (docs/phase-1.md 9.9.3).
    */
   ready_pane: z.string().optional(),
+  /**
+   * The agent session ids of hook events that are not the id of this session: awd warned once for
+   * each (openspec agent-pushes-updates).
+   */
+  foreign_sessions: z.array(z.string()).default([]),
   /** True from a UserPromptSubmit to the next Stop: Claude Code queues a text that arrives then. */
   busy: z.boolean().default(false),
   /**

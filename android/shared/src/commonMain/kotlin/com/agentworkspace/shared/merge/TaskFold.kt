@@ -379,6 +379,9 @@ class TaskFold(
                             permissionMode = data.permissionMode,
                             agentTeams = data.agentTeams,
                             workIn = data.workIn,
+                            name = data.name,
+                            terminal = data.terminal?.let { t -> TerminalView(t.window, t.pane) },
+                            pid = data.pids.pane,
                         )
                     if (!sessionStarted && branch == null) branch = data.branch
                     sessionStarted = true
@@ -389,9 +392,24 @@ class TaskFold(
                 Decision.OK.also {
                     // The same session keeps its values; another session has none known.
                     val same = session?.takeIf { current -> current.session == data.session }
+                    // A resume names its new pane (agent-pushes-updates); "Resume again" names none.
+                    val terminal = data.terminal?.let { t -> TerminalView(t.window, t.pane) }
                     session =
-                        same?.copy(device = e.dev, state = "running", reason = null)
-                            ?: SessionView(data.session, e.dev, "unknown", "running", null)
+                        same?.copy(
+                            device = e.dev,
+                            state = "running",
+                            reason = null,
+                            terminal = terminal ?: same.terminal,
+                            pid = data.pids?.pane ?: same.pid,
+                        ) ?: SessionView(
+                            data.session,
+                            e.dev,
+                            "unknown",
+                            "running",
+                            null,
+                            terminal = terminal,
+                            pid = data.pids?.pane,
+                        )
                 }
             }
 
