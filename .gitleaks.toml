@@ -5,3 +5,11 @@ useDefault = true
 [[allowlists]]
 description = "Test vectors: fixed, public test keys (HLC, age, Ed25519), not secrets"
 paths = ['''^contracts/test-vectors/.*\.json$''']
+
+[[allowlists]]
+description = "Public RFC 8291 appendix A values (Web Push tests and schema samples) and the fake sk_test_*_4242 credentials of the e2e tests"
+regexes = [
+  '''^BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4$''',
+  '''^BTBZMqHH6r4Tts7J_aSIgg$''',
+  '''^sk_test_[a-z_]+_4242$''',
+]
