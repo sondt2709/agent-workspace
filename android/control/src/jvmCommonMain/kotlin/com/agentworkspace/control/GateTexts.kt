@@ -13,6 +13,12 @@ data class GateDecision(
     val recommended: String,
 )
 
+/** The answer of the decision picks: "Request changes" with one line for each changed decision. */
+data class DecisionsAnswer(
+    val answer: String,
+    val comment: String,
+)
+
 /** One option of a gate question (`gate.opened` `data.questions[].options[]`, gate-context). */
 data class GateQuestionOption(
     val label: String,
@@ -67,6 +73,52 @@ object GateTexts {
             if (options == null || options.any { it == null }) return@mapNotNull null
             GateDecision(question, options.filterNotNull(), recommended)
         }
+
+    // ---- Decision picks (openspec task-review-layout, design decision 4). TS: @aw/client/gates. ----
+
+    /** The option that makes the agent write a new approach, and the answer of the decision picks. */
+    const val REQUEST_CHANGES = "Request changes"
+
+    /** True when the person can pick the decisions of a gate: the gate has the option "Request changes". */
+    fun canPickDecisions(options: List<String>): Boolean =
+        options.any { it.trim().equals(REQUEST_CHANGES, ignoreCase = true) }
+
+    /**
+     * The answer for the decision picks of a gate, or null when each pick is the recommended option
+     * (the gate then gets its recommended option, for example "Confirm"). `picks[i]` is the option
+     * label picked for decision i; a missing pick or a label that is not an option counts as the
+     * recommended option. `contracts/fixtures/gates/decisions-answer.json`.
+     */
+    fun decisionsAnswer(
+        decisions: List<GateDecision>,
+        picks: List<String>,
+    ): DecisionsAnswer? {
+        val changed =
+            decisions.mapIndexedNotNull { i, d ->
+                val pick = picks.getOrNull(i)
+                if (pick != null && pick != d.recommended && pick in d.options) "- ${d.question}: $pick" else null
+            }
+        if (changed.isEmpty()) return null
+        val lines = mutableListOf("My choices for the decisions:")
+        lines += changed
+        if (changed.size < decisions.size) lines += "Keep the recommended option of the other decisions."
+        return DecisionsAnswer(REQUEST_CHANGES, lines.joinToString("\n"))
+    }
+
+    /**
+     * The status line under the decision picks, as the desktop `DecisionList`: how many picks differ
+     * from the recommendation and what "Send my choices" does.
+     */
+    fun picksLine(
+        decisions: List<GateDecision>,
+        picks: List<String>,
+    ): String {
+        val differ = decisions.indices.count { i -> picks.getOrNull(i) != decisions[i].recommended }
+        if (differ == 0) return "All picks are the recommended options."
+        val verb = if (differ == 1) "pick differs" else "picks differ"
+        return "$differ $verb from the recommendation. “Send my choices” asks the agent for a new " +
+            "approach with your picks."
+    }
 
     /** The text with no decision block when the gate has decisions to show; else the text. */
     fun body(

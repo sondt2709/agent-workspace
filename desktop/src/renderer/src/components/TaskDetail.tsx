@@ -1,12 +1,15 @@
-// The task detail, as an issue (docs/design.md 8.6, openspec task-view-focus): the header with the
-// stage progress, then the tabs Activity (gates, the description, the key activity), Session (the
-// session summary and each raw event: principle 8), Terminal and Files. The properties are a
-// right panel when the task detail is wide, else a Properties tab. The width is the width of the
-// task detail itself, so the board split gets the narrow layout.
+// The task page, as an issue (docs/design.md 8.6, openspec task-view-focus, task-review-layout): the
+// header with the need-you navigation, "Show list" and the stage progress, then the tabs Activity
+// (gates, the description, the key activity), Session (the session summary and each raw event:
+// principle 8), Terminal and Files. The properties are a right panel when the task page is wide,
+// else a Properties tab. The width is the width of the task page itself. The Android app has the
+// same page (android/app TaskScreens.kt).
 import ArrowBack from "@mui/icons-material/ArrowBackOutlined";
-import Close from "@mui/icons-material/CloseOutlined";
+import ChevronLeft from "@mui/icons-material/ChevronLeftOutlined";
+import ChevronRight from "@mui/icons-material/ChevronRightOutlined";
 import Key from "@mui/icons-material/KeyOutlined";
 import Terminal from "@mui/icons-material/TerminalOutlined";
+import ViewSidebar from "@mui/icons-material/ViewSidebarOutlined";
 import {
   Alert,
   Box,
@@ -24,16 +27,23 @@ import {
   type Theme,
 } from "@mui/material";
 import { useCallback, useId, useState, type ReactNode } from "react";
-import { Link as RouterLink } from "react-router";
+import { Link as RouterLink, useNavigate, useSearchParams } from "react-router";
 import type { Task } from "../../../shared/channels.ts";
 import { errorText } from "../bridge.ts";
 import {
   approachVersions,
+  CONTENT_MAX_PX,
   details,
+  GROUP_LABEL,
+  needYouNav,
   pauseLabel,
+  PROPERTIES_PANEL_PX,
   stageLabel,
   STAGES,
+  switchGroups,
+  TASK_LIST_PX,
   taskLabel,
+  taskPageLayout,
   type Stage,
 } from "../model.ts";
 import { useQueues, useTask, useTasks, useWorkEvents } from "../queries.ts";
@@ -54,12 +64,10 @@ export const WIDE_DETAIL_PX = 1000;
 type TabId = "activity" | "session" | "terminal" | "files" | "properties";
 
 /**
- * True when the element is at least `px` wide, from a ResizeObserver. With no ResizeObserver (the
- * renderer tests), the media query `lg` of the window decides.
+ * The width of the element, from a ResizeObserver. With no ResizeObserver (the renderer tests), the
+ * media query `lg` of the window decides: 1280 px from `lg`, else 800 px.
  */
-function useOwnWidth(
-  px: number,
-): [(node: HTMLElement | null) => (() => void) | undefined, boolean] {
+function useOwnWidth(): [(node: HTMLElement | null) => (() => void) | undefined, number] {
   const windowWide = useMediaQuery((theme: Theme) => theme.breakpoints.up("lg"));
   const [width, setWidth] = useState<number | null>(null);
   const ref = useCallback((node: HTMLElement | null) => {
@@ -71,7 +79,7 @@ function useOwnWidth(
     observer.observe(node);
     return () => observer.disconnect();
   }, []);
-  return [ref, width === null ? windowWide : width >= px];
+  return [ref, width ?? (windowWide ? 1280 : 800)];
 }
 
 function Field({ label, children, note }: { label: string; children: ReactNode; note?: string }) {
@@ -421,22 +429,130 @@ export function NeedsYouCards({
   );
 }
 
+/** The task list of the task page: the tasks that need the person, then the working tasks. */
+function TaskSwitchList({ ws, current }: { ws: string; current: string }) {
+  const tasks = useTasks(ws).data ?? [];
+  const queues = useQueues(ws).data;
+  const [params] = useSearchParams();
+  const groups = switchGroups(tasks, queues);
+  return (
+    <Box
+      component="nav"
+      aria-label="Task list"
+      sx={{
+        width: TASK_LIST_PX,
+        flex: "none",
+        overflowY: "auto",
+        borderRight: 1,
+        borderColor: "divider",
+        p: 2,
+      }}
+    >
+      {groups.map((g) => (
+        <Stack key={g.id} spacing={0.5} sx={{ mb: 2 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ px: 1.5 }}>
+            {GROUP_LABEL[g.id]} · {g.tasks.length}
+          </Typography>
+          {g.tasks.map((t) => (
+            <Button
+              key={t.id}
+              component={RouterLink}
+              to={`/w/${ws}/tasks/${t.id}?${params.toString()}`}
+              aria-current={t.id === current ? "page" : undefined}
+              color="inherit"
+              sx={{
+                display: "block",
+                textAlign: "left",
+                textTransform: "none",
+                px: 1.5,
+                py: 1,
+                border: 1,
+                borderColor: t.id === current ? "warning.main" : "transparent",
+                bgcolor: t.id === current ? "action.selected" : undefined,
+              }}
+            >
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: "block", fontFamily: "var(--aw-font-mono)" }}
+              >
+                {taskLabel(t)}
+              </Typography>
+              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                {t.title ?? "(no title)"}
+              </Typography>
+            </Button>
+          ))}
+        </Stack>
+      ))}
+    </Box>
+  );
+}
+
+/** "1 of 2 need you" with Previous and Next, in the Inbox order (design decision 3). */
+function NeedYouNavigation({ ws, task }: { ws: string; task: string }) {
+  const tasks = useTasks(ws).data ?? [];
+  const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const nav = needYouNav(tasks, task);
+  if (!nav.text) return null;
+  const go = (id: string | null) => {
+    if (id) void navigate(`/w/${ws}/tasks/${id}?${params.toString()}`, { replace: true });
+  };
+  return (
+    <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
+      <Typography variant="caption" color="text.secondary" sx={{ mr: 0.5 }}>
+        {nav.text}
+      </Typography>
+      <IconButton
+        size="small"
+        aria-label="Previous task that needs you"
+        disabled={!nav.prev}
+        onClick={() => go(nav.prev)}
+      >
+        <ChevronLeft fontSize="small" />
+      </IconButton>
+      <IconButton
+        size="small"
+        aria-label="Next task that needs you"
+        disabled={!nav.next}
+        onClick={() => go(nav.next)}
+      >
+        <ChevronRight fontSize="small" />
+      </IconButton>
+    </Stack>
+  );
+}
+
+/** The width of the content of the Activity and Session tabs and of the message box, centred. */
+const READ_SX = { maxWidth: CONTENT_MAX_PX, mx: "auto", width: "100%" } as const;
+
 export function TaskDetail({
   ws,
   taskId,
-  onClose,
   onBack,
 }: {
   ws: string;
   taskId: string;
-  /** The board split: a Close button. */
-  onClose?: () => void;
-  /** The task route: a Back button. */
+  /** Back: the screen that opened the task page. */
   onBack?: () => void;
 }) {
   const query = useTask(ws, taskId);
   const queues = useQueues(ws);
-  const [ref, wide] = useOwnWidth(WIDE_DETAIL_PX);
+  const [params, setParams] = useSearchParams();
+  const [ref, width] = useOwnWidth();
+  const layout = taskPageLayout(width, params.get("list") === "1", WIDE_DETAIL_PX);
+  const wide = layout.propertiesPanel;
+  const toggleList = () =>
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (layout.list) next.delete("list");
+        else next.set("list", "1");
+        return next;
+      },
+      { replace: true },
+    );
   const [chosen, setTab] = useState<TabId>("activity");
   const tab: TabId = wide && chosen === "properties" ? "activity" : chosen;
   // The tab panel is labelled by its tab (WAI-ARIA tabs pattern).
@@ -458,6 +574,7 @@ export function TaskDetail({
   } else {
     const task = query.data;
     const queue = queues.data?.get(task.id);
+    const reading = tab === "activity" || tab === "session";
     const content: Record<TabId, ReactNode> = {
       activity: (
         <Stack spacing={4}>
@@ -483,7 +600,7 @@ export function TaskDetail({
     };
     body = (
       <>
-        <Stack spacing={1} sx={{ px: 4, pt: 3, pb: 2, borderBottom: 1, borderColor: "divider" }}>
+        <Stack spacing={1} sx={{ px: 4, pt: 2, pb: 2, borderBottom: 1, borderColor: "divider" }}>
           <Stack
             direction="row"
             spacing={2}
@@ -507,12 +624,19 @@ export function TaskDetail({
             <TaskChips task={task} queue={queue} />
             <SessionOptionChips ws={ws} task={task} />
             <Box sx={{ flex: 1 }} />
-            <TaskActionsMenu ws={ws} task={task} />
-            {onClose && (
-              <IconButton aria-label="Close the task" onClick={onClose}>
-                <Close fontSize="small" />
-              </IconButton>
+            <NeedYouNavigation ws={ws} task={task.id} />
+            {layout.canList && (
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<ViewSidebar fontSize="small" />}
+                aria-pressed={layout.list}
+                onClick={toggleList}
+              >
+                {layout.list ? "Hide list" : "Show list"}
+              </Button>
             )}
+            <TaskActionsMenu ws={ws} task={task} />
           </Stack>
           <Typography variant="h1">{task.title ?? "(no title)"}</Typography>
           <StageProgress stage={task.stage} />
@@ -520,7 +644,9 @@ export function TaskDetail({
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: wide ? "minmax(0, 1fr) 300px" : "minmax(0, 1fr)",
+            gridTemplateColumns: wide
+              ? `minmax(0, 1fr) ${PROPERTIES_PANEL_PX}px`
+              : "minmax(0, 1fr)",
             flex: 1,
             minHeight: 0,
           }}
@@ -545,7 +671,7 @@ export function TaskDetail({
               aria-labelledby={tabId(tab)}
               sx={{ overflow: "auto", p: 4, flex: 1, minHeight: 0 }}
             >
-              <Stack spacing={3}>
+              <Stack spacing={3} sx={reading ? READ_SX : undefined}>
                 {/* Each tab except Activity: a gate never hides behind a tab. */}
                 {tab !== "activity" && (
                   <NeedsYouCards
@@ -560,9 +686,11 @@ export function TaskDetail({
                 {content[tab]}
               </Stack>
             </Box>
-            {(tab === "activity" || tab === "session") && (
+            {reading && (
               <Box sx={{ px: 4, py: 2, borderTop: 1, borderColor: "divider" }}>
-                <Composer ws={ws} task={task} />
+                <Box sx={READ_SX}>
+                  <Composer ws={ws} task={task} />
+                </Box>
               </Box>
             )}
           </Stack>
@@ -576,8 +704,9 @@ export function TaskDetail({
     );
   }
   return (
-    <Stack ref={ref} sx={{ height: "100%", minHeight: 0 }}>
-      {body}
-    </Stack>
+    <Box ref={ref} sx={{ height: "100%", minHeight: 0, display: "flex" }}>
+      {layout.list && <TaskSwitchList ws={ws} current={taskId} />}
+      <Stack sx={{ flex: 1, minWidth: 0, minHeight: 0 }}>{body}</Stack>
+    </Box>
   );
 }

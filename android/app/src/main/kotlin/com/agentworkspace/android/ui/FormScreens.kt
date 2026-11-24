@@ -4,10 +4,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
@@ -25,6 +25,7 @@ import androidx.compose.material3.OutlinedSecureTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldLabelPosition
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -73,8 +74,9 @@ fun NewTaskScreen(
     val projectMode = snapshot.projects.firstOrNull { it.slug == project }?.permissionMode
     val servers = ScreenStates.testServers(snapshot, project)
     val start = NewTaskChoices.startAgent(snapshot, project)
-    // The form scrolls above a pinned action bar, so "Create task" shows with no scroll (prc-16).
-    Column(Modifier.fillMaxSize().imePadding()) {
+    // The form scrolls above a pinned action bar, so "Create task" shows with no scroll (prc-16). The
+    // root of the app keeps the bar above the keyboard (openspec task-review-layout).
+    Column(Modifier.fillMaxSize()) {
         Column(
             Modifier
                 .weight(1f)
@@ -261,7 +263,8 @@ private fun CredentialChips(
             )
         }
     }
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    // The field has its label above it: the button aligns with the field.
+    Row(verticalAlignment = Alignment.Bottom) {
         OutlinedTextField(
             value = other,
             onValueChange = { other = it.lowercase().trim() },
@@ -321,9 +324,14 @@ fun CredentialScreen(
         // Accessibility services get only the masked value: the secure field gives them the clear text
         // (fix list 0-37). The outer semantics of the same node replace its editable text.
         val masked = AnnotatedString(MASK.toString().repeat(value.text.length))
+        // The label above the field and 48 dp, as the other fields (openspec task-review-layout).
         OutlinedSecureTextField(
             state = value,
-            label = { Text("Value") },
+            labelPosition = TextFieldLabelPosition.Above(),
+            label = { Text("Value", style = MaterialTheme.typography.labelMedium) },
+            textStyle = MaterialTheme.typography.bodyMedium,
+            shape = CompactShape,
+            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 15.dp),
             enabled = available,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, autoCorrectEnabled = false),
             modifier = Modifier.fillMaxWidth().semantics { editableText = masked },

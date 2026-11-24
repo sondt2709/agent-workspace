@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -156,7 +157,7 @@ fun LazyListScope.sessionOptionItems(
     projectMode: String?,
 ) {
     items(SessionOptionRows.rows(task, projectMode), key = { "options-${it.first}" }) { (label, value) ->
-        Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 2.dp)) {
+        Row(Modifier.fillMaxWidth().widthIn(max = MaxContentWidth).padding(horizontal = 16.dp, vertical = 2.dp)) {
             Text(label, style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(LABEL_SHARE))
             SelectionContainer(Modifier.weight(1f - LABEL_SHARE)) {
                 Text(value, style = MaterialTheme.typography.bodyMedium)

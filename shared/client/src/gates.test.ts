@@ -3,6 +3,9 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
+  agentMessage,
+  canPickDecisions,
+  decisionsAnswer,
   gateBody,
   gateContext,
   gateDecisions,
@@ -11,6 +14,7 @@ import {
   questionAnswer,
   questionMode,
   recommendedOption,
+  type AgentMessage,
   type ContextEvent,
   type GateDecision,
   type GateQuestion,
@@ -117,5 +121,37 @@ describe("gate context (contracts/fixtures/gates/context.json)", () => {
 
   it.each(c.context.map((x) => [x.name, x] as const))("context: %s", (_name, x) => {
     expect(gateContext(x.events, x.gate_event).map((e) => e.text)).toEqual(x.context);
+  });
+});
+
+describe("decision picks (contracts/fixtures/gates/decisions-answer.json)", () => {
+  const f = fixture<{
+    cases: {
+      name: string;
+      decisions: GateDecision[];
+      picks: string[];
+      expected: { answer: string; comment: string } | null;
+    }[];
+    gates: { name: string; options: string[]; can_pick: boolean }[];
+  }>("decisions-answer.json");
+  it.each(f.cases.map((c) => [c.name, c] as const))("%s", (_name, c) => {
+    expect(decisionsAnswer(c.decisions, c.picks)).toEqual(c.expected);
+  });
+  it.each(f.gates.map((g) => [g.name, g] as const))("can pick: %s", (_name, g) => {
+    expect(canPickDecisions(g.options)).toBe(g.can_pick);
+  });
+});
+
+describe("agent messages (contracts/fixtures/activity/agent-message.json)", () => {
+  const f = JSON.parse(
+    readFileSync(
+      fileURLToPath(
+        new URL("../../../contracts/fixtures/activity/agent-message.json", import.meta.url),
+      ),
+      "utf8",
+    ),
+  ) as { cases: { name: string; text: string; expected: AgentMessage | null }[] };
+  it.each(f.cases.map((c) => [c.name, c] as const))("%s", (_name, c) => {
+    expect(agentMessage(c.text)).toEqual(c.expected);
   });
 });

@@ -2,6 +2,8 @@
 // from the gate kind, the buttons from the gate options, the text and the time from the
 // `gate.opened` event of the thread.
 import {
+  canPickDecisions,
+  decisionsAnswer,
   gateBody,
   gateDecisions,
   gateHasBody,
@@ -160,6 +162,11 @@ function AnswerCard({ ws, task, gate }: GateCardProps) {
   const { mine, other } = pendingAnswer(gate, device);
   const owner = task.owner ?? "the session device";
   const decisions = gateDecisions(opened?.event.data);
+  // The decision picks: the recommended option until the person picks another (task-review-layout).
+  const [picked, setPicked] = useState<Record<number, string>>({});
+  const pickable = decisions.length > 0 && canPickDecisions(gate.options);
+  const picks = decisions.map((d, i) => picked[i] ?? d.recommended);
+  const choices = pickable ? decisionsAnswer(decisions, picks) : null;
   // The decisions show as a list: the text loses the decision block of awd (decision 4).
   const text = gateBody(
     typeof opened?.event.data.text === "string" ? opened.event.data.text : "",
@@ -241,7 +248,16 @@ function AnswerCard({ ws, task, gate }: GateCardProps) {
       )}
       {!isCommand && hasBody && <GateBody text={text} />}
       {!isCommand && !hasBody && asks && <GateContext rows={context.data ?? []} />}
-      <DecisionList decisions={decisions} />
+      <DecisionList
+        decisions={decisions}
+        {...(pickable && !mine
+          ? {
+              picks,
+              disabled: answer.isPending,
+              onPick: (i: number, option: string) => setPicked((p) => ({ ...p, [i]: option })),
+            }
+          : {})}
+      />
       {gate.kind === "approve_result" && (
         <ResultArtifacts ws={ws} task={task.id} gate={gate} rows={work.data?.events ?? []} />
       )}
@@ -285,24 +301,36 @@ function AnswerCard({ ws, task, gate }: GateCardProps) {
           )}
           {mode !== "list" && !asks && gate.options.length > 0 && (
             <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
-              {gate.options.map((option, i) => (
-                <Button
-                  key={option}
-                  variant={
-                    i === recommended && commentRule(option) === "none" ? "contained" : "outlined"
-                  }
-                  color={
-                    i === recommended && commentRule(option) === "none" ? "primary" : "inherit"
-                  }
-                  disabled={busy}
-                  aria-pressed={choice === option}
-                  onClick={() => pick(option)}
-                >
-                  {isCommand && countdown(openedMs, now).expired && i === 0
-                    ? `${option} (late)`
-                    : option}
-                </Button>
-              ))}
+              {gate.options.map((option, i) =>
+                choices && i === recommended ? (
+                  // A pick differs: the recommended option would ignore it (design decision 4).
+                  <Button
+                    key={option}
+                    variant="contained"
+                    disabled={busy}
+                    onClick={() => send(choices.answer, choices.comment)}
+                  >
+                    Send my choices
+                  </Button>
+                ) : (
+                  <Button
+                    key={option}
+                    variant={
+                      i === recommended && commentRule(option) === "none" ? "contained" : "outlined"
+                    }
+                    color={
+                      i === recommended && commentRule(option) === "none" ? "primary" : "inherit"
+                    }
+                    disabled={busy}
+                    aria-pressed={choice === option}
+                    onClick={() => pick(option)}
+                  >
+                    {isCommand && countdown(openedMs, now).expired && i === 0
+                      ? `${option} (late)`
+                      : option}
+                  </Button>
+                ),
+              )}
             </Stack>
           )}
           {choice && (

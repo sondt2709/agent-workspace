@@ -127,7 +127,9 @@ describe("GateCard", () => {
     const button = screen.getByRole("button", { name: "Library A" });
     expect(text.compareDocumentPosition(button) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     await userEvent.click(screen.getByRole("button", { name: "Show more" }));
-    expect(getComputedStyle(screen.getByTestId("gate-text")).overflowY).toBe("auto");
+    // The full text shows in the page, with no scroll box of its own (task-review-layout).
+    const open = getComputedStyle(screen.getByTestId("gate-text"));
+    expect([open.maxHeight, open.overflowY]).toEqual(["none", "visible"]);
     expect(screen.getByRole("button", { name: "Show less" })).toBeTruthy();
     expect(screen.queryByTestId("gate-context")).toBeNull();
   });
@@ -272,12 +274,12 @@ describe("GateCard", () => {
     );
   });
 
-  it("keeps a long approach inside the card with its own scroll (task-view-focus)", async () => {
+  it("shows a short approach in full, with no scroll box (task-review-layout)", async () => {
     const gate = makeGate({ kind: "confirm_approach", title: "Approach v1", options: ["Confirm"] });
     setup(gate, { data: { text: "# Plan\n\nA long approach." } });
     expect(await screen.findByText("A long approach.")).toBeTruthy();
     const box = getComputedStyle(screen.getByTestId("gate-text"));
-    expect([box.maxHeight, box.overflowY]).toEqual([`${window.innerHeight / 2}px`, "auto"]);
+    expect([box.maxHeight, box.overflowY]).toEqual(["none", "visible"]);
   });
 
   it("shows the countdown of Approve command", async () => {

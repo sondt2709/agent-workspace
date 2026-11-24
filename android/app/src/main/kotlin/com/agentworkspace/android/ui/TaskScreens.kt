@@ -4,11 +4,17 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -17,140 +23,159 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryScrollableTabRow
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.agentworkspace.control.ActivityRule
-import com.agentworkspace.control.ApproachVersions
-import com.agentworkspace.control.ArtifactList
-import com.agentworkspace.control.ArtifactRow
 import com.agentworkspace.control.LateAnswers
-import com.agentworkspace.control.QueueTexts
 import com.agentworkspace.control.ScreenStates
 import com.agentworkspace.control.SessionOptionRows
 import com.agentworkspace.control.SessionOptionsDraft
 import com.agentworkspace.control.TaskDetail
+import com.agentworkspace.control.TaskPageLayout
+import com.agentworkspace.control.TaskRowState
 import com.agentworkspace.control.TaskTab
 import com.agentworkspace.control.TerminalPaneState
-import com.agentworkspace.control.Texts
 import com.agentworkspace.control.ThreadItem
 import com.agentworkspace.control.ThreadKind
 import com.agentworkspace.control.ThreadWindow
 import com.agentworkspace.control.WorkspaceModel
 import com.agentworkspace.control.WorkspaceSnapshot
 import com.agentworkspace.shared.merge.TaskView
-import kotlinx.coroutines.delay
+
+/** The actions of the task page: the task actions of the header and the answers of its cards. */
+class TaskPageActions(
+    val onAnswer: (gate: String, answer: String, comment: String?, sent: () -> Unit) -> Unit,
+    val onAssign: (String) -> Unit,
+    val onSend: (text: String, sent: () -> Unit) -> Unit,
+    val onStopSession: () -> Unit = {},
+    val onNewSession: (assignee: String, options: SessionOptionsDraft?) -> Unit = { _, _ -> },
+    val onArchive: () -> Unit = {},
+    val onUnarchive: () -> Unit = {},
+)
+
+/** The navigation of the task page: Back, another task, and the task list of "Show list". */
+class TaskPageNavigation(
+    val onBack: () -> Unit,
+    val onOpen: (String) -> Unit,
+    val listOn: Boolean,
+    val onList: (Boolean) -> Unit,
+)
 
 /**
- * The task detail (openspec phone-task-focus, docs/design.md 8.6): the header, then the tabs Activity
- * (the gate cards, the description and the key activity), Session (the session summary and each raw
- * event), Terminal and Properties. [sessionInPane] is true while the third pane of a large window
- * shows the Session view: the tab row then has no Session tab.
+ * The task page (openspec task-review-layout, docs/design.md 8.6), the same parts as the desktop: the
+ * header (Back, the key, the project, the state chip, the need-you navigation, "Show list", the
+ * actions, the title and the stage bar), then the tabs Activity, Session, Terminal and Properties. The
+ * width of the page decides the task list and the Properties panel ([TaskPageLayout]), not the window.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TaskScreen(
     task: TaskView,
     snapshot: WorkspaceSnapshot,
-    sessionInPane: Boolean,
+    nav: TaskPageNavigation,
     loadThread: suspend (String, Int) -> ThreadWindow,
     loadTerminal: suspend (TaskView) -> TerminalPaneState,
     parts: TaskDetailParts,
-    onAnswer: (gate: String, answer: String, comment: String?, sent: () -> Unit) -> Unit,
-    onAssign: (String) -> Unit,
-    onSend: (text: String, sent: () -> Unit) -> Unit,
-    onStopSession: () -> Unit = {},
-    onNewSession: (assignee: String, options: SessionOptionsDraft?) -> Unit = { _, _ -> },
-    onArchive: () -> Unit = {},
-    onUnarchive: () -> Unit = {},
+    actions: TaskPageActions,
 ) {
-    // Each task opens on Activity: the state belongs to the task (the desktop `key={task}`).
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val layout = TaskPageLayout.of(maxWidth.value.toInt(), nav.listOn)
+        Row(Modifier.fillMaxSize()) {
+            if (layout.list) {
+                val width = TaskPageLayout.TASK_LIST_DP.dp
+                TaskListPane(snapshot, task.id, nav.onOpen, Modifier.width(width).fillMaxHeight())
+                VerticalDivider()
+            }
+            // Each task opens on Activity: the state belongs to the task (the desktop `key={task}`).
+            key(task.id) {
+                TaskMain(task, snapshot, layout, nav, loadThread, loadTerminal, parts, actions, Modifier.weight(1f))
+            }
+            if (layout.propertiesPanel) {
+                VerticalDivider()
+                PropertiesPanel(
+                    task,
+                    snapshot,
+                    parts,
+                    Modifier.width(TaskPageLayout.PROPERTIES_PANEL_DP.dp).fillMaxHeight(),
+                )
+            }
+        }
+    }
+}
+
+/** The header, the tabs and the message box of the task page. */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun TaskMain(
+    task: TaskView,
+    snapshot: WorkspaceSnapshot,
+    layout: TaskPageLayout,
+    nav: TaskPageNavigation,
+    loadThread: suspend (String, Int) -> ThreadWindow,
+    loadTerminal: suspend (TaskView) -> TerminalPaneState,
+    parts: TaskDetailParts,
+    actions: TaskPageActions,
+    modifier: Modifier,
+) {
     var selected by rememberSaveable(task.id) { mutableStateOf(TaskTab.ACTIVITY) }
-    val tabs = TaskTab.of(sessionInPane)
+    val tabs = layout.tabs
     val tab = TaskTab.shown(selected, tabs)
     // The newest 500 events; "Show older" adds 500 (fix list 0-20, prd TSK-24).
     var shown by rememberSaveable(task.id) { mutableIntStateOf(WorkspaceModel.THREAD_PAGE) }
     val thread by produceState(ThreadWindow.EMPTY, task.id, task.lastHlc, task.eventCount, shown) {
         value = loadThread(task.id, shown)
     }
-    // A request and a requested artifact change no event: read the list again every 3 s while one
-    // waits. The loop restarts when the wait starts; an equal list does not stop it.
-    var tick by remember(task.id) { mutableIntStateOf(0) }
-    var asked by remember(task.id) { mutableStateOf(emptySet<String>()) }
-    val artifacts by produceState(emptyList(), task.id, task.lastHlc, snapshot.loadedAtMs, tick) {
-        value = parts.loadArtifacts(task.id)
-    }
-    val waiting = ArtifactList.waiting(artifacts, asked)
-    LaunchedEffect(task.id, waiting) {
-        while (waiting) {
-            delay(ARTIFACT_CHECK_MS)
-            tick++
-        }
-    }
-    val download = { row: ArtifactRow ->
-        if (parts.onDownload(row)) asked = asked + row.request
-    }
+    val artifacts = rememberArtifacts(task, snapshot, parts)
     // A snapshot file changes with no event: read it again at each reload of the model.
     val terminal by produceState<TerminalPaneState?>(null, task.id, snapshot.loadedAtMs) { value = loadTerminal(task) }
     var draft by rememberSaveable(task.id) { mutableStateOf("") }
     var assigning by rememberSaveable(task.id) { mutableStateOf(false) }
     val row = ScreenStates.row(task, snapshot)
     val older = { shown += WorkspaceModel.THREAD_PAGE }
-    Column(Modifier.fillMaxSize()) {
+    Column(modifier.fillMaxHeight()) {
         // The header scrolls with the list and the tab row stays at the top, so a short window (a phone
         // in landscape, the keyboard open) keeps the list. Each tab opens at the top with its own
-        // scroll state, so the needs-you line shows.
+        // scroll state, so the needs-you line shows. The content is 840 dp wide at most and centred.
         key(tab) {
-            LazyColumn(Modifier.weight(1f).fillMaxWidth().focusGroup()) {
+            LazyColumn(
+                Modifier.weight(1f).fillMaxWidth().focusGroup(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
                 item(key = "header") {
-                    Column(
-                        Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp).widthIn(max = MaxContentWidth),
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                row.label,
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.weight(1f),
-                            )
-                            if (task.archived) Text("Archived", style = MaterialTheme.typography.labelMedium)
-                            TaskActionsMenu(task, onStopSession, onArchive, onUnarchive)
-                        }
-                        SelectionContainer { Text(row.title, style = MaterialTheme.typography.headlineSmall) }
-                        row.pause?.let { chip ->
-                            PauseChipView(chip)
-                            if (chip.canAssign) {
-                                TextButton(onClick = {
-                                    assigning = true
-                                    selected = TaskTab.ACTIVITY
-                                }) { Text("Assign to another device…") }
-                            }
-                        }
-                        row.queue?.let { QueueChipView(it, row.queueCause) }
-                        val projectMode = SessionOptionRows.projectMode(task, snapshot.projects)
-                        SessionOptionChips(task, projectMode)
-                        SessionActions(task, snapshot, onNewSession)
+                    TaskHeader(task, snapshot, row, layout, nav, actions) {
+                        assigning = true
+                        selected = TaskTab.ACTIVITY
                     }
                 }
                 stickyHeader(key = "tabs") {
-                    PrimaryScrollableTabRow(selectedTabIndex = tabs.indexOf(tab), edgePadding = 8.dp) {
-                        tabs.forEach { t ->
-                            Tab(selected = t == tab, onClick = { selected = t }, text = { Text(t.label) })
+                    Surface(Modifier.fillMaxWidth()) {
+                        PrimaryScrollableTabRow(selectedTabIndex = tabs.indexOf(tab), edgePadding = 8.dp) {
+                            tabs.forEach { t ->
+                                Tab(selected = t == tab, onClick = { selected = t }, text = { Text(t.label) })
+                            }
                         }
                     }
                 }
@@ -161,45 +186,7 @@ fun TaskScreen(
                 }
                 when (tab) {
                     TaskTab.ACTIVITY -> {
-                        items(ScreenStates.gateCards(task, snapshot), key = { it.gate.gate }) { card ->
-                            GateCardView(
-                                card,
-                            ) { answer, comment, sent -> onAnswer(card.gate.gate, answer, comment, sent) }
-                        }
-                        items(LateAnswers.of(task, snapshot.phone), key = { "late-${it.gate}" }) { late ->
-                            Card(
-                                modifier = Modifier.listCard(),
-                                colors =
-                                    CardDefaults.cardColors(
-                                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                    ),
-                            ) {
-                                Text(
-                                    late.text,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier.padding(16.dp),
-                                )
-                            }
-                        }
-                        if (ScreenStates.needsAssign(task) || assigning) {
-                            item(key = "assign") {
-                                val title = if (assigning) "Assign to another device…" else "${row.label} · Assign task"
-                                val choices =
-                                    if (assigning) {
-                                        ScreenStates.agentChoices(
-                                            snapshot,
-                                            task.project,
-                                            except = task.assignee?.substringAfter('@'),
-                                        )
-                                    } else {
-                                        ScreenStates.agentChoices(snapshot, task.project, task.assignee)
-                                    }
-                                AssignCard(title, choices) {
-                                    assigning = false
-                                    onAssign(it)
-                                }
-                            }
-                        }
+                        cardItems(task, snapshot, row, assigning, actions) { assigning = false }
                         item(key = "description") { Description(task.firstMessage) }
                         activityItems(thread, older)
                     }
@@ -213,37 +200,65 @@ fun TaskScreen(
                     }
 
                     TaskTab.PROPERTIES -> {
-                        items(
-                            QueueTexts.withQueue(ScreenStates.fields(task), snapshot.queueEntries[task.id]),
-                            key = { "field-${it.first}" },
-                        ) { (label, value) -> FieldRow(label, value) }
-                        val versions = ApproachVersions.of(task)
-                        if (versions.isNotEmpty()) {
-                            item { SectionHeader("Approach") }
-                            items(versions, key = { "approach-${it.version}" }) { v ->
-                                ApproachRow(task.id, v, parts.loadApproach)
-                            }
-                        }
-                        if (artifacts.isNotEmpty()) {
-                            item { SectionHeader("Artifacts · ${artifacts.size}") }
-                            items(artifacts, key = { "artifact-${it.path}" }) { row ->
-                                ArtifactLine(row, download, parts.onOpenArtifact)
-                            }
-                        }
+                        propertyItems(task, snapshot, parts, artifacts.rows, artifacts.download)
                     }
                 }
             }
         }
         if (tab.hasMessageBox) {
             val can = ScreenStates.canMessage(task)
-            MessageField(
-                value = draft,
-                onValueChange = { draft = it },
-                label = if (can) "Message to the session" else "No session runs: assign the task first",
-                enabled = can,
-                onSend = { onSend(draft) { draft = "" } },
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).widthIn(max = MaxContentWidth),
-            )
+            HorizontalDivider()
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+                MessageField(
+                    value = draft,
+                    onValueChange = { draft = it },
+                    label = "Message to the agent",
+                    placeholder = if (can) SEND_HINT else NO_SESSION,
+                    enabled = can,
+                    onSend = { actions.onSend(draft) { draft = "" } },
+                    modifier =
+                        Modifier
+                            .widthIn(max = MaxContentWidth)
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                )
+            }
+        }
+    }
+}
+
+/** The open gate cards, the late answers and the Assign card: first in Activity. */
+private fun LazyListScope.cardItems(
+    task: TaskView,
+    snapshot: WorkspaceSnapshot,
+    row: TaskRowState,
+    assigning: Boolean,
+    actions: TaskPageActions,
+    onAssigned: () -> Unit,
+) {
+    items(ScreenStates.gateCards(task, snapshot), key = { it.gate.gate }) { card ->
+        GateCardView(card) { answer, comment, sent -> actions.onAnswer(card.gate.gate, answer, comment, sent) }
+    }
+    items(LateAnswers.of(task, snapshot.phone), key = { "late-${it.gate}" }) { late ->
+        Card(
+            modifier = Modifier.listCard(),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        ) {
+            Text(late.text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(16.dp))
+        }
+    }
+    if (ScreenStates.needsAssign(task) || assigning) {
+        item(key = "assign") {
+            val title = if (assigning) "Assign to another device…" else "${row.label} · Assign task"
+            val choices =
+                if (assigning) {
+                    ScreenStates.agentChoices(snapshot, task.project, except = task.assignee?.substringAfter('@'))
+                } else {
+                    ScreenStates.agentChoices(snapshot, task.project, task.assignee)
+                }
+            AssignCard(title, choices) {
+                onAssigned()
+                actions.onAssign(it)
+            }
         }
     }
 }
@@ -279,24 +294,11 @@ private fun Description(text: String?) {
     }
 }
 
-@Composable
-private fun FieldRow(
-    label: String,
-    value: String,
-) {
-    Row(Modifier.fillMaxWidth().widthIn(max = MaxContentWidth).padding(horizontal = 16.dp, vertical = 2.dp)) {
-        Text(label, style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(LABEL_WEIGHT))
-        SelectionContainer(Modifier.weight(1f - LABEL_WEIGHT)) {
-            Text(value, style = MaterialTheme.typography.bodyMedium)
-        }
-    }
-}
-
 /** The newest terminal snapshot: the caption, the screen in a monospace block, or the note. */
 @Composable
 private fun TerminalCard(state: TerminalPaneState) {
     Column(
-        Modifier.padding(horizontal = 16.dp).widthIn(max = MaxContentWidth),
+        Modifier.fillMaxWidth().widthIn(max = MaxContentWidth).padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         state.caption?.let { Text(it, style = MaterialTheme.typography.labelSmall) }
@@ -312,23 +314,6 @@ private fun TerminalCard(state: TerminalPaneState) {
             }
         }
         state.note?.let { Text(it, style = MaterialTheme.typography.bodyMedium) }
-    }
-}
-
-/** The Session view of a task in the third pane of a large window: the summary and each raw event. */
-@Composable
-fun SessionPane(
-    task: TaskView,
-    loadThread: suspend (String, Int) -> ThreadWindow,
-    projectMode: String? = null,
-) {
-    var shown by rememberSaveable(task.id) { mutableIntStateOf(WorkspaceModel.THREAD_PAGE) }
-    val thread by produceState(ThreadWindow.EMPTY, task.id, task.lastHlc, task.eventCount, shown) {
-        value = loadThread(task.id, shown)
-    }
-    LazyColumn(Modifier.fillMaxSize().focusGroup()) {
-        item { SectionHeader("Session · ${Texts.taskLabel(task.id, task.key)}") }
-        sessionItems(task, thread, { shown += WorkspaceModel.THREAD_PAGE }, projectMode)
     }
 }
 
@@ -369,7 +354,7 @@ private fun LazyListScope.activityItems(
             )
         }
     }
-    items(thread.activity, key = { "activity-${it.id}" }) { ThreadLine(it, clamp = it.kind == ThreadKind.AGENT) }
+    items(thread.activity, key = { "activity-${it.id}" }) { ThreadLine(it, activity = true) }
 }
 
 private fun LazyListScope.olderItem(
@@ -378,7 +363,10 @@ private fun LazyListScope.olderItem(
 ) {
     if (thread.hasOlder) {
         item(key = "thread-older") {
-            Row(Modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                Modifier.fillMaxWidth().widthIn(max = MaxContentWidth).padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 OutlinedButton(onClick = onOlder) { Text("Show older") }
                 Text(
                     "The thread shows the newest ${thread.items.size} events.",
@@ -390,38 +378,63 @@ private fun LazyListScope.olderItem(
     }
 }
 
-/** One row of the thread. [clamp]: Activity shows 6 lines of a long agent message and "Show more". */
+/**
+ * One row of the thread as a line with a 2 dp edge in the color of its author, as on the desktop
+ * (openspec task-review-layout, design decision 9): the info color for an agent and a subagent
+ * report, the outline color for a person. [activity]: Activity shows the messages as Markdown with 6
+ * lines and "Show more"; the Session view shows each raw event (principle 8).
+ */
 @Composable
 private fun ThreadLine(
     item: ThreadItem,
-    clamp: Boolean = false,
+    activity: Boolean = false,
 ) {
-    val container =
+    val scheme = MaterialTheme.colorScheme
+    val edge =
         when (item.kind) {
-            ThreadKind.HUMAN, ThreadKind.SENT, ThreadKind.ANSWER -> MaterialTheme.colorScheme.primaryContainer
-            ThreadKind.AGENT -> MaterialTheme.colorScheme.surfaceVariant
-            ThreadKind.GATE -> MaterialTheme.colorScheme.secondaryContainer
-            ThreadKind.COMMENT, ThreadKind.SYSTEM -> MaterialTheme.colorScheme.surface
+            ThreadKind.AGENT -> infoColor()
+            ThreadKind.HUMAN, ThreadKind.SENT, ThreadKind.ANSWER, ThreadKind.COMMENT -> scheme.outline
+            ThreadKind.GATE -> scheme.primary
+            ThreadKind.SYSTEM -> null
         }
-    Card(
-        modifier = Modifier.listCard(),
-        colors = CardDefaults.cardColors(containerColor = container),
+    val markdown = activity && item.kind in MARKDOWN_KINDS
+    // The edge is drawn behind the row: a Markdown table cannot give an intrinsic height.
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .widthIn(max = MaxContentWidth)
+            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .drawBehind { if (edge != null) drawRect(edge, size = Size(EDGE.toPx(), size.height)) },
     ) {
-        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(
+            Modifier.padding(start = if (edge != null) 16.dp else 0.dp, top = 2.dp, bottom = 2.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
             val time =
                 item.hlc
                     .substringBefore('#')
                     .replace('T', ' ')
                     .take(SHOWN_TIME)
-            val head = listOfNotNull(item.who, item.note, time)
-            Text(head.joinToString(" · "), style = MaterialTheme.typography.labelSmall)
+            if (activity && item.kind == ThreadKind.SYSTEM) {
+                // A line of the task, for example "Created by human@macbook-pro".
+                Text("${item.text} · $time", style = MaterialTheme.typography.bodyMedium, color = muted())
+                return@Column
+            }
+            Text(
+                buildAnnotatedString {
+                    withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, color = scheme.onSurface)) {
+                        append(item.who)
+                    }
+                    for (part in listOfNotNull(item.note, time)) append(" · $part")
+                },
+                style = MaterialTheme.typography.labelSmall,
+                color = muted(),
+            )
             var all by rememberSaveable(item.id) { mutableStateOf(false) }
-            val cut = if (clamp) ActivityRule.clamp(item.text) else ActivityRule.Clamp(item.text, false)
+            val cut = if (markdown) ActivityRule.clamp(item.text) else ActivityRule.Clamp(item.text, false)
             val shown = if (cut.cut && !all) cut.head else item.text
             SelectionContainer {
-                // Activity shows the text of the agent as Markdown; the Session view shows each raw
-                // event (principle 8).
-                if (clamp) MarkdownText(shown) else Text(shown, style = MaterialTheme.typography.bodyMedium)
+                if (markdown) MarkdownText(shown) else Text(shown, style = MaterialTheme.typography.bodyMedium)
             }
             if (cut.cut) {
                 TextButton(onClick = { all = !all }) { Text(if (all) "Show less" else "Show more") }
@@ -430,11 +443,15 @@ private fun ThreadLine(
     }
 }
 
-/** The wait between 2 reads of the artifact list while a download runs. */
-private const val ARTIFACT_CHECK_MS = 3_000L
+/** The width of the colored edge of a thread row (2 dp, as on the desktop). */
+private val EDGE = 2.dp
 
-/** The share of the row width for the field label. */
-private const val LABEL_WEIGHT = 0.35f
+/** The kinds of Activity rows that show their text as Markdown: the messages of agents and persons. */
+private val MARKDOWN_KINDS = setOf(ThreadKind.AGENT, ThreadKind.HUMAN, ThreadKind.SENT)
+
+/** The placeholders of the message box: with a running session, and with none. */
+private const val SEND_HINT = "It arrives as the next input of the session."
+private const val NO_SESSION = "No session runs: assign the task first"
 
 /** "2026-11-22 14:21:00": the time part of an HLC, to the second. */
 private const val SHOWN_TIME = 19

@@ -1,6 +1,6 @@
 package com.agentworkspace.control
 
-/** The tabs of the phone task detail (openspec phone-task-focus, docs/design.md 8.6). */
+/** The tabs of the phone task page (openspec phone-task-focus and task-review-layout, docs/design.md 8.6). */
 enum class TaskTab(
     val label: String,
 ) {
@@ -15,10 +15,11 @@ enum class TaskTab(
 
     companion object {
         /**
-         * The tabs of the task detail. While the third pane of a large window shows the Session view,
-         * the tab row has no Session tab, as the desktop has no Properties tab next to its right panel.
+         * The tabs of the task page. Next to the Properties panel of a wide task page
+         * ([TaskPageLayout.propertiesPanel]), the tab row has no Properties tab, as on the desktop.
          */
-        fun of(sessionInPane: Boolean): List<TaskTab> = if (sessionInPane) entries - SESSION else entries.toList()
+        fun of(propertiesPanel: Boolean): List<TaskTab> =
+            if (propertiesPanel) entries - PROPERTIES else entries.toList()
 
         /** The selected tab, or Activity when the selected tab is not in [tabs]. */
         fun shown(

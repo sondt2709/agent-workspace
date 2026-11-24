@@ -7,8 +7,11 @@ import {
   GROUP_LABEL,
   hlcMs,
   listGroups,
+  needYouNav,
   pauseText,
   pendingAnswer,
+  switchGroups,
+  taskPageLayout,
   titleFromFirstMessage,
 } from "./model.ts";
 import { makeGate, makeTask, PROJECT } from "./testing.tsx";
@@ -169,5 +172,60 @@ describe("gate rules", () => {
     expect(pendingAnswer(gate, "macbook-pro").mine?.dev).toBe("macbook-pro");
     expect(pendingAnswer(gate, "macbook-pro").other?.dev).toBe("pixel-9");
     expect(pendingAnswer(makeGate(), "macbook-pro")).toEqual({ mine: null, other: null });
+  });
+});
+
+describe("task page (openspec task-review-layout)", () => {
+  const tasks = [
+    makeTask({ id: "a", needs_you_lane: true }),
+    makeTask({ id: "b" }),
+    makeTask({ id: "c", needs_you_lane: true }),
+    makeTask({ id: "d", needs_you_lane: true, archived: true }),
+  ];
+
+  it("gives the place of a task that needs the person, in the Inbox order", () => {
+    expect(needYouNav(tasks, "a")).toEqual({ text: "1 of 2 need you", prev: null, next: "c" });
+    expect(needYouNav(tasks, "c")).toEqual({ text: "2 of 2 need you", prev: "a", next: null });
+  });
+
+  it("gives the count and the first task for another task", () => {
+    expect(needYouNav(tasks, "b")).toEqual({ text: "2 need you", prev: null, next: "a" });
+    expect(needYouNav([makeTask({ id: "x", needs_you_lane: true })], "y").text).toBe("1 needs you");
+    expect(needYouNav([makeTask({ id: "b" })], "b")).toEqual({
+      text: null,
+      prev: null,
+      next: null,
+    });
+  });
+
+  it("shows the task list from 700 px and the Properties panel from 1,000 px without it", () => {
+    expect(taskPageLayout(699, true, 1000)).toEqual({
+      canList: false,
+      list: false,
+      propertiesPanel: false,
+    });
+    expect(taskPageLayout(1208, false, 1000)).toEqual({
+      canList: true,
+      list: false,
+      propertiesPanel: true,
+    });
+    // 1208 - 300 = 908: the Properties tab comes back while the list shows.
+    expect(taskPageLayout(1208, true, 1000)).toEqual({
+      canList: true,
+      list: true,
+      propertiesPanel: false,
+    });
+  });
+
+  it("lists the tasks that need the person first, then the working tasks", () => {
+    const groups = switchGroups([
+      makeTask({ id: "w", stage: "implement" }),
+      makeTask({ id: "n", needs_you_lane: true }),
+      makeTask({ id: "z", stage: "done" }),
+    ]);
+    expect(groups.map((g) => [g.id, g.tasks.map((t) => t.id)])).toEqual([
+      ["needs_you", ["n"]],
+      ["running", ["w"]],
+    ]);
   });
 });

@@ -15,11 +15,6 @@ sealed interface Route {
         val id: String,
     ) : Route
 
-    /** The Session view of a task (summary and raw thread): the third pane on a large window. */
-    data class Thread(
-        val id: String,
-    ) : Route
-
     data object NewTask : Route
 
     data object AddCredential : Route
@@ -59,20 +54,13 @@ class Navigator(
     fun select(tab: Tab) = replace(listOf(tab.root))
 
     /**
-     * Opens a route. A task replaces the open task (one detail at a time) and keeps the root, so Back
-     * returns to the list; its thread goes on top of the task; a form goes on top of the stack once.
+     * Opens a route. A task replaces the open task (one task page at a time) and keeps the root, so
+     * Back returns to the list; a form goes on top of the stack once.
      */
     fun open(route: Route) {
         when (route) {
             is Route.Task -> {
                 replace(listOf(stack.first(), route))
-            }
-
-            is Route.Thread -> {
-                val task = Route.Task(route.id)
-                if (task !in stack) open(task)
-                val upTo = stack.indexOf(task)
-                replace(stack.take(upTo + 1) + route)
             }
 
             Route.NewTask, Route.AddCredential, Route.Pairing -> {

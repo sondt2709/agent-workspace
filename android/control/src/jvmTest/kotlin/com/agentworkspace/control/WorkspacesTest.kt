@@ -136,7 +136,7 @@ class WorkspacesTest {
     @Test
     fun aSwitchResetsTheBackStackToTheTabRoot() {
         val s = switcher()
-        val stack = mutableListOf<Route>(Route.Tasks, Route.Task("t1"), Route.Thread("t1"))
+        val stack = mutableListOf<Route>(Route.Tasks, Route.Task("t1"), Route.NewTask)
         val nav = WorkspaceNavigation(s, Navigator(stack))
         assertTrue(nav.switchTo(SIDE))
         assertEquals(SIDE, s.selected.value)

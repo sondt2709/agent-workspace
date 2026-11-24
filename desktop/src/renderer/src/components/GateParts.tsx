@@ -18,39 +18,82 @@ import { approachChip, resultArtifacts } from "../model.ts";
 import { useGateNotice, useTaskFile } from "../queries.ts";
 import { MarkdownText } from "./common.tsx";
 
-/** The decisions of a gate, each with its options and the recommended option marked. */
-export function DecisionList({ decisions }: { decisions: readonly GateDecision[] }) {
+/**
+ * The decisions of a gate, each with its options and the recommended option marked. With `onPick`
+ * (a gate with "Request changes"), each decision is a radio group with `picks[i]` picked, and a line
+ * says how many picks differ from the recommendation (openspec task-review-layout, decision 4).
+ */
+export function DecisionList({
+  decisions,
+  picks,
+  onPick,
+  disabled = false,
+}: {
+  decisions: readonly GateDecision[];
+  picks?: readonly string[];
+  onPick?: (index: number, option: string) => void;
+  disabled?: boolean;
+}) {
   if (decisions.length === 0) return null;
+  const differ = picks ? decisions.filter((d, i) => picks[i] !== d.recommended).length : 0;
   return (
     <Stack spacing={1.5} data-testid="gate-decisions">
       <Typography variant="overline" color="text.secondary">
         Decisions
       </Typography>
+      {onPick && (
+        <Typography variant="caption" color="text.secondary">
+          Pick one option for each. The recommended options are picked first.
+        </Typography>
+      )}
       {decisions.map((d, i) => (
         <Stack key={`${i}-${d.question}`} spacing={0.75}>
-          <Typography variant="body2">
+          <Typography variant="body2" id={`decision-${i}`} sx={{ fontWeight: 500 }}>
             {i + 1}. {d.question}
           </Typography>
-          <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap", pl: 2 }}>
-            {d.options.map((option) =>
-              option === d.recommended ? (
-                <Chip
+          {onPick ? (
+            <Stack spacing={0.75} role="radiogroup" aria-labelledby={`decision-${i}`}>
+              {d.options.map((option) => (
+                <OptionButton
                   key={option}
-                  color="success"
-                  variant="outlined"
-                  label={`${option} · Recommended`}
+                  label={option}
+                  description={option === d.recommended ? "Recommended" : ""}
+                  role="radio"
+                  checked={picks?.[i] === option}
+                  disabled={disabled}
+                  onClick={() => onPick(i, option)}
                 />
-              ) : (
-                <Chip key={option} variant="outlined" label={option} />
-              ),
-            )}
-          </Stack>
+              ))}
+            </Stack>
+          ) : (
+            <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap", pl: 2 }}>
+              {d.options.map((option) =>
+                option === d.recommended ? (
+                  <Chip
+                    key={option}
+                    color="success"
+                    variant="outlined"
+                    label={`${option} · Recommended`}
+                  />
+                ) : (
+                  <Chip key={option} variant="outlined" label={option} />
+                ),
+              )}
+            </Stack>
+          )}
         </Stack>
       ))}
-      <Typography variant="caption" color="text.secondary">
-        “Confirm” accepts the recommended options. To choose another option, select “Request
-        changes” and name it.
-      </Typography>
+      {onPick && (
+        <Typography
+          variant="body2"
+          role="status"
+          color={differ > 0 ? "warning.main" : "text.secondary"}
+        >
+          {differ > 0
+            ? `${differ} ${differ === 1 ? "pick differs" : "picks differ"} from the recommendation. "Send my choices" asks the agent for a new approach with your picks.`
+            : "All picks are the recommended options."}
+        </Typography>
+      )}
     </Stack>
   );
 }
@@ -216,10 +259,11 @@ export function GateBody({ text }: { text: string }) {
         data-testid="gate-text"
         sx={{
           position: "relative",
-          // The full text scrolls inside the card, so the answers stay near.
-          maxHeight: shut ? 240 : "50vh",
-          overflowY: shut ? "hidden" : "auto",
+          // "Show more" shows the full text in the page, with no scroll box of its own: the plan is
+          // the content that the person reads (openspec task-review-layout, design decision 6).
           ...(shut && {
+            maxHeight: 240,
+            overflowY: "hidden",
             maskImage: "linear-gradient(to bottom, black 70%, transparent)",
           }),
         }}

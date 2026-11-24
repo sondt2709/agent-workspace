@@ -1,0 +1,118 @@
+{
+  "description": "decisionsAnswer and canPickDecisions of shared/client/src/gates.ts (openspec task-review-layout, design decision 4). picks[i] is the option label picked for decision i. expected null: the gate gets its recommended option (for example Confirm). Synthetic data, written by hand on 2026-11-25. The desktop and the phone (android/control GateTexts) run the same cases.",
+  "cases": [
+    {
+      "name": "each pick is the recommended option",
+      "decisions": [
+        {
+          "question": "D1 Limit per API key",
+          "options": ["100 requests per minute", "1,000 requests per minute"],
+          "recommended": "100 requests per minute"
+        },
+        {
+          "question": "D2 Counter store",
+          "options": ["Redis, shared by all gateway pods", "In memory, one counter per pod"],
+          "recommended": "Redis, shared by all gateway pods"
+        }
+      ],
+      "picks": ["100 requests per minute", "Redis, shared by all gateway pods"],
+      "expected": null
+    },
+    {
+      "name": "one pick differs",
+      "decisions": [
+        {
+          "question": "D1 Limit per API key",
+          "options": ["100 requests per minute", "1,000 requests per minute"],
+          "recommended": "100 requests per minute"
+        },
+        {
+          "question": "D2 Counter store",
+          "options": ["Redis, shared by all gateway pods", "In memory, one counter per pod"],
+          "recommended": "Redis, shared by all gateway pods"
+        }
+      ],
+      "picks": ["100 requests per minute", "In memory, one counter per pod"],
+      "expected": {
+        "answer": "Request changes",
+        "comment": "My choices for the decisions:\n- D2 Counter store: In memory, one counter per pod\nKeep the recommended option of the other decisions."
+      }
+    },
+    {
+      "name": "each pick differs: no keep line",
+      "decisions": [
+        {
+          "question": "D1 Limit per API key",
+          "options": ["100 requests per minute", "1,000 requests per minute"],
+          "recommended": "100 requests per minute"
+        },
+        {
+          "question": "D2 Counter store",
+          "options": ["Redis, shared by all gateway pods", "In memory, one counter per pod"],
+          "recommended": "Redis, shared by all gateway pods"
+        }
+      ],
+      "picks": ["1,000 requests per minute", "In memory, one counter per pod"],
+      "expected": {
+        "answer": "Request changes",
+        "comment": "My choices for the decisions:\n- D1 Limit per API key: 1,000 requests per minute\n- D2 Counter store: In memory, one counter per pod"
+      }
+    },
+    {
+      "name": "a pick that is not an option counts as the recommended option",
+      "decisions": [
+        {
+          "question": "D1 Limit per API key",
+          "options": ["100 requests per minute", "1,000 requests per minute"],
+          "recommended": "100 requests per minute"
+        },
+        {
+          "question": "D2 Counter store",
+          "options": ["Redis, shared by all gateway pods", "In memory, one counter per pod"],
+          "recommended": "Redis, shared by all gateway pods"
+        }
+      ],
+      "picks": ["5 per minute", "Redis, shared by all gateway pods"],
+      "expected": null
+    },
+    {
+      "name": "missing picks count as the recommended option",
+      "decisions": [
+        {
+          "question": "D1 Limit per API key",
+          "options": ["100 requests per minute", "1,000 requests per minute"],
+          "recommended": "100 requests per minute"
+        },
+        {
+          "question": "D2 Counter store",
+          "options": ["Redis, shared by all gateway pods", "In memory, one counter per pod"],
+          "recommended": "Redis, shared by all gateway pods"
+        }
+      ],
+      "picks": [],
+      "expected": null
+    }
+  ],
+  "gates": [
+    {
+      "name": "Confirm approach",
+      "options": ["Confirm", "Request changes"],
+      "can_pick": true
+    },
+    {
+      "name": "Approve result, other case",
+      "options": ["Approve", "request changes"],
+      "can_pick": true
+    },
+    {
+      "name": "custom gate",
+      "options": ["Yes", "No"],
+      "can_pick": false
+    },
+    {
+      "name": "no options",
+      "options": [],
+      "can_pick": false
+    }
+  ]
+}

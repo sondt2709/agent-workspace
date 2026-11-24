@@ -54,18 +54,72 @@ const argsOf = (call: ReturnType<typeof installBridge>, method: string) =>
   call.mock.calls.filter(([m]) => m === method).map(([, args]) => args);
 
 describe("gate card decisions", () => {
-  it("lists each decision with its recommended option and cuts the block of the text", async () => {
+  it("lists each decision as a radio group with the recommended option picked", async () => {
     const gate = makeGate({ kind: "confirm_approach", options: ["Confirm", "Request changes"] });
     renderCard(gate, [
       gateOpenedRow(gate, { text: WITH_DECISIONS.text, decisions: WITH_DECISIONS.decisions }),
     ]);
     expect(await screen.findByText("1. Which limit per API key?")).toBeTruthy();
     expect(screen.getByText("2. Where do we keep the counters?")).toBeTruthy();
-    expect(screen.getByText("100/min · Recommended")).toBeTruthy();
-    expect(screen.getByText("Redis · Recommended")).toBeTruthy();
-    expect(screen.getByText("1000/min")).toBeTruthy();
+    const limit = screen.getByRole("radiogroup", { name: "1. Which limit per API key?" });
+    expect(limit.querySelectorAll('[role="radio"]').length).toBe(2);
+    expect(screen.getByRole("radio", { name: "100/min" }).getAttribute("aria-checked")).toBe(
+      "true",
+    );
+    expect(screen.getByRole("radio", { name: "Redis" }).getAttribute("aria-checked")).toBe("true");
+    expect(screen.getByRole("radio", { name: "1000/min" }).getAttribute("aria-checked")).toBe(
+      "false",
+    );
+    expect(screen.getAllByText("Recommended").length).toBe(2);
+    expect(screen.getByText("All picks are the recommended options.")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Confirm" })).toBeTruthy();
     expect(screen.queryByText(/Recommended: 100\/min/)).toBeNull();
     expect(screen.getByText("Add a token bucket per API key.")).toBeTruthy();
+  });
+
+  it("sends Request changes with the changed decisions as Send my choices", async () => {
+    const gate = makeGate({ kind: "confirm_approach", options: ["Confirm", "Request changes"] });
+    const { call } = renderCard(gate, [
+      gateOpenedRow(gate, { text: WITH_DECISIONS.text, decisions: WITH_DECISIONS.decisions }),
+    ]);
+    await userEvent.click(await screen.findByRole("radio", { name: "1000/min" }));
+    expect(screen.getByRole("radio", { name: "1000/min" }).getAttribute("aria-checked")).toBe(
+      "true",
+    );
+    expect(screen.getByRole("status").textContent).toContain("1 pick differs");
+    expect(screen.queryByRole("button", { name: "Confirm" })).toBeNull();
+    await userEvent.click(screen.getByRole("button", { name: "Send my choices" }));
+    await waitFor(() =>
+      expect(argsOf(call, "answerGate")[0]).toMatchObject({
+        gate: gate.gate,
+        body: {
+          answer: "Request changes",
+          comment:
+            "My choices for the decisions:\n- Which limit per API key?: 1000/min\nKeep the recommended option of the other decisions.",
+        },
+      }),
+    );
+  });
+
+  it("shows Confirm again when the person picks the recommended option again", async () => {
+    const gate = makeGate({ kind: "confirm_approach", options: ["Confirm", "Request changes"] });
+    renderCard(gate, [
+      gateOpenedRow(gate, { text: WITH_DECISIONS.text, decisions: WITH_DECISIONS.decisions }),
+    ]);
+    await userEvent.click(await screen.findByRole("radio", { name: "In memory" }));
+    expect(screen.getByRole("button", { name: "Send my choices" })).toBeTruthy();
+    await userEvent.click(screen.getByRole("radio", { name: "Redis" }));
+    expect(screen.getByRole("button", { name: "Confirm" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Send my choices" })).toBeNull();
+  });
+
+  it("shows the decisions of a gate with no Request changes as labels", async () => {
+    const gate = makeGate({ kind: "custom", options: ["Yes", "No"] });
+    renderCard(gate, [
+      gateOpenedRow(gate, { text: WITH_DECISIONS.text, decisions: WITH_DECISIONS.decisions }),
+    ]);
+    expect(await screen.findByText("100/min · Recommended")).toBeTruthy();
+    expect(screen.queryByRole("radio")).toBeNull();
   });
 });
 

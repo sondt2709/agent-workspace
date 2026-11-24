@@ -123,14 +123,8 @@ describe("TaskList", () => {
     expect(screen.getByText("Shipped")).toBeTruthy();
   });
 
-  it("moves the focus with Up and Down, opens with Enter, and Esc closes the detail", async () => {
+  it("moves the focus with Up and Down, and Enter opens the task page", async () => {
     restore = stubWindowWidth(1280);
-    // The divider of the split measures its panels; jsdom has no ResizeObserver.
-    globalThis.ResizeObserver ??= class {
-      observe() {}
-      unobserve() {}
-      disconnect() {}
-    };
     installBridge({
       tasks: () => tasks,
       task: (a: { task: string }) => tasks.find((t) => t.id === a.task),
@@ -145,10 +139,17 @@ describe("TaskList", () => {
     const second = screen.getByRole("button", { name: "AW-2 Laptop task" });
     expect(document.activeElement).toBe(second);
     await userEvent.keyboard("{Enter}");
-    expect(router.state.location.search).toBe("?task=b");
-    // The split renders the list again: focus the new row, then press Esc.
-    (await screen.findByRole("button", { name: "AW-2 Laptop task" })).focus();
-    await userEvent.keyboard("{Escape}");
-    await waitFor(() => expect(router.state.location.search).toBe(""));
+    // A task opens as the task page at each width: no split (openspec task-review-layout).
+    expect(router.state.location.pathname).toBe("/w/ws-1/tasks/b");
+  });
+
+  it("opens the task page for an old link with ?task=", async () => {
+    restore = stubWindowWidth(1440);
+    installBridge({ tasks: () => tasks });
+    const { router } = renderApp(<ProjectTasks view="board" />, {
+      route: "/w/:ws/p/:project/board",
+      url: "/w/ws-1/p/billing-api/board?task=a",
+    });
+    await waitFor(() => expect(router.state.location.pathname).toBe("/w/ws-1/tasks/a"));
   });
 });
