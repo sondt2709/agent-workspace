@@ -72,7 +72,11 @@ The `files` layer SHALL append one event as one line, after the schema check and
 - **THEN** the writer refuses the event with a write-refused error and writes nothing
 
 ### Requirement: Write guard
-The `files` layer SHALL refuse a write to a file that this device does not own, by the ownership table of `docs/architecture.md` 4.3.1 and the folder layout of `docs/phase-1.md` 3.1. It SHALL also refuse a path outside the layout, a path with `..`, a `*.aw-tmp` or `*.sync-conflict-*` name in any part of the path, the `secure` folder on a mobile device, a device record without the master key, and a second write of an approach version. The layout SHALL include `secure/keys/<device>.age` (the credential key sealed to a computer; a shared file, on computers only). The deletes of the `files` layer are: `removeHeartbeatLog(path)`, which SHALL remove a file only when the path matches the `device-heartbeat` rule and names this device; `removeKnowledgeFile(path)`, which SHALL remove a file only when the path matches the `knowledge-file` rule (a shared knowledge file, never a knowledge log); `removeCredentialFile(path)`, which SHALL remove a file only when the path matches the `credential` rule; `resolveConflictCopy(copy, keep)`, which SHALL remove only a conflict copy whose original path this device may write; and `mergeLogCopy(copy)`, which SHALL remove only a conflict copy of a log of this device. Each SHALL refuse each other path.
+The `files` layer SHALL refuse a write to a file that this device does not own, by the ownership table of `docs/architecture.md` 4.3.1 and the folder layout of `docs/phase-1.md` 3.1. It SHALL also refuse a path outside the layout, a path with `..`, a `*.aw-tmp` or `*.sync-conflict-*` name in any part of the path, the `secure` folder on a mobile device, a device record without the master key, and a second write of a proposal version. The layout SHALL include `tasks/<task-id>/proposal/v<n>.md` (written by the owner device), and SHALL keep `tasks/<task-id>/approach/v<n>.md` readable for the versions from before the rename; a new write to `approach/` SHALL be refused. The layout SHALL include `secure/keys/<device>.age` (the credential key sealed to a computer; a shared file, on computers only). The deletes of the `files` layer are: `removeHeartbeatLog(path)`, which SHALL remove a file only when the path matches the `device-heartbeat` rule and names this device; `removeKnowledgeFile(path)`, which SHALL remove a file only when the path matches the `knowledge-file` rule (a shared knowledge file, never a knowledge log); `removeCredentialFile(path)`, which SHALL remove a file only when the path matches the `credential` rule; `resolveConflictCopy(copy, keep)`, which SHALL remove only a conflict copy whose original path this device may write; and `mergeLogCopy(copy)`, which SHALL remove only a conflict copy of a log of this device. Each SHALL refuse each other path.
+
+#### Scenario: Proposal file
+- **WHEN** the owner device writes `tasks/<task-id>/proposal/v6.md`, then writes it again, then writes `tasks/<task-id>/approach/v7.md`
+- **THEN** the first write passes, the second is refused as a second write of a version, and the third is refused because `approach/` is read-only
 
 #### Scenario: Log of another device
 - **WHEN** `macbook-pro` writes `tasks/<task-id>/log/ubuntu-01.jsonl`
@@ -137,8 +141,8 @@ Before the `files` layer writes an event line or a text file of a task, it SHALL
 - **WHEN** the session has the secret `2026` and writes a gate answer in 2026
 - **THEN** the event is written with its HLC and ids unchanged, and the answer text has `[redacted:<name>]`
 
-#### Scenario: Approach version and text artifact
-- **WHEN** `writeFile` writes `approach/v1.md` as a string and `artifacts/ubuntu-01/notes.txt` as UTF-8 bytes, each with the value
+#### Scenario: Proposal version and text artifact
+- **WHEN** `writeFile` writes `proposal/v1.md` as a string and `artifacts/ubuntu-01/notes.txt` as UTF-8 bytes, each with the value
 - **THEN** both files have `[redacted:stripe-test]` and not the value, and `writeFile` returns the redacted content
 
 #### Scenario: Binary artifact
@@ -178,7 +182,6 @@ Writing each document and each event of the fixture folder through the `files` l
 - **WHEN** the path is `knowledge/shared/t.sync-conflict-20261123-032921-5NRSCRM.md`
 - **THEN** the original is `knowledge/shared/t.md` and the short id is `5NRSCRM`
 
-
 ### Requirement: No synced links
 The `files` layer SHALL never read or append a workspace file through a symbolic link. A log, a document or a text file that is a link, a folder or a FIFO, and a path whose folder below the workspace root is a link, SHALL give the error `ENOTREG` and SHALL change no file. A new log SHALL be made as a regular file. A write of a document SHALL replace a link with a regular file and SHALL not read the link target. The reason: the sync engine copies the link of another device as a link (final check fc1-1, fc1-3).
 
@@ -186,6 +189,7 @@ The `files` layer SHALL never read or append a workspace file through a symbolic
 - **WHEN** another device syncs `tasks/<id>/log/macbook-pro.jsonl` as a link to `~/.zshenv`, and awd on macbook-pro writes an event
 - **THEN** the write fails with `ENOTREG` and `~/.zshenv` does not change
 
-#### Scenario: A linked approach file
-- **WHEN** `tasks/<id>/approach/v1.md` is a link to a private file and awd reads the approach for the first message of a session
+#### Scenario: A linked proposal file
+- **WHEN** `tasks/<id>/proposal/v1.md` is a link to a private file and awd reads the proposal for the first message of a session
 - **THEN** the read fails with `ENOTREG` and no text of the private file goes into the session
+

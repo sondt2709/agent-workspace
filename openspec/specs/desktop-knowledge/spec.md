@@ -40,7 +40,7 @@ The Inbox SHALL show the daily digest of today when it has learned items, change
 - **THEN** the Inbox card shows "1 learned · 1 waits for approval" and the learned item with Undo
 
 ### Requirement: Files view
-The project Files page SHALL list the tasks of the project by key and title, with the stage as the meta line, and SHALL not show the task id. For the selected task it SHALL show the folder tree (`task.yaml`, `log/<device>.jsonl`, `approach/v<n>.md`, `artifacts/…`) read-only, with the folder path on one line, and the text of the selected file. A file that awd does not return as text SHALL show the reason.
+The project Files page SHALL list the tasks of the project by key and title, with the stage as the meta line, and SHALL not show the task id. For the selected task it SHALL show the folder tree (`task.yaml`, `log/<device>.jsonl`, `proposal/v<n>.md`, `artifacts/…`) read-only, with the folder path on one line, and the text of the selected file. A file that awd does not return as text SHALL show the reason.
 
 #### Scenario: Open a log file
 - **WHEN** the person selects `log/macbook-pro.jsonl` of `AW-3`
@@ -60,3 +60,4 @@ The Inbox SHALL show a "Fix a file" card for each issue `bad_document`, with the
 #### Scenario: Synced link to a program
 - **WHEN** `tasks/projects/x/project.yaml` is a symbolic link to `tasks/evil.command`, and the person selects "Open file"
 - **THEN** the app refuses with "tasks/projects/x/project.yaml is a link, not a file" and opens nothing
+
