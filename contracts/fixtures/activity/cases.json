@@ -384,7 +384,7 @@
       "author": null
     },
     {
-      "name": "notice of AW with no kind",
+      "name": "notice of AW stays in Session (the stage line says it)",
       "type": "message.sent",
       "dev": "ubuntu-01",
       "by": "aw@ubuntu-01",
@@ -393,10 +393,10 @@
         "text": "Start implementing AW-7.",
         "to_session": "01a2038e-8100-7000-8000-000000000001"
       },
-      "in_activity": true,
+      "in_activity": false,
       "line": null,
-      "style": "message",
-      "author": "person"
+      "style": null,
+      "author": null
     },
     {
       "name": "comment of a person",
@@ -437,6 +437,21 @@
       "line": null,
       "style": "line",
       "author": null
+    },
+    {
+      "name": "message that a person sent from the app",
+      "type": "message.sent",
+      "dev": "macbook-pro",
+      "by": "human@macbook-pro",
+      "data": {
+        "id": "01a2038e-8100-7000-8000-0000000000c1",
+        "text": "Use cents.",
+        "to_session": "01a2038e-8100-7000-8000-000000000001"
+      },
+      "in_activity": true,
+      "line": null,
+      "style": "message",
+      "author": "person"
     }
   ],
   "clamp": [

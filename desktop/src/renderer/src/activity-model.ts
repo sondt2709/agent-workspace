@@ -78,7 +78,8 @@ const STOPS = new Set(["stopped", "crashed"]);
  * replaced session shows its effect in other rows (Done, the assignment).
  * The text of an agent turn (`message.agent` source `turn`) and the nudge notice show only in
  * Session: Activity has what the agent sent to AW (openspec agent-pushes-updates). A note of AW
- * (`comment.added` by `aw@<device>`, for example "Context compacted") shows only in Session.
+ * (`comment.added` or `message.sent` by `aw@<device>`, for example "Context compacted" or "Start
+ * implementing") shows only in Session.
  */
 export function inActivity(row: EventRow): boolean {
   if (ACTIVITY[row.type] !== "activity") return false;
@@ -86,7 +87,8 @@ export function inActivity(row: EventRow): boolean {
   if (row.type === "session.ended") return STOPS.has(String(data.reason));
   if (row.type === "comment.added") return !isAw(row.event.by);
   if (row.type === "message.agent") return data.source !== "turn";
-  if (row.type === "message.sent") return data.kind !== "nudge";
+  // A notice of AW ("Start implementing …") is a note of AW: the stage line says it.
+  if (row.type === "message.sent") return data.kind !== "nudge" && !isAw(row.event.by);
   if (row.type !== "message.human") return true;
   const { source, delivery_id: delivery } = data;
   return (
