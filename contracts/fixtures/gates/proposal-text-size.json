@@ -1,0 +1,84 @@
+{
+  "description": "The text size of a proposal (openspec proposal-and-discussion): 14 to 24 px (dp on the phone) in steps of 2, 16 by default. load reads the saved value (a string, or null when nothing is saved); larger and smaller change a size. The desktop (shared/client proposalTextSize) and the phone (android/control ProposalTextSize) run the same cases. Synthetic data, written by hand on 2026-11-26.",
+  "min": 14,
+  "max": 24,
+  "step": 2,
+  "default": 16,
+  "load": [
+    {
+      "saved": null,
+      "size": 16
+    },
+    {
+      "saved": "18",
+      "size": 18
+    },
+    {
+      "saved": "24",
+      "size": 24
+    },
+    {
+      "saved": "30",
+      "size": 24
+    },
+    {
+      "saved": "10",
+      "size": 14
+    },
+    {
+      "saved": "17",
+      "size": 16
+    },
+    {
+      "saved": "abc",
+      "size": 16
+    },
+    {
+      "saved": "",
+      "size": 16
+    },
+    {
+      "saved": "20.5",
+      "size": 16
+    }
+  ],
+  "change": [
+    {
+      "size": 16,
+      "action": "larger",
+      "size_after": 18
+    },
+    {
+      "size": 16,
+      "action": "smaller",
+      "size_after": 14
+    },
+    {
+      "size": 24,
+      "action": "larger",
+      "size_after": 24
+    },
+    {
+      "size": 14,
+      "action": "smaller",
+      "size_after": 14
+    }
+  ],
+  "limits": [
+    {
+      "size": 14,
+      "can_smaller": false,
+      "can_larger": true
+    },
+    {
+      "size": 24,
+      "can_smaller": true,
+      "can_larger": false
+    },
+    {
+      "size": 18,
+      "can_smaller": true,
+      "can_larger": true
+    }
+  ]
+}

@@ -1,41 +1,4 @@
-// The text of a gate with decisions (openspec gate-full-context, design decision 4). awd appends the
-// decisions of `gate.opened` to the gate text as a Markdown block, so the CLI and the agents read
-// them. A screen that shows `data.decisions` itself cuts that block. Kotlin: GateTexts.kt.
-
-/** The start of the decision block that awd appends (`gateText` in daemon/src/loop/agent.ts). */
-export const DECISIONS_HEADING = "\n\n## Decisions\n";
-
-/** One decision of a gate, with its recommended option. */
-export interface GateDecision {
-  question: string;
-  options: string[];
-  recommended: string;
-}
-
-/** The decisions of `gate.opened` data, or [] for data of another form. */
-export function gateDecisions(data: Record<string, unknown> | undefined): GateDecision[] {
-  const raw = data?.decisions;
-  if (!Array.isArray(raw)) return [];
-  return raw.flatMap((d: unknown) => {
-    const item = d as Partial<GateDecision> | null;
-    if (
-      typeof item?.question !== "string" ||
-      typeof item.recommended !== "string" ||
-      !Array.isArray(item.options) ||
-      !item.options.every((o) => typeof o === "string")
-    ) {
-      return [];
-    }
-    return [{ question: item.question, options: item.options, recommended: item.recommended }];
-  });
-}
-
-/** The gate text with no decision block, when the gate has decisions to show; else the text. */
-export function gateBody(text: string, decisions: readonly GateDecision[]): string {
-  if (decisions.length === 0) return text;
-  const at = text.lastIndexOf(DECISIONS_HEADING);
-  return at < 0 ? text : text.slice(0, at);
-}
+// The rules of gate texts and proposals that both apps use. Kotlin: GateTexts.kt and Activity.kt.
 
 // ---- Question details, context and questions (openspec gate-context). Kotlin: GateTexts.kt. ----
 
@@ -182,36 +145,28 @@ export function gateContext(events: readonly ContextEvent[], gateEvent: string):
   return found.reverse();
 }
 
-// ---- Decision picks (openspec task-review-layout, design decision 4). Kotlin: GateTexts.kt. ----
+// ---- Proposal text size (openspec proposal-and-discussion, design decision 7). Kotlin: ProposalTextSize.kt. ----
 
-/** True when the person can pick the decisions of a gate: the gate has the option "Request changes". */
-export function canPickDecisions(options: readonly string[]): boolean {
-  return options.some((o) => o.trim().toLowerCase() === "request changes");
-}
+/** The text size of a proposal: 14 to 24 px in steps of 2, 16 px by default. */
+export const PROPOSAL_TEXT = { min: 14, max: 24, step: 2, default: 16 } as const;
 
 /**
- * The answer for the decision picks of a gate, or null when each pick is the recommended option (the
- * gate then gets its recommended option, for example "Confirm"). `picks[i]` is the option label
- * picked for decision i; a missing pick or a label that is not an option counts as the recommended
- * option. The answer "Request changes" makes the agent write a new approach with the picks.
- * `contracts/fixtures/gates/decisions-answer.json`.
+ * The size from the saved value of the device: the default for no value, a value that is not a
+ * whole number or not on a step; a whole number out of range gets the nearest limit.
+ * `contracts/fixtures/gates/proposal-text-size.json`.
  */
-export function decisionsAnswer(
-  decisions: readonly GateDecision[],
-  picks: readonly string[],
-): { answer: "Request changes"; comment: string } | null {
-  const changed = decisions.flatMap((d, i) => {
-    const pick = picks[i];
-    return pick !== undefined && pick !== d.recommended && d.options.includes(pick)
-      ? [`- ${d.question}: ${pick}`]
-      : [];
-  });
-  if (changed.length === 0) return null;
-  const lines = ["My choices for the decisions:", ...changed];
-  if (changed.length < decisions.length) {
-    lines.push("Keep the recommended option of the other decisions.");
-  }
-  return { answer: "Request changes", comment: lines.join("\n") };
+export function loadProposalTextSize(saved: string | null): number {
+  if (saved === null || !/^-?[0-9]+$/.test(saved.trim())) return PROPOSAL_TEXT.default;
+  const n = Number(saved.trim());
+  if (n < PROPOSAL_TEXT.min) return PROPOSAL_TEXT.min;
+  if (n > PROPOSAL_TEXT.max) return PROPOSAL_TEXT.max;
+  return (n - PROPOSAL_TEXT.min) % PROPOSAL_TEXT.step === 0 ? n : PROPOSAL_TEXT.default;
+}
+
+/** The next size for A+ (`larger`) or A− (`smaller`), within the limits. */
+export function changeProposalTextSize(size: number, action: "larger" | "smaller"): number {
+  const next = size + (action === "larger" ? PROPOSAL_TEXT.step : -PROPOSAL_TEXT.step);
+  return Math.min(PROPOSAL_TEXT.max, Math.max(PROPOSAL_TEXT.min, next));
 }
 
 // ---- Messages of other agents (openspec task-review-layout, design decision 5). Kotlin: Activity.kt. ----

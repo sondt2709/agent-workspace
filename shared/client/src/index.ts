@@ -310,8 +310,8 @@ export class AwClient {
       { body },
     );
   // The work loop (add-task-loop).
-  approach = (session: string, body: T.ApproachInput) =>
-    this.request<T.LoopReply>("POST", `/v1/sessions/${encode(session)}/approach`, S.loopReply, {
+  proposal = (session: string, body: T.ProposalInput) =>
+    this.request<T.LoopReply>("POST", `/v1/sessions/${encode(session)}/proposal`, S.loopReply, {
       body,
     });
   reportReady = (session: string, body: T.ReadyInput) =>

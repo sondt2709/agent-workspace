@@ -4,6 +4,7 @@ import {
   eventEnvelope,
   eventSchema,
   isEventType,
+  upgradeEvent,
   versionStatus,
   type AwEvent,
   type EventEnvelope,
@@ -51,8 +52,10 @@ function depthOf(value: unknown): number {
 }
 
 /** Validates one event value against the schema of its type and version. */
-function validateEvent(value: unknown, path: string, line?: number): AwEvent | EventEnvelope {
+function validateEvent(raw: unknown, path: string, line?: number): AwEvent | EventEnvelope {
   const details = { path, ...(line === undefined ? {} : { line }) };
+  // A line from before openspec proposal-and-discussion gets the new names (legacy.ts).
+  const value = upgradeEvent(raw);
   const envelope = eventEnvelope.safeParse(value);
   if (!envelope.success) throw new SchemaError(details, "event", toSchemaIssues(envelope.error));
   const { type, v } = envelope.data;

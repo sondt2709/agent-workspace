@@ -161,10 +161,6 @@
     "slots": [],
     "tasks": [
       {
-        "approach": {
-          "confirmed": 1,
-          "latest": 1
-        },
         "archived": false,
         "artifacts": [],
         "assignee": "claude@ubuntu-01",
@@ -244,7 +240,7 @@
             ],
             "file": "approach/v1.md",
             "gate": "01a20397-a6c0-7e6c-bb4d-77006b2cc4c0",
-            "kind": "confirm_approach",
+            "kind": "approve_proposal",
             "opened": {
               "dev": "ubuntu-01",
               "event": "01a20397-a6c0-77fa-97ab-af0d3aeaca24",
@@ -279,6 +275,10 @@
         "priority": null,
         "progress": "Run the tests again",
         "project": "billing-api",
+        "proposal": {
+          "approved": 1,
+          "latest": 1
+        },
         "ready": {
           "missing": [],
           "passed_on": "ubuntu-01"

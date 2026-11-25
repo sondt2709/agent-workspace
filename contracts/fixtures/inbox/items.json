@@ -1,0 +1,240 @@
+{
+  "description": "The Needs you tab of the Inbox (openspec proposal-and-discussion): the rows of the tasks in the Needs you lane, with the reason, the title and the key, then the groups Working now (running), Paused and Queued, in this order and only when not empty. A task in the lane is in no group. The desktop (desktop/src/renderer/src/nav-model.ts inboxItems and listGroups) and the phone (android/control InboxItems) run the same cases. Synthetic data, written by hand on 2026-11-26.",
+  "cases": [
+    {
+      "name": "each reason, then the groups",
+      "tasks": [
+        {
+          "id": "t-AW-12",
+          "key": "AW-12",
+          "title": "Rate limits for the public API",
+          "project": "api",
+          "stage": "discuss",
+          "archived": false,
+          "needs_you_lane": true,
+          "needs_you_reasons": [
+            {
+              "reason": "gate",
+              "kind": "question"
+            }
+          ],
+          "paused": false,
+          "queued": false
+        },
+        {
+          "id": "t-AW-15",
+          "key": "AW-15",
+          "title": "Sign-in with passkeys",
+          "project": "api",
+          "stage": "discuss",
+          "archived": false,
+          "needs_you_lane": true,
+          "needs_you_reasons": [
+            {
+              "reason": "gate",
+              "kind": "approve_proposal"
+            }
+          ],
+          "paused": false,
+          "queued": false
+        },
+        {
+          "id": "t-AW-16",
+          "key": "AW-16",
+          "title": "Reply to a turn",
+          "project": "api",
+          "stage": "discuss",
+          "archived": false,
+          "needs_you_lane": true,
+          "needs_you_reasons": [
+            {
+              "reason": "gate",
+              "kind": "reply"
+            }
+          ],
+          "paused": false,
+          "queued": false
+        },
+        {
+          "id": "t-AW-17",
+          "key": "AW-17",
+          "title": "Result of the export",
+          "project": "api",
+          "stage": "review",
+          "archived": false,
+          "needs_you_lane": true,
+          "needs_you_reasons": [
+            {
+              "reason": "gate",
+              "kind": "approve_result"
+            }
+          ],
+          "paused": false,
+          "queued": false
+        },
+        {
+          "id": "t-AW-18",
+          "key": "AW-18",
+          "title": "Docs for the CLI flags",
+          "project": "api",
+          "stage": "backlog",
+          "archived": false,
+          "needs_you_lane": true,
+          "needs_you_reasons": [
+            {
+              "reason": "assign"
+            }
+          ],
+          "paused": false,
+          "queued": false
+        },
+        {
+          "id": "t-AW-9",
+          "key": "AW-9",
+          "title": "Nightly backup check",
+          "project": "api",
+          "stage": "implement",
+          "archived": false,
+          "needs_you_lane": false,
+          "needs_you_reasons": [],
+          "paused": false,
+          "queued": false
+        },
+        {
+          "id": "t-AW-14",
+          "key": "AW-14",
+          "title": "Upgrade the test runner",
+          "project": "api",
+          "stage": "discuss",
+          "archived": false,
+          "needs_you_lane": false,
+          "needs_you_reasons": [],
+          "paused": false,
+          "queued": false
+        },
+        {
+          "id": "t-AW-19",
+          "key": "AW-19",
+          "title": "Flaky invoice test",
+          "project": "api",
+          "stage": "implement",
+          "archived": false,
+          "needs_you_lane": false,
+          "needs_you_reasons": [],
+          "paused": true,
+          "queued": false
+        },
+        {
+          "id": "t-AW-20",
+          "key": "AW-20",
+          "title": "Release notes",
+          "project": "api",
+          "stage": "ready",
+          "archived": false,
+          "needs_you_lane": false,
+          "needs_you_reasons": [],
+          "paused": false,
+          "queued": true
+        },
+        {
+          "id": "t-AW-21",
+          "key": "AW-21",
+          "title": "Old task",
+          "project": "api",
+          "stage": "done",
+          "archived": false,
+          "needs_you_lane": false,
+          "needs_you_reasons": [],
+          "paused": false,
+          "queued": false
+        },
+        {
+          "id": "t-AW-22",
+          "key": "AW-22",
+          "title": "Archived task",
+          "project": "api",
+          "stage": "discuss",
+          "archived": true,
+          "needs_you_lane": true,
+          "needs_you_reasons": [
+            {
+              "reason": "gate",
+              "kind": "question"
+            }
+          ],
+          "paused": false,
+          "queued": false
+        }
+      ],
+      "rows": [
+        {
+          "reason": "Reply to a question",
+          "title": "Rate limits for the public API",
+          "key": "AW-12"
+        },
+        {
+          "reason": "Approve proposal",
+          "title": "Sign-in with passkeys",
+          "key": "AW-15"
+        },
+        {
+          "reason": "Reply to a question",
+          "title": "Reply to a turn",
+          "key": "AW-16"
+        },
+        {
+          "reason": "Approve result",
+          "title": "Result of the export",
+          "key": "AW-17"
+        },
+        {
+          "reason": "Assign task",
+          "title": "Docs for the CLI flags",
+          "key": "AW-18"
+        }
+      ],
+      "groups": [
+        {
+          "id": "running",
+          "label": "Working now",
+          "keys": ["AW-9", "AW-14"]
+        },
+        {
+          "id": "paused",
+          "label": "Paused",
+          "keys": ["AW-19"]
+        },
+        {
+          "id": "queued",
+          "label": "Queued",
+          "keys": ["AW-20"]
+        }
+      ]
+    },
+    {
+      "name": "nothing needs you",
+      "tasks": [
+        {
+          "id": "t-AW-9",
+          "key": "AW-9",
+          "title": "Nightly backup check",
+          "project": "api",
+          "stage": "implement",
+          "archived": false,
+          "needs_you_lane": false,
+          "needs_you_reasons": [],
+          "paused": false,
+          "queued": false
+        }
+      ],
+      "rows": [],
+      "groups": [
+        {
+          "id": "running",
+          "label": "Working now",
+          "keys": ["AW-9"]
+        }
+      ]
+    }
+  ]
+}

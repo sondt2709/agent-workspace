@@ -978,7 +978,7 @@
               "enum": [
                 "question",
                 "reply",
-                "confirm_approach",
+                "approve_proposal",
                 "assign",
                 "approve_command",
                 "approve_result",
@@ -1187,7 +1187,7 @@
           "x-aw-check": "hlc"
         },
         "dev": { "type": "string", "maxLength": 63, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
-        "type": { "type": "string", "const": "approach.proposed" },
+        "type": { "type": "string", "const": "proposal.proposed" },
         "task": {
           "type": "string",
           "format": "uuid",

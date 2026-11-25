@@ -3,6 +3,7 @@ import {
   currentDocumentMajor,
   documentSchema,
   isDocumentKind,
+  upgradeTaskDocument,
   versionStatus,
   type DocumentKind,
   type DocumentOf,
@@ -69,7 +70,8 @@ export function parseDocumentText<K extends DocumentKind>(
   const schema = documentSchema(kind, version);
   if (status === "unsupported" || !schema)
     throw new UnsupportedVersionError({ path }, kind, version);
-  const result = schema.safeParse(value);
+  // A task snapshot from before openspec proposal-and-discussion gets the field `proposal`.
+  const result = schema.safeParse(upgradeTaskDocument(value));
   if (!result.success)
     throw new SchemaError({ path }, `${kind}.v${version}`, toSchemaIssues(result.error));
   return { kind: kind as K, version, status, value: result.data as DocumentOf[K] };

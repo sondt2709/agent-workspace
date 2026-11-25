@@ -190,7 +190,7 @@ export const eventDataV1 = {
       .nullable()
       .default(null),
     file: relativePath.nullable().default(null),
-    /** Optional decisions of an approach or a custom gate, each with a recommended option. */
+    /** The decisions of a gate from before openspec proposal-and-discussion: read only, a writer writes []. */
     decisions: z.array(gateDecision).default([]),
     /** Optional questions with option descriptions, headers and multi-select (gate-context). */
     questions: z.array(gateQuestion).max(10).default([]),
@@ -210,7 +210,7 @@ export const eventDataV1 = {
   }),
 
   // Work products (docs/workflow.md 8).
-  "approach.proposed": z.looseObject({ version: z.int().min(1), file: relativePath }),
+  "proposal.proposed": z.looseObject({ version: z.int().min(1), file: relativePath }),
   "artifact.added": z.looseObject({
     path: relativePath,
     size: count,

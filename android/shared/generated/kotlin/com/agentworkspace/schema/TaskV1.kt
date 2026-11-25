@@ -29,7 +29,7 @@ data class TaskV1(
     @SerialName("paused") val paused: Paused? = null,
     @SerialName("assignee") val assignee: String? = null,
     @SerialName("claim") val claim: Claim? = null,
-    @SerialName("approach") val approach: Approach = Approach(latest = 0L, confirmed = null),
+    @SerialName("proposal") val proposal: Proposal = Proposal(latest = 0L, approved = null),
     @SerialName("ready") val ready: Ready? = null,
     @SerialName("test_server") val testServer: String? = null,
     @SerialName("credentials") val credentials: List<String> = emptyList(),
@@ -123,16 +123,16 @@ data class TaskV1(
     }
 
     @Serializable
-    data class Approach(
+    data class Proposal(
         @SerialName("latest") val latest: Long,
-        @SerialName("confirmed") val confirmed: Long?,
+        @SerialName("approved") val approved: Long?,
     ) {
         init {
             AwChecks.atLeast(latest, 0L, "latest")
             AwChecks.atMost(latest, 9007199254740991L, "latest")
-            if (confirmed != null) {
-                AwChecks.atLeast(confirmed, 1L, "confirmed")
-                AwChecks.atMost(confirmed, 9007199254740991L, "confirmed")
+            if (approved != null) {
+                AwChecks.atLeast(approved, 1L, "approved")
+                AwChecks.atMost(approved, 9007199254740991L, "approved")
             }
         }
     }

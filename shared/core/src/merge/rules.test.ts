@@ -477,7 +477,48 @@ describe("gates", () => {
     expect(view.issues.filter((i) => i.task === task).map((i) => i.reason)).toEqual(["not_owner"]);
   });
 
-  it("confirms the approach version of the gate file", async () => {
+  it("approves the proposal version of the gate file with Approve", async () => {
+    const task = newTask();
+    await ws.task(
+      task,
+      event(
+        "macbook-pro",
+        "task.created",
+        at("15:00:00"),
+        createdData("AW-20", { assignee: "claude@ubuntu-01" }),
+        human("macbook-pro"),
+      ),
+      event("ubuntu-01", "task.claimed", at("15:01:00"), {
+        epoch: 1,
+        device: "ubuntu-01",
+        session: session(),
+        based_on: null,
+      }),
+      event("ubuntu-01", "proposal.proposed", at("15:02:00"), {
+        version: 2,
+        file: "proposal/v2.md",
+      }),
+      event("ubuntu-01", "gate.opened", at("15:02:00", 1), {
+        gate,
+        kind: "approve_proposal",
+        version: 1,
+        title: "",
+        text: "",
+        options: [],
+        request_id: null,
+        file: "proposal/v2.md",
+      }),
+      event("ubuntu-01", "gate.resolved", at("15:03:00"), {
+        gate,
+        version: 1,
+        answer_event: null,
+        answer: "Approve",
+      }),
+    );
+    expect((await taskOf(task)).proposal).toEqual({ latest: 2, approved: 2 });
+  });
+
+  it("approves the version of a gate from before the rename (approach, Confirm)", async () => {
     const task = newTask();
     await ws.task(
       task,
@@ -515,7 +556,7 @@ describe("gates", () => {
         answer: "Confirm",
       }),
     );
-    expect((await taskOf(task)).approach).toEqual({ latest: 2, confirmed: 2 });
+    expect((await taskOf(task)).proposal).toEqual({ latest: 2, approved: 2 });
   });
 });
 

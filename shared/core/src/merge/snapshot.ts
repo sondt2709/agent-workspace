@@ -21,7 +21,7 @@ export function toTaskDocument(task: TaskView): TaskDocument | null {
     claim: task.claim
       ? { epoch: task.claim.epoch, device: task.claim.device, session: task.claim.session }
       : null,
-    approach: { ...task.approach },
+    proposal: { ...task.proposal },
     ready: task.ready
       ? { passed_on: task.ready.passed_on, missing: [...task.ready.missing] }
       : null,

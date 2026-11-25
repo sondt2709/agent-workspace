@@ -116,9 +116,9 @@ export const taskV1 = z.looseObject({
     .looseObject({ epoch: z.int().min(1), device: deviceSlug, session: uuidv7 })
     .nullable()
     .default(null),
-  approach: z
-    .looseObject({ latest: count, confirmed: z.int().min(1).nullable() })
-    .default({ latest: 0, confirmed: null }),
+  proposal: z
+    .looseObject({ latest: count, approved: z.int().min(1).nullable() })
+    .default({ latest: 0, approved: null }),
   ready: z
     .looseObject({ passed_on: deviceSlug.nullable(), missing: z.array(z.string()) })
     .nullable()

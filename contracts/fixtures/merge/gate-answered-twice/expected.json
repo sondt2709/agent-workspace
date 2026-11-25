@@ -148,10 +148,6 @@
     "slots": [],
     "tasks": [
       {
-        "approach": {
-          "confirmed": 1,
-          "latest": 1
-        },
         "archived": false,
         "artifacts": [],
         "assignee": "claude@ubuntu-01",
@@ -215,11 +211,11 @@
             "version": 1
           },
           {
-            "answer": "confirm",
+            "answer": "Approve",
             "answer_event": "01a20399-7b80-73e6-b93e-974147ddfe38",
             "answers": [
               {
-                "answer": "confirm",
+                "answer": "Approve",
                 "by": "human@macbook-pro",
                 "comment": null,
                 "dev": "macbook-pro",
@@ -229,18 +225,18 @@
                 "version": 1
               }
             ],
-            "file": "approach/v1.md",
+            "file": "proposal/v1.md",
             "gate": "01a20397-a6c0-7e6c-bb4d-77006b2cc4c0",
-            "kind": "confirm_approach",
+            "kind": "approve_proposal",
             "opened": {
               "dev": "ubuntu-01",
               "event": "01a20397-a6c0-77fa-97ab-af0d3aeaca24",
               "hlc": "2026-11-22T14:10:00.000Z#0001"
             },
-            "options": ["Confirm", "Request changes"],
+            "options": ["Approve"],
             "resolved_by": "ubuntu-01",
             "state": "resolved",
-            "title": "Confirm approach v1",
+            "title": "Proposal v1",
             "version": 1
           }
         ],
@@ -266,6 +262,10 @@
         "priority": null,
         "progress": "Run the tests",
         "project": "billing-api",
+        "proposal": {
+          "approved": 1,
+          "latest": 1
+        },
         "ready": {
           "missing": [],
           "passed_on": "ubuntu-01"
@@ -295,10 +295,6 @@
         "title": "Fix the flaky invoice test"
       },
       {
-        "approach": {
-          "confirmed": null,
-          "latest": 2
-        },
         "archived": false,
         "artifacts": [],
         "assignee": "claude@ubuntu-01",
@@ -416,7 +412,7 @@
             ],
             "file": "approach/v2.md",
             "gate": "01a203ce-9540-7000-8000-0ce146ab1075",
-            "kind": "confirm_approach",
+            "kind": "approve_proposal",
             "opened": {
               "dev": "ubuntu-01",
               "event": "01a203d0-6a00-7000-8000-4bcc3196fb60",
@@ -446,7 +442,7 @@
         "needs_you_reasons": [
           {
             "gate": "01a203ce-9540-7000-8000-0ce146ab1075",
-            "kind": "confirm_approach",
+            "kind": "approve_proposal",
             "reason": "gate",
             "waiting_for_owner": false
           }
@@ -458,6 +454,10 @@
         "priority": null,
         "progress": null,
         "project": "billing-api",
+        "proposal": {
+          "approved": null,
+          "latest": 2
+        },
         "ready": null,
         "rekey_by": null,
         "released_epoch": null,

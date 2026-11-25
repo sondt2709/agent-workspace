@@ -147,7 +147,7 @@ export type PauseCause = z.infer<typeof pauseCause>;
 export const gateKind = z.enum([
   "question",
   "reply",
-  "confirm_approach",
+  "approve_proposal",
   "assign",
   "approve_command",
   "approve_result",

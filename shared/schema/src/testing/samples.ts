@@ -57,7 +57,7 @@ export const validData: Record<EventType, Record<string, unknown>> = {
   },
   "gate.answered": { gate: ID, version: 1, answer: "1000/min" },
   "gate.resolved": { gate: ID, version: 1, answer_event: ID2, answer: "1000/min" },
-  "approach.proposed": { version: 2, file: "approach/v2.md" },
+  "proposal.proposed": { version: 2, file: "proposal/v2.md" },
   "artifact.added": { path: "artifacts/ubuntu-01/report.html", size: 2048, sha256: HASH },
   "result.posted": { file: "artifacts/ubuntu-01/result.md", artifacts: [] },
   "handoff.written": { file: "artifacts/ubuntu-01/handoff.md" },

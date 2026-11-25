@@ -196,7 +196,7 @@ describe("WorkspaceFiles", () => {
     await expect(ws.appendEvent(taskLog("ubuntu-01"), event)).rejects.toThrow(WriteRefusedError);
   });
 
-  it("refuses the secure folder on the phone and a second approach version write", async () => {
+  it("refuses the secure folder on the phone and a second proposal version write", async () => {
     const phone = open("pixel-9");
     await expect(
       phone.writeDocument("secure/test-servers.yaml", {
@@ -206,9 +206,9 @@ describe("WorkspaceFiles", () => {
       }),
     ).rejects.toThrow("computers only");
     const owner = open("ubuntu-01");
-    await owner.writeFile(`tasks/${FIXTURE_TASK_ID}/approach/v1.md`, "# Approach v1\n");
+    await owner.writeFile(`tasks/${FIXTURE_TASK_ID}/proposal/v1.md`, "# Proposal v1\n");
     await expect(
-      owner.writeFile(`tasks/${FIXTURE_TASK_ID}/approach/v1.md`, "# Changed\n"),
+      owner.writeFile(`tasks/${FIXTURE_TASK_ID}/proposal/v1.md`, "# Changed\n"),
     ).rejects.toThrow("written once");
   });
 
@@ -313,9 +313,9 @@ describe("WorkspaceFiles", () => {
       return ws;
     }
 
-    it("redacts an approach version and returns the written text", async () => {
+    it("redacts a proposal version and returns the written text", async () => {
       const ws = secretOpen();
-      const path = task("approach/v1.md");
+      const path = task("proposal/v1.md");
       const written = await ws.writeFile(path, `# Plan\n\nCall staging with ${value}.\n`);
       expect(written).toBe("# Plan\n\nCall staging with [redacted:staging-api-key].\n");
       expect((await disk(path)).toString("utf8")).toBe(written);

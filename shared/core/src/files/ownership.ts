@@ -12,7 +12,9 @@ export type Writer =
   /** A device with the master key: the device records. */
   | { type: "master-key" }
   /** The owner device of the task: the highest `task.claimed` epoch, else the creating device. */
-  | { type: "task-owner"; task: string };
+  | { type: "task-owner"; task: string }
+  /** No device: a read-only file of an older layout. `reason` says where the new file goes. */
+  | { type: "none"; reason: string };
 
 /** The kind of a JSON Lines log: which event types it holds (docs/phase-1.md 3.1). */
 export type LogKind = "task" | "workspace" | "knowledge" | "heartbeat";
@@ -42,7 +44,7 @@ export interface PathInfo {
   identity?: DocumentIdentity;
   /** The task id of a path in a task folder. */
   task?: string;
-  /** The file is written once and never changed (`approach/v<n>.md`). */
+  /** The file is written once and never changed (`proposal/v<n>.md`). */
   writeOnce?: boolean;
   /** Only computers have the `secure` folder (docs/decisions/2026-11-22-device-sync.md, sync 1). */
   computersOnly?: boolean;
@@ -149,13 +151,23 @@ const rules: Rule[] = [
     info: (m) => ({ writer: device(m.d!), format: log(m.d!, "task"), task: m.t! }),
   },
   {
-    name: "task-approach",
-    pattern: new RegExp(`^tasks/(?<t>${UUID7})/approach/v[1-9][0-9]*\\.md$`),
+    name: "task-proposal",
+    pattern: new RegExp(`^tasks/(?<t>${UUID7})/proposal/v[1-9][0-9]*\\.md$`),
     info: (m) => ({
       writer: { type: "task-owner", task: m.t! },
       format: file,
       task: m.t!,
       writeOnce: true,
+    }),
+  },
+  {
+    // The versions from before openspec proposal-and-discussion: read only.
+    name: "task-approach",
+    pattern: new RegExp(`^tasks/(?<t>${UUID7})/approach/v[1-9][0-9]*\\.md$`),
+    info: (m) => ({
+      writer: { type: "none", reason: "approach/ is read-only: a new version goes to proposal/" },
+      format: file,
+      task: m.t!,
     }),
   },
   {
@@ -270,6 +282,8 @@ export function checkWrite(path: string, context: WriterContext, check: WriteChe
       if (!context.hasMasterKey)
         throw refuse("only a device with the master key writes a device record");
       break;
+    case "none":
+      throw refuse(writer.reason);
     case "task-owner": {
       const owner = context.taskOwner?.(writer.task);
       if (owner === undefined) throw refuse(`the owner device of task ${writer.task} is not known`);
@@ -282,6 +296,6 @@ export function checkWrite(path: string, context: WriterContext, check: WriteChe
     }
   }
   if (info.writeOnce && check.exists)
-    throw refuse("an approach version is written once and never changed");
+    throw refuse("a proposal version is written once and never changed");
   return info;
 }
