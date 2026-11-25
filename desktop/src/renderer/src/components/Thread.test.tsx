@@ -184,28 +184,36 @@ describe("Thread: person messages and agent messages (task-review-layout)", () =
   const FIXTURE = JSON.parse(agentMessageJson) as {
     cases: { name: string; text: string; expected: { kind: string; body: string } | null }[];
   };
-  function humanRow(task: string, text: string): EventRow {
+  function personRow(task: string, type: string, data: Record<string, unknown>): EventRow {
     return {
       ...rekeyRow(task),
       id: "row-human",
-      type: "message.human",
+      type,
       event: {
         v: 1,
         id: "row-human",
         hlc: HLC,
         dev: "macbook-pro",
-        type: "message.human",
+        type,
         by: "human@macbook-pro",
-        data: { text, source: "typed", session: "s1", delivery_id: null },
+        data,
       },
     };
   }
-  function show(text: string, mode: "activity" | "session") {
+  function humanRow(task: string, text: string): EventRow {
+    return personRow(task, "message.human", {
+      text,
+      source: "typed",
+      session: "s1",
+      delivery_id: null,
+    });
+  }
+  function show(text: string, mode: "activity" | "session", row = humanRow) {
     const task = makeTask({ key: "AW-1" });
     installBridge({
       thread: () => ({
         task: { id: task.id, key: task.key, title: task.title },
-        events: [humanRow(task.id, text)],
+        events: [row(task.id, text)],
         next: null,
         ancestors: [],
       }),
@@ -219,6 +227,29 @@ describe("Thread: person messages and agent messages (task-review-layout)", () =
     expect(await screen.findByText(/typed in the terminal/)).toBeTruthy();
     expect(container.querySelector("strong")?.textContent).toBe("cents");
     expect(screen.getAllByRole("listitem").length).toBe(2);
+  });
+
+  it("shows a sent message and a comment as Markdown in Activity, and raw in Session", async () => {
+    const sent = (task: string, text: string) =>
+      personRow(task, "message.sent", { id: "d1", text });
+    const comment = (task: string, text: string) => personRow(task, "comment.added", { text });
+    for (const row of [sent, comment]) {
+      const first = show("Use **cents**.", "activity", row);
+      expect((await screen.findByText("cents")).tagName).toBe("STRONG");
+      first.unmount();
+      const raw = show("Use **cents**.", "session", row);
+      expect(await screen.findByText("Use **cents**.")).toBeTruthy();
+      raw.unmount();
+    }
+  });
+
+  it("shows the comment of an answer as Markdown in Activity", async () => {
+    const answered = (task: string, text: string) =>
+      personRow(task, "gate.answered", { gate: "g1", answer: "Request changes", comment: text });
+    show("My choices:\n- **D2**: In memory", "activity", answered);
+    expect(await screen.findByText(/answered: Request changes/)).toBeTruthy();
+    expect(screen.getByText("D2").tagName).toBe("STRONG");
+    expect(screen.getAllByRole("listitem").length).toBe(1);
   });
 
   it("shows a subagent report with its label and the report as Markdown", async () => {

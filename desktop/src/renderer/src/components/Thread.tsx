@@ -205,11 +205,33 @@ function Row({
         who={by}
         meta={`${d.kind === "nudge" ? "nudge · " : ""}${done ? "sent" : "not delivered yet"} · ${when}`}
         text={str(d.text)}
+        clamp={mode === "activity"}
+        markdown={mode === "activity"}
       />
     );
   }
   if (row.type === "comment.added") {
-    return <MessageRow who={by} meta={`comment · ${when}`} text={str(d.text)} />;
+    return (
+      <MessageRow
+        who={by}
+        meta={`comment · ${when}`}
+        text={str(d.text)}
+        clamp={mode === "activity"}
+        markdown={mode === "activity"}
+      />
+    );
+  }
+  if (row.type === "gate.answered" && mode === "activity" && str(d.comment)) {
+    // The comment of an answer is person text: Markdown, as a message (task-review-layout).
+    return (
+      <MessageRow
+        who={by}
+        meta={`answered: ${str(d.answer)} · ${when}${notApplied}`}
+        text={str(d.comment)}
+        clamp
+        markdown
+      />
+    );
   }
   if (row.type === "task.learned") {
     return <LearnedLine ws={ws} row={row} meta={`${when}${notApplied}`} />;

@@ -397,7 +397,7 @@ private fun ThreadLine(
             ThreadKind.GATE -> scheme.primary
             ThreadKind.SYSTEM -> null
         }
-    val markdown = activity && item.kind in MARKDOWN_KINDS
+    val markdown = activity && ActivityRule.markdown(item.kind)
     // The edge is drawn behind the row: a Markdown table cannot give an intrinsic height.
     Row(
         Modifier
@@ -445,9 +445,6 @@ private fun ThreadLine(
 
 /** The width of the colored edge of a thread row (2 dp, as on the desktop). */
 private val EDGE = 2.dp
-
-/** The kinds of Activity rows that show their text as Markdown: the messages of agents and persons. */
-private val MARKDOWN_KINDS = setOf(ThreadKind.AGENT, ThreadKind.HUMAN, ThreadKind.SENT)
 
 /** The placeholders of the message box: with a running session, and with none. */
 private const val SEND_HINT = "It arrives as the next input of the session."

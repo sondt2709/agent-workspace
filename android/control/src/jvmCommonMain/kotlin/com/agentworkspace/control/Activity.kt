@@ -130,6 +130,13 @@ object ActivityRule {
         }
     }
 
+    /**
+     * True when an Activity row of [kind] shows its text as Markdown: each message of an agent or a
+     * person (the agent, a typed or sent message, a comment, a gate and an answer). A task line stays
+     * plain text. The Session view shows the raw text (principle 8).
+     */
+    fun markdown(kind: ThreadKind): Boolean = kind != ThreadKind.SYSTEM
+
     /** The lines of an agent message that Activity shows first. */
     const val CLAMP_LINES = 6
 

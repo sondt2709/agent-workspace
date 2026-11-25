@@ -19,11 +19,19 @@ import androidx.core.net.toUri
 import com.agentworkspace.control.LinkRule
 import com.mikepenz.markdown.m3.Markdown
 import com.mikepenz.markdown.m3.markdownTypography
+import com.mikepenz.markdown.model.State
+import com.mikepenz.markdown.model.markdownAnimations
+import com.mikepenz.markdown.model.parseMarkdown
 
 /**
  * Claude output as Markdown (openspec polish-prototype-style), with the maintained renderer of
  * docs/tech-stack.md 2.5. The renderer draws Compose text: no HTML or script runs, and it loads no
  * image (no image transformer). A tap on a link opens the system browser only for `https://`.
+ *
+ * The text is parsed before the first draw, not in the background (the renderer default): else a row
+ * of a lazy list shows with no height and then grows, and the list moves when the person scrolls up
+ * (docs/design.md 8.19). [ParsedTexts] keeps the parsed texts, so a row that comes back into view does
+ * not parse again.
  */
 @Composable
 fun MarkdownText(
@@ -34,10 +42,13 @@ fun MarkdownText(
     val links = remember(context) { BrowserLinks(context) }
     val type = MaterialTheme.typography
     val body = type.bodyMedium
+    val state = remember(text) { ParsedTexts.of(text) }
     CompositionLocalProvider(LocalUriHandler provides links) {
         Markdown(
-            content = text,
+            state = state,
             modifier = modifier.fillMaxWidth(),
+            // No size animation: the text has its full height at once.
+            animations = markdownAnimations(animateTextSize = { this }),
             // Headings stay small inside a card or a message, as on the desktop (docs/design.md 3).
             typography =
                 markdownTypography(
@@ -67,6 +78,19 @@ fun MarkdownText(
         )
     }
 }
+
+/** The parsed Markdown of the newest texts, by text. Only the main thread reads and writes it. */
+private object ParsedTexts {
+    private const val SIZE = 200
+    private val parsed =
+        object : LinkedHashMap<String, State>(SIZE, LOAD_FACTOR, true) {
+            override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, State>?): Boolean = size > SIZE
+        }
+
+    fun of(text: String): State = parsed.getOrPut(text) { parseMarkdown(text) }
+}
+
+private const val LOAD_FACTOR = 0.75f
 
 /** Opens a link of [LinkRule] in the system browser; other links do nothing. */
 private class BrowserLinks(
