@@ -58,7 +58,7 @@ function task(fields: Partial<TaskView> = {}): TaskView {
     test_server: null,
     credentials: ["stripe-test"],
     links: [],
-    approach: { latest: 0, confirmed: null },
+    proposal: { latest: 0, approved: null },
     gates: [],
     ...fields,
   } as TaskView;
@@ -69,10 +69,10 @@ describe("session texts", () => {
     expect(firstInput(task(), null)).toBe("/opsx:explore The invoice test fails 1 time in 5.");
   });
 
-  it("puts the first message first, then the approach word for word, then the thread line", () => {
+  it("puts the first message first, then the proposal word for word, then the thread line", () => {
     const text = firstInput(task(), "1. Retry the call.\n2. Add a test.");
     expect(text).toBe(
-      "/opsx:explore The invoice test fails 1 time in 5.\n\nConfirmed approach:\n\n1. Retry the call.\n2. Add a test.\n\nRead `aw thread AW-7 --ancestors` before you act.",
+      "/opsx:explore The invoice test fails 1 time in 5.\n\nApproved proposal:\n\n1. Retry the call.\n2. Add a test.\n\nRead `aw thread AW-7 --ancestors` before you act.",
     );
     expect(firstInput(task({ parent: "p" }), null)).toContain(
       "Read `aw thread AW-7 --ancestors` before you act.",

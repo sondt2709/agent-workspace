@@ -2,6 +2,7 @@ package com.agentworkspace.control
 
 import com.agentworkspace.shared.merge.EventRow
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.boolean
@@ -82,15 +83,141 @@ class ActivityRuleTest {
             val type = case.getValue("type").jsonPrimitive.content
             val dev = case.getValue("dev").jsonPrimitive.content
             val data = case.getValue("data").jsonObject
-            val expected = case.getValue("in_activity").jsonPrimitive.boolean
-            assertEquals(expected, ActivityRule.inActivity(type, data), name)
-            assertEquals((case["line"] as? JsonPrimitive)?.contentOrNull, ActivityRule.line(type, dev, data), name)
-            // The phone rows: a case in Activity gives one Activity row with the line, if it has one.
             val by = case.getValue("by").jsonPrimitive.content
-            val activity = ThreadItems.activity(listOf(row(1, type, dev, by, data)))
+            val expected = case.getValue("in_activity").jsonPrimitive.boolean
+            assertEquals(expected, ActivityRule.inActivity(type, data, by), name)
+            assertEquals((case["line"] as? JsonPrimitive)?.contentOrNull, ActivityRule.line(type, dev, data), name)
+            // The phone rows: a case in Activity gives one Activity row with its style, its author and
+            // the line, if it has one.
+            val activity = ActivityRows.of(listOf(row(1, type, dev, by, data)))
             assertEquals(if (expected) 1 else 0, activity.size, name)
-            (case["line"] as? JsonPrimitive)?.contentOrNull?.let { assertEquals(it, activity.single().text, name) }
+            assertEquals(
+                case.text("style"),
+                activity
+                    .singleOrNull()
+                    ?.style
+                    ?.name
+                    ?.lowercase(),
+                name,
+            )
+            assertEquals(
+                case.text("author"),
+                activity
+                    .singleOrNull()
+                    ?.author
+                    ?.name
+                    ?.lowercase(),
+                name,
+            )
+            case.text("line")?.let { assertEquals(it, activity.single().text, name) }
         }
+    }
+
+    /**
+     * The whole threads of the shared fixture: the rows that depend on later events (an open or
+     * answered question, a replaced or approved proposal, a gate card). Each expected field of a row
+     * must match; a field that the fixture leaves out is not checked.
+     */
+    @Test
+    fun eachSharedThreadHasTheExpectedRows() {
+        val threads = fixture.getValue("threads").jsonArray.map { it.jsonObject }
+        assertEquals(5, threads.size)
+        for (thread in threads) {
+            val name = thread.getValue("name").jsonPrimitive.content
+            val rows =
+                thread.getValue("rows").jsonArray.mapIndexed { i, r ->
+                    val e = r.jsonObject
+                    EventRow(
+                        id = e.getValue("id").jsonPrimitive.content,
+                        task = "t1",
+                        hlc = e.getValue("hlc").jsonPrimitive.content,
+                        dev = e.getValue("dev").jsonPrimitive.content,
+                        type = e.getValue("type").jsonPrimitive.content,
+                        path = "tasks/t1/log/${e.getValue("dev").jsonPrimitive.content}.jsonl",
+                        line = i + 1,
+                        applied = true,
+                        reason = null,
+                        event = e,
+                    )
+                }
+            val activity = ActivityRows.of(rows)
+            val expected = thread.getValue("expected").jsonArray.map { it.jsonObject }
+            assertEquals(expected.map { it.text("event") }, activity.map { it.event }, name)
+            for ((want, got) in expected.zip(activity)) {
+                val at = "$name: ${got.event}"
+                assertEquals(want.text("style"), got.style.name.lowercase(), at)
+                for ((field, value) in want) {
+                    val actual: Any? =
+                        when (field) {
+                            "event", "style" -> continue
+                            "author" -> got.author?.name?.lowercase()
+                            "kind" -> got.kind.name.lowercase()
+                            "title" -> got.title
+                            "text" -> got.text
+                            "options" -> got.options
+                            "note" -> got.gateNote
+                            "label" -> got.label
+                            "line" -> got.text
+                            "gate" -> got.gate
+                            "version" -> got.version?.toInt()
+                            "file" -> got.file
+                            "state" -> got.state?.name?.lowercase()
+                            else -> error("$at: the test does not know the field $field")
+                        }
+                    val wanted: Any? =
+                        when {
+                            value is JsonArray -> value.map { it.jsonPrimitive.content }
+                            field == "version" -> value.jsonPrimitive.int
+                            else -> (value as? JsonPrimitive)?.contentOrNull
+                        }
+                    assertEquals(wanted, actual, "$at: $field")
+                }
+            }
+        }
+    }
+
+    @Test
+    fun theApprovedCardNamesThePersonAndAnOpenQuestionNeedsYou() {
+        val thread = fixture.getValue("threads").jsonArray.map { it.jsonObject }
+        val rowsOf = { t: JsonObject ->
+            t.getValue("rows").jsonArray.mapIndexed { i, r ->
+                val e = r.jsonObject
+                row(i + 1, e.text("type")!!, e.text("dev")!!, e.text("by")!!, e.getValue("data").jsonObject)
+                    .copy(id = e.text("id")!!)
+            }
+        }
+        val card = ActivityRows.of(rowsOf(thread[1])).single { it.style == RowStyle.PROPOSAL }
+        assertEquals("human@macbook-pro", card.approvedBy)
+        assertEquals(false, card.needsYou)
+        val questions = ActivityRows.of(rowsOf(thread[0])).filter { it.kind == MessageKind.QUESTION }
+        assertEquals(listOf(false, false, true), questions.map { it.needsYou })
+        assertTrue(ActivityRows.of(rowsOf(thread[2])).single().needsYou)
+    }
+
+    @Test
+    fun approveProposalSendsAnOptionOfTheGate() {
+        assertEquals("Approve", ActivityRows.approveAnswer(listOf("Approve")))
+        assertEquals("Confirm", ActivityRows.approveAnswer(listOf("Confirm", "Request changes")))
+        assertEquals("Approve", ActivityRows.approveAnswer(emptyList()))
+    }
+
+    @Test
+    fun aProposalOfThreeVersionsNamesTheNextVersion() {
+        val proposed = { n: Int ->
+            row(
+                n,
+                "proposal.proposed",
+                "ubuntu-01",
+                "claude@ubuntu-01",
+                obj("""{"version":$n,"file":"proposal/v$n.md"}"""),
+            )
+        }
+        val activity = ActivityRows.of(listOf(proposed(1), proposed(2), proposed(3)))
+        assertEquals(
+            listOf("Proposal v1 · replaced by v2", "Proposal v2 · replaced by v3"),
+            activity.filter { it.style == RowStyle.LINE }.map { it.text },
+        )
+        assertEquals(ProposalState.NONE, activity.last().state)
     }
 
     @Test
@@ -167,12 +294,13 @@ class ActivityRuleTest {
                 ),
                 row(7, "session.ended", "ubuntu-01", "aw@ubuntu-01", obj("""$session,"reason":"stopped"}""")),
             )
-        val activity = ThreadItems.activity(rows)
-        assertEquals(listOf("e1", "e5", "e6", "e7"), activity.map { it.id })
+        val activity = ActivityRows.of(rows)
+        assertEquals(listOf("e1", "e5", "e6", "e7"), activity.map { it.event })
         assertEquals("Created by human@macbook-pro", activity[0].text)
-        assertEquals(ThreadKind.SYSTEM, activity[0].kind)
+        assertEquals(RowStyle.LINE, activity[0].style)
+        assertEquals(ThreadKind.SYSTEM, activity[0].item.kind)
         assertEquals("1\n2\n3\n4\n5\n6\n7\n8\n9", activity[1].text)
-        assertEquals("typed in the terminal", activity[2].note)
+        assertEquals("typed in the terminal", activity[2].item.note)
         assertTrue(activity[3].text.startsWith("Session stopped on ubuntu-01: "))
         // The Session view keeps each event, also the first message as its row.
         val session7 = ThreadItems.of(rows)
@@ -199,12 +327,13 @@ class ActivityRuleTest {
                 row(6, "gate.answered", "macbook-pro", "human@macbook-pro", obj("""{"gate":"g1","answer":"A"}""")),
                 row(7, "task.done", "macbook-pro", "human@macbook-pro", obj("{}")),
             )
-        val activity = ThreadItems.activity(rows)
-        assertEquals(listOf("e1", "e2", "e3", "e4", "e5", "e6", "e7"), activity.map { it.id })
+        val activity = ActivityRows.of(rows)
+        assertEquals(listOf("e1", "e2", "e3", "e4", "e5", "e6", "e7"), activity.map { it.event })
         assertEquals(
             listOf(false, true, true, true, true, true, false),
-            activity.map { ActivityRule.markdown(it.kind) },
+            activity.map { ActivityRule.markdown(it.item.kind) },
         )
+        assertEquals(listOf(RowStyle.LINE) + List(5) { RowStyle.MESSAGE } + RowStyle.LINE, activity.map { it.style })
     }
 
     @Test
@@ -227,10 +356,12 @@ class ActivityRuleTest {
                     obj("""$session,"text":"x","source":"typed"}"""),
                 ),
             ).map { it.copy(applied = false, reason = "not_owner") }
-        val activity = ThreadItems.activity(rows)
-        assertEquals(listOf("Ignored: not_owner", "Ignored: not_owner"), activity.map { it.note })
+        val activity = ActivityRows.of(rows)
+        assertEquals(listOf("Ignored: not_owner", "Ignored: not_owner"), activity.map { it.item.note })
         assertEquals("Created by human@macbook-pro", activity[0].text)
     }
 
     private fun obj(text: String): JsonObject = Json.parseToJsonElement(text).jsonObject
+
+    private fun JsonObject.text(key: String): String? = (this[key] as? JsonPrimitive)?.contentOrNull
 }

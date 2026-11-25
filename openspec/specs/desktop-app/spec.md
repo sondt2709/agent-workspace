@@ -68,7 +68,7 @@ The window SHALL have a sidebar with, from the top: the workspace switcher; Inbo
 - **THEN** the app shows the Board of `billing-api`, then its List, and the sidebar has one row for `billing-api`
 
 ### Requirement: Inbox
-The Inbox SHALL show a list and a detail with the tabs "Needs you" and "Updates". "Needs you" SHALL list one row for each task in the "Needs you" lane (with its reason, title, key and project) and for each file to fix, then the groups Working now, Paused and Queued. "Updates" SHALL list the knowledge of today and each device with changes of this workspace not synced. The detail of a task SHALL show one card for each open gate and for each other reason (assign, a pause that needs the person), and "Open task". The person SHALL act on a gate in the card. A task with an answer notice SHALL keep its row until the person closes the notice. From 840 px the first row shows in the detail when no row is selected, or when the selected row left the list. When the workspace has no open project, the Inbox SHALL show "No projects yet" with the button "Add a project". When it has a project but no active task, the Inbox SHALL show "No tasks yet" with the button "New task". The files to fix and the knowledge of today SHALL show in each state of the Inbox, also with no project or no active task.
+The Inbox SHALL show a list and a detail with the tabs "Needs you" and "Updates". "Needs you" SHALL list one row for each task in the "Needs you" lane (with its reason, title, key and project) and for each file to fix, then the groups Working now, Paused and Queued. "Updates" SHALL list the knowledge of today and each device with changes of this workspace not synced. The reason of a row SHALL be "Reply to a question" for a `question` or `reply` gate and "Approve proposal" for an `approve_proposal` gate. The detail of a task SHALL show the title, the Activity row of each open gate (the question message with its option buttons and a reply field, the proposal card, or the gate card), the Assign card or the pause, and "Open task". The person SHALL act on a gate in the detail. A task with an answer notice SHALL keep its row until the person closes the notice. From 840 px the first row shows in the detail when no row is selected, or when the selected row left the list. When the workspace has no open project, the Inbox SHALL show "No projects yet" with the button "Add a project". When it has a project but no active task, the Inbox SHALL show "No tasks yet" with the button "New task". The files to fix and the knowledge of today SHALL show in each state of the Inbox, also with no project or no active task.
 
 #### Scenario: Answer in place
 - **WHEN** the Inbox detail shows the question gate of `AW-3` with the options `100/min` and `1000/min`, and the person selects `100/min`
@@ -102,7 +102,7 @@ The Board SHALL show the columns Backlog, Discuss, Ready, Implement, Review and 
 - **THEN** its card is in the Implement column with the chip "Paused · device offline"
 
 #### Scenario: Needs you keeps the stage
-- **WHEN** `AW-3` is in Discuss and has an open "Confirm approach" gate
+- **WHEN** `AW-3` is in Discuss and has an open "Approve proposal" gate
 - **THEN** its card is in the "Needs you" row of the Discuss column, and the Discuss count includes it
 
 #### Scenario: Queued task
@@ -122,18 +122,18 @@ The task page SHALL show a header with Back, the key, the project, the state chi
 
 It SHALL have the tabs Activity (default), Session, Terminal and Files. When the task page without the task list is narrower than 1,000 px, it SHALL also have the tab Properties; from 1,000 px the properties SHALL show in a right panel of 280 px next to the tabs. The width SHALL be the width of the task page, not of the window. The content of the Activity and Session tabs and the message box SHALL have a maximum width of 840 px and SHALL be centred. Each task SHALL open on the Activity tab, also when the person opens another task from a task. Esc on the task page SHALL go back, except in a text field.
 
-The properties SHALL be read-only: the stage, the assignee with New session, the project, the approach versions (latest and confirmed), the test server, the credential names, the queue, the parent, the subtasks and the dependencies, and the progress. The properties SHALL NOT show the first message, the session or the task id.
+The properties SHALL be read-only: the stage, the assignee with New session, the project, the proposal versions (latest and approved), the test server, the credential names, the queue, the parent, the subtasks and the dependencies, and the progress. The properties SHALL NOT show the first message, the session or the task id.
 
 The Session tab SHALL show the session summary (the state, the device, the host, the claim epoch, the session id, the branch, the task id, and Stop session for a running session of this device), then the raw thread: each event of the thread window with its text, each message with its raw text, "Show older", and the original conversation of the ancestors. The Session tab SHALL show a row for each event type, also for an unknown type (principle 8). The Files tab SHALL show the read-only folder of the task and the text of a selected file. The tabs Session, Files and Properties SHALL show the line "<n> items need you" with the button "Show in Activity" when an open gate, Assign or a pause needs the person, so that a gate never hides behind a tab.
 
-Each open gate SHALL show as a gate card: Answer question and Reply (options and free text), Confirm approach and Approve result (confirm or approve, or request changes with a required comment), Assign task (an `agent@device` choice), Approve command (Allow once, Allow for this task, Deny, a countdown from 120 s), Fix a file (its options), and other kinds with their options. A long Markdown text of a gate card SHALL show its first 240 px and "Show more"; "Show more" SHALL show the full text in the page, with no scroll box of its own. A message box SHALL send a message to the running session. It SHALL stay at the bottom of the Activity and Session tabs, outside the scroll area.
+A `question` or `reply` gate SHALL show as an agent message with its options as buttons, and the message box is its free text ("Task activity"). An `approve_proposal` gate SHALL show as the proposal card ("Proposal card"). Each other open gate SHALL show as a gate card: Approve result (approve, or request changes with a required comment), Assign task (an `agent@device` choice), Approve command (Allow once, Allow for this task, Deny, a countdown from 120 s), Fix a file (its options), and other kinds with their options. A long Markdown text of a gate card SHALL show its first 240 px and "Show more"; "Show more" SHALL show the full text in the page, with no scroll box of its own. A message box SHALL send a message to the running session. It SHALL stay at the bottom of the Activity and Session tabs, outside the scroll area.
 
 #### Scenario: Approve command countdown
 - **WHEN** an Approve command gate opened 30 s ago
 - **THEN** the card shows "Denies in 90 s"; after 120 s it shows "Denied after 120 s" and a late "Allow once" still sends an answer
 
 #### Scenario: Request changes needs a comment
-- **WHEN** the person selects "Request changes" on Confirm approach with an empty comment
+- **WHEN** the person selects "Request changes" on Approve result with an empty comment
 - **THEN** the send button is disabled
 
 #### Scenario: Session tab keeps each event
@@ -145,7 +145,7 @@ Each open gate SHALL show as a gate card: Answer question and Reply (options and
 - **THEN** AW-9 shows the Activity tab
 
 #### Scenario: A gate does not hide behind a tab
-- **WHEN** AW-12 has an open Answer question gate and the person opens the Session tab
+- **WHEN** AW-12 has an open question gate and the person opens the Session tab
 - **THEN** the tab shows "1 item needs you" with "Show in Activity" and no gate card
 
 #### Scenario: Narrow task page
@@ -165,8 +165,8 @@ Each open gate SHALL show as a gate card: Answer question and Reply (options and
 - **THEN** a 300 px task list shows on the left with AW-1 and AW-4 first, and the page shows AW-2
 
 #### Scenario: Show more without a scroll box
-- **WHEN** the plan of a Confirm approach gate has 60 lines and the person selects "Show more"
-- **THEN** the card shows the 60 lines in the page, and the gate text has no scroll bar of its own
+- **WHEN** the proposal of AW-12 has 60 lines and the person selects "Show more" on the proposal card
+- **THEN** the card shows the 60 lines in the page, and the text has no scroll bar of its own
 
 ### Requirement: New task and New session
 The New task dialog SHALL have the first message (required), the project, the title (made from the first line of the first message when empty), the assignee (default none, so the task opens "Needs you: assign"), "Start the agent now", the test server, the credential names and the parent task, and SHALL call `createTask`. An empty select SHALL show its empty value ("None") under its label. "Start the agent now" SHALL set the assignee to the default agent of the project on the first device of the project. The credentials SHALL be chips from the credential list of the workspace. When the workspace has no open project, the dialog SHALL show "Add a project first" with the button "Add a project" and no form; after the add, New task SHALL open with the new project. The New session dialog SHALL select a task and an `agent@device` (a new task selection SHALL clear the agent and the host that the person picked for the task before), show the session host, and SHALL write a human `task.assigned` with the chosen `session_host`, so that the device of the agent claims the task with a higher epoch. Opened on a task page or with a selected task, New session SHALL start with that task, and the person SHALL be able to change it. New session SHALL show where the session works: for this device the checkout folder of the project; for another device whether it has a checkout of the project. When Orca is not turned on for this device, the dialog SHALL link to the Project settings of the project. The Orca choice SHALL be enabled only when the bindings of the device have `use_orca: true` and, for this device, awd found Orca; the dialog SHALL first select the `session_host` of the checkout of the project, else Orca when it is enabled, else tmux. While the host list of the session-hosts route loads, the dialog SHALL wait for it or for a host that the person picks; when the list fails and the person picked no host, the dialog SHALL send no `session_host`, and awd decides. A dialog of a workspace (New task, New session, Add a project, Pair, Assign to another device) SHALL keep the workspace of the moment it opened, and SHALL send each write to that workspace. A navigation to another workspace, for example a notification click, SHALL not change it. While one of these dialogs is open, the app SHALL ignore the commands of the app menu and the Tray that open a dialog (New Task, New Session, Sync now), so the open dialog and its draft stay.
@@ -271,38 +271,15 @@ The main process SHALL have the call `openTerminal {ws, task, action: "attach" |
 - **THEN** the app opens Terminal.app with `<claude> auth login`
 
 ### Requirement: Gate cards with the full context
-A gate card SHALL show each decision of `gate.opened` `data.decisions` with its question, its options and the recommended option marked "Recommended". When `data.decisions` is not empty, the card SHALL cut the text at the last `\n\n## Decisions\n`. When the gate has the option "Request changes", each decision SHALL be a radio group, and its recommended option SHALL be picked when the card opens. When each pick is the recommended option, the main button SHALL be the recommended option of the gate (for example "Confirm"). When a pick is not the recommended option, the main button SHALL be "Send my choices", a line SHALL say how many picks differ and that the agent writes a new approach with them, and "Send my choices" SHALL send the answer "Request changes" with the comment of `decisionsAnswer` (`shared/client/src/gates.ts`): "My choices for the decisions:", one line "- <question>: <picked option>" for each changed decision, and "Keep the recommended option of the other decisions." when a decision keeps its recommended option. A gate with no option "Request changes" SHALL show the decisions as labels. The card SHALL read `gate.opened` from the work events of the task (`types=gate.opened,approach.proposed,result.posted,artifact.added&newest=true`), not from the thread window. An "Approve result" card SHALL list the artifacts of its `result.posted` with name and size, each with "Open".
+A gate card SHALL NOT show decisions: `data.decisions` of a gate from before openspec proposal-and-discussion SHALL show only in the Session tab, and the card SHALL show the gate text as written. The card SHALL read `gate.opened` from the work events of the task (`types=gate.opened,proposal.proposed,result.posted,artifact.added&newest=true`), not from the thread window. An "Approve result" card SHALL list the artifacts of its `result.posted` with name and size, each with "Open".
 
-#### Scenario: Decisions with a recommendation
-- **WHEN** the "Confirm approach" gate of AW-12 has 2 decisions, each with a recommended option
-- **THEN** the card shows both questions, their options as radio groups with the recommended options picked and marked "Recommended", the button "Confirm", and no "## Decisions" text block
-
-#### Scenario: Send my choices
-- **WHEN** the person picks "In memory, one counter per pod" for the decision "D2 Counter store" of AW-12 and selects "Send my choices"
-- **THEN** the app sends the answer "Request changes" with the comment "My choices for the decisions:\n- D2 Counter store: In memory, one counter per pod\nKeep the recommended option of the other decisions."
-
-#### Scenario: Back to the recommendation
-- **WHEN** the person picks another option of D2, then the recommended option of D2 again
-- **THEN** the main button is "Confirm" again
-
-#### Scenario: Decisions of a gate with no Request changes
-- **WHEN** a custom gate has the options "Yes" and "No" and 1 decision
-- **THEN** the card shows the decision as labels with "Recommended", and no radio group
+#### Scenario: Old gate with decisions
+- **WHEN** an open custom gate from before the rename has 2 decisions
+- **THEN** the card shows its text and its options, and no decision picker and no "Send my choices"
 
 #### Scenario: Result artifacts
 - **WHEN** the result of AW-12 names `artifacts/ubuntu-01/shot.png` and `artifacts/ubuntu-01/report.xml`
 - **THEN** the "Approve result" card lists both with their sizes and an "Open" button
-
-### Requirement: Approach versions in the task detail
-The Approach field SHALL list each version. A version SHALL open to the full text of `tasks/<task>/approach/v<n>.md`. The chip SHALL be "Confirmed" for the confirmed version, "Waits for you" for the latest version when no version is confirmed or the latest version is newer than the confirmed one, and "Replaced" for each other version.
-
-#### Scenario: New version after a confirmed one
-- **WHEN** v1 of AW-12 is confirmed and the agent proposes v2
-- **THEN** v1 shows "Confirmed" and v2 shows "Waits for you"
-
-#### Scenario: Full text
-- **WHEN** the person opens v2
-- **THEN** the field shows the full Markdown of `approach/v2.md`
 
 ### Requirement: Open a task artifact
 The main call `openTaskArtifact {ws, task, path}` SHALL accept only a path that starts with `artifacts/`, is a file of the task files route, and whose real path stays in the task folder. It SHALL open the types `png jpg jpeg gif webp pdf txt md log json xml csv` in the default app, and SHALL show any other type in Finder. It SHALL never open another file.
@@ -365,45 +342,54 @@ The desktop app SHALL follow `docs/design.md`. The color tokens SHALL live in `@
 - **THEN** the window options have `titleBarStyle: "hiddenInset"` and the background `#08090A`, and the sidebar starts with a 44 px drag row
 
 ### Requirement: Task activity
-The Activity tab SHALL show the open gate cards, the Assign card and a pause first; then the first message once as the description, as Markdown with raw HTML off, with a "Show raw" switch that shows the exact text; then the activity rows in merge order. One table SHALL decide for each event type if it shows in Activity, with an entry for each type of the contract. The table and the rule SHALL agree with the shared fixture `contracts/fixtures/activity/cases.json`, which the phone tests too. Activity SHALL show `task.created` (as "Created by <by>", without the text), `task.assigned`, `task.rekeyed`, `task.edited`, `task.stage_changed`, `task.paused`, `task.resumed`, `task.done`, `task.archived`, `task.learned`, `message.agent` (only with the source `tool` or with no source), `message.sent` (not with `kind: nudge`), `comment.added`, `gate.opened`, `gate.answered`, `approach.proposed`, `result.posted` and `artifact.added`. It SHALL show a `message.human` only with the source `typed` or `phone` and no `delivery_id` (text that the person typed in the terminal). It SHALL show a `session.ended` only with the reason `stopped` or `crashed`, as a line with the cause and the next step (principle 2): "Session stopped on <device>: a person stopped it or ended the agent. AW starts no new session until a person starts one." or "Session crashed on <device>: the agent process ended and AW did not restart it. AW starts no new session until a person starts one." It SHALL NOT show the other types, a `message.agent` with the source `turn` (the text of an agent turn), a nudge notice, a `message.human` that repeats a message, an answer, a notice or the first message, a `session.ended` with another reason, or an unknown type: these show in the Session tab.
+The Activity tab SHALL show the Assign card and a pause first; then the first message once as the description, as Markdown with raw HTML off, with a "Show raw" switch that shows the exact text; then the activity rows in merge order, oldest first. The header chip "Needs you: <reason>" SHALL scroll to the row that needs the person. One table SHALL decide for each event the row style and the text, with an entry for each type of the contract. The table and the rule SHALL agree with the shared fixture `contracts/fixtures/activity/cases.json`, which the phone tests too. Activity SHALL have 3 row styles:
+- **Message**: an agent message (`message.agent` with the source `tool` or no source, a subagent report), a person message (`message.human` with the source `typed` or `phone` and no `delivery_id`, `message.sent` that is not a nudge, `comment.added` by a person), a question (`gate.opened` of the kind `question` or `reply`: an agent message with the gate text and, while the gate is open, its options as buttons and the chip "Waits for your reply"), and an answer (`gate.answered` of a question or reply: a person message with the answer and the comment).
+- **Proposal card**: the `proposal.proposed` of the newest version ("Proposal card").
+- **Task line**: `task.created` (as "Created by <by>", without the text), `task.assigned`, `task.rekeyed`, `task.edited`, `task.stage_changed`, `task.paused`, `task.resumed`, `task.done`, `task.archived`, `task.learned`, `result.posted`, `artifact.added`, a `proposal.proposed` that a newer version replaced ("Proposal v<n> · replaced by v<m>"), the approval of a proposal ("Proposal v<n> approved by <by>"), an answered gate of another kind ("<gate> answered: <answer>"), and a `session.ended` with the reason `stopped` or `crashed` as a line with the cause and the next step (principle 2): "Session stopped on <device>: a person stopped it or ended the agent. AW starts no new session until a person starts one." or "Session crashed on <device>: the agent process ended and AW did not restart it. AW starts no new session until a person starts one."
 
-An agent message, a person message, a sent message, a comment and the comment of an answer SHALL show as Markdown with raw HTML off. A message longer than 6 lines SHALL show its first 6 lines and "Show more". A `message.human` whose text is a subagent report (the rule `agentMessage` of `shared/client`, tested against `contracts/fixtures/activity/agent-message.json`) SHALL show in the style of an agent message, with the text of the agent as Markdown and the label "Subagent report · arrived in the terminal" for the report of a subagent, or "Agent message · arrived in the terminal" for a message of another agent of the session. The Session tab SHALL show the raw text of each message.
+An open gate of another kind (Approve result, Approve command, Fix a file, a custom gate, …) SHALL show its gate card at its place in time. Activity SHALL NOT show the `gate.opened` of a proposal, a `gate.resolved`, a `comment.added` by `aw@<device>` (for example "Context compacted"), a `message.agent` with the source `turn`, a nudge notice, a `message.human` that repeats a message, a notice or the first message, a `session.ended` with another reason, or an unknown type: these show in the Session tab.
+
+Each message SHALL show as Markdown with raw HTML off, as a line with a 2 px edge in the colour of its author (agent or person) and the same text sizes for each author. A message longer than 6 lines SHALL show its first 6 lines and "Show more". A `message.human` whose text is a subagent report (the rule `agentMessage` of `shared/client`, tested against `contracts/fixtures/activity/agent-message.json`) SHALL show as an agent message with the text of the agent and the label "Subagent report · arrived in the terminal", or "Agent message · arrived in the terminal" for a message of another agent of the session. The Session tab SHALL show the raw text of each event.
 
 #### Scenario: First message once
 - **WHEN** the person opens a task whose thread has `task.created`, `task.claimed`, `session.started` and a `message.human` with source `first`
 - **THEN** Activity shows the first message once as the description, the line "Created by human@macbook-pro", and no claim, session or input row
 
+#### Scenario: Question as a message
+- **WHEN** the agent of AW-12 asks "Where do the counters live?" with the options "Redis" and "In memory"
+- **THEN** Activity shows an agent message with the question, the buttons "Redis" and "In memory" and the chip "Waits for your reply", and no "… opened" line
+
+#### Scenario: Answer as a message
+- **WHEN** the person selects "Redis"
+- **THEN** the question has no buttons, and a person message "Redis" follows it
+
+#### Scenario: One proposal
+- **WHEN** the agent sent proposal v1 and then v2
+- **THEN** Activity shows the line "Proposal v1 · replaced by v2" at the place of v1, and one proposal card for v2
+
+#### Scenario: AW note
+- **WHEN** the thread has `comment.added` "Context compacted at 10:51 UTC." by `aw@macbook-pro`
+- **THEN** Activity has no row for it, and the Session tab shows it
+
 #### Scenario: Message from the terminal
-- **WHEN** the thread has a `message.human` with source `typed`, no `delivery_id` and the text "Use **cents**.\n\n- one\n- two"
-- **THEN** Activity shows a message of the person with "cents" in bold and a list of 2 items
+- **WHEN** the person types "Use cents." in the terminal of the session
+- **THEN** Activity shows a person message "Use cents." with "typed in the terminal"
 
 #### Scenario: Subagent report
-- **WHEN** the thread has a typed `message.human` whose text starts with `<agent-message from="a5190c65">`, has the line "The report follows:", and then "  ## Gateway: what runs today"
-- **THEN** Activity shows "Subagent report · arrived in the terminal" and the heading "Gateway: what runs today", and the Session tab shows the raw text with the tags
-
-#### Scenario: Show raw
-- **WHEN** the first message is "# Plan\n\nUse **cents**." and the person turns on "Show raw"
-- **THEN** the description shows the exact text "# Plan\n\nUse **cents**."
+- **WHEN** the person relays a subagent report into the terminal
+- **THEN** Activity shows "Subagent report · arrived in the terminal" and the report as Markdown
 
 #### Scenario: Stopped session
-- **WHEN** the person stops the session of AW-1 on ubuntu-01 and the thread gets `session.ended` with the reason `stopped`
-- **THEN** Activity shows "Session stopped on ubuntu-01: a person stopped it or ended the agent. AW starts no new session until a person starts one."
-
-#### Scenario: Moved session
-- **WHEN** the thread has `session.ended` with the reason `moved`
-- **THEN** Activity shows no line for it, and the Session tab shows "Session ended (moved)"
+- **WHEN** the session of AW-12 on ubuntu-01 ended with `stopped`
+- **THEN** Activity shows the task line "Session stopped on ubuntu-01: a person stopped it or ended the agent. AW starts no new session until a person starts one."
 
 #### Scenario: Turn text stays in Session
-- **WHEN** the thread has `message.agent` "Plan: …" with the source `turn` and `message.agent` "Tests pass" with the source `tool`
-- **THEN** Activity shows "Tests pass" only, and the Session tab shows both texts
-
-#### Scenario: Old agent message
-- **WHEN** the thread has `message.agent` with no source
-- **THEN** Activity shows it
+- **WHEN** the thread has a `message.agent` with the source `turn`
+- **THEN** Activity has no row for it, and the Session tab shows it with "turn text"
 
 #### Scenario: Nudge notice
-- **WHEN** the thread has `message.sent` with `kind: nudge` by `aw@ubuntu-01`
-- **THEN** Activity shows no row for it, and the Session tab shows it
+- **WHEN** the thread has a `message.sent` with `kind: nudge`
+- **THEN** Activity has no row for it, and the Session tab shows it
 
 ### Requirement: Appearance
 Settings SHALL have "Appearance" with System, Light and Dark. The choice SHALL be stored as `appearance` in `<userData>/aw-desktop.json` (default `system`; an unknown value counts as `system`). The main process SHALL set `nativeTheme.themeSource` to the choice at the start, before the first window, and after each change, so the renderer, the window background and the menus use that scheme.
@@ -460,15 +446,15 @@ The Assign card SHALL show the default agent of the project on its first device 
 - **THEN** the app sends `assignTask` with `claude@macbook-pro`
 
 ### Requirement: Question details and context on gate cards
-A gate card in the Inbox detail and in Activity SHALL show the gate text as Markdown above the choices when the gate has a body (the trimmed text is not empty and not the trimmed title). A body longer than 12 lines SHALL show its start and "Show more". A `question` or `reply` gate with no body SHALL show "Context": the `message.agent` texts after the last event by `human@…` before its `gate.opened`, oldest first, at most 5, each longer than 6 lines clamped with "Show more". With no such message, the card SHALL show no Context.
+A question message in Activity and in the Inbox detail SHALL show the gate title in bold and the gate text as Markdown when the gate has a body (the trimmed text is not empty and not the trimmed title). A body longer than 12 lines SHALL show its start and "Show more". A `question` or `reply` gate with no body SHALL show "Context": the `message.agent` texts after the last event by `human@…` before its `gate.opened`, oldest first, at most 5, each longer than 6 lines clamped with "Show more". With no such message, the question SHALL show no Context. An option with a description SHALL show the description under its label.
 
 #### Scenario: Details
 - **WHEN** the agent asks "Which queue library?" with details
-- **THEN** the card shows the title, the details as Markdown, and then the option buttons
+- **THEN** the message shows the question in bold, the details as Markdown, and then the option buttons
 
 #### Scenario: Analysis before the question
 - **WHEN** the agent writes its analysis with `aw message` and then asks "Which option? (see the gate message above)" in the same turn
-- **THEN** the card shows the analysis under "Context" above the buttons a, b, c and d
+- **THEN** the question message shows the analysis under "Context" above the buttons a, b, c and d
 
 ### Requirement: Gate cards with questions
 When `gate.opened` has `questions`, the card SHALL show each option description under its label. A gate with one single-choice question SHALL keep one button per option. A gate with 2 or more questions, or a multiSelect question, SHALL show each question with its header and its options as choices (one pick, or any picks for multiSelect), and "Send answers", which sends one answer: `"<question>"="<answer>"` for each question joined by `, `, multiSelect labels joined by `, `, and `(no option selected)` for a question with no pick.
@@ -483,4 +469,52 @@ The session summary of the Session tab SHALL show the full session id (the Claud
 #### Scenario: Link of a tmux session
 - **WHEN** `session.started` of AW-7 has the name `AW-7`, the window `aw-01a2`, the pane `%12` and the pid 4242
 - **THEN** the session summary shows the full session id, "AW-7", "tmux window aw-01a2 · pane %12" and "pid 4242"
+
+### Requirement: Proposal versions in the task detail
+The Proposal field SHALL list each version. A version SHALL open to the full text of the file of its `proposal.proposed` event (`proposal/v<n>.md`, or `approach/v<n>.md` from before the rename). The chip SHALL be "Approved" for the approved version, "Waits for you" for the latest version when no version is approved or the latest version is newer than the approved one, and "Replaced" for each other version.
+
+#### Scenario: New version after an approved one
+- **WHEN** v1 of AW-12 is approved and the agent proposes v2
+- **THEN** v1 shows "Approved" and v2 shows "Waits for you"
+
+#### Scenario: Full text
+- **WHEN** the person opens v2
+- **THEN** the field shows the full Markdown of `proposal/v2.md`
+
+#### Scenario: Version from before the rename
+- **WHEN** the task has `approach.proposed {version: 3, file: approach/v3.md}`
+- **THEN** the field lists v3 and opens `approach/v3.md`
+
+### Requirement: Proposal card
+The proposal card SHALL show "Proposal v<n>", the author and the time, the proposal as Markdown (the first 240 px and "Show more", with no scroll box of its own), and a full screen button. While its gate is open, it SHALL show the chip "Waits for your approval", the button "Approve proposal" and the line "To change it, write a message." After the approval it SHALL show "Approved by <by>" and no button. The card SHALL use the text size of the device ("Proposal text size"). "Approve proposal" SHALL send the answer "Approve" with the gate version. A message that the person sends while the gate is open SHALL go to the session, and the card SHALL stay open.
+
+#### Scenario: Approve
+- **WHEN** the person selects "Approve proposal" on proposal v2 of AW-12
+- **THEN** the app sends `answerGate` with "Approve", and after the resolution the card shows "Approved by human@macbook-pro"
+
+#### Scenario: Discuss
+- **WHEN** the person writes "Also send Retry-After" in the message box while proposal v2 waits
+- **THEN** the message goes to the session, and the card still shows "Approve proposal"
+
+### Requirement: Proposal in full screen
+The full screen button of the proposal card SHALL open the proposal over the whole window: the title "Proposal v<n>", the task key and title, the text size control, Close, the proposal as Markdown with a maximum width of 760 px, and at the bottom "Approve proposal" (while the gate is open) and "Discuss". Esc and Close SHALL close the view. "Discuss" SHALL close the view and put the cursor in the message box.
+
+#### Scenario: Open and close
+- **WHEN** the person selects the full screen button of proposal v2, then presses Esc
+- **THEN** the view shows the full proposal, and Esc shows the task page again
+
+#### Scenario: Discuss from full screen
+- **WHEN** the person selects "Discuss" in the full screen view
+- **THEN** the view closes and the message box has the focus
+
+### Requirement: Proposal text size
+The text size control SHALL have A− and A+ and show the size. The size SHALL be 14 to 24 px in steps of 2 px, 16 px by default. The app SHALL save the size as `proposal_text_px` in `aw-desktop.json` and SHALL use it for each proposal, in the card and in the full screen view, also after a restart. The rule SHALL be `proposalTextSize` of `shared/client`, tested with the cases of `contracts/fixtures/gates/proposal-text-size.json`.
+
+#### Scenario: Larger text is kept
+- **WHEN** the person selects A+ twice in the full screen view and starts the app again
+- **THEN** the proposal text is 20 px in the card and in the full screen view
+
+#### Scenario: Limits
+- **WHEN** the size is 24 px and the person selects A+
+- **THEN** the size stays 24 px and A+ is disabled
 

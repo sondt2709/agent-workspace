@@ -26,7 +26,7 @@ private val PATTERN_12 = Regex("^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\
 private val VALUES_13 = setOf("first", "typed", "answer", "phone", "notice")
 private val VALUES_14 = setOf("turn", "tool")
 private val VALUES_15 = setOf("nudge")
-private val VALUES_16 = setOf("question", "reply", "confirm_approach", "assign", "approve_command", "approve_result", "approve_knowledge", "approve_device", "continue_after_limit", "take_over_terminal", "fix_file", "custom")
+private val VALUES_16 = setOf("question", "reply", "approve_proposal", "assign", "approve_command", "approve_result", "approve_knowledge", "approve_device", "continue_after_limit", "take_over_terminal", "fix_file", "custom")
 private val PATTERN_17 = Regex("^p-[0-9a-f-]{36}\\z")
 private val PATTERN_18 = Regex("^[0-9a-f]{64}\\z")
 private val VALUES_19 = setOf("tmux", "orca", "pty")
@@ -478,9 +478,9 @@ data class GateResolvedV1(
     }
 }
 
-/** The data of `approach.proposed`. */
+/** The data of `proposal.proposed`. */
 @Serializable
-data class ApproachProposedV1(
+data class ProposalProposedV1(
     @SerialName("version") val version: Long,
     @SerialName("file") val file: String,
 ) : EventDataV1 {
@@ -1023,7 +1023,7 @@ object EventTypesV1 {
         "gate.opened" to GateOpenedV1.serializer(),
         "gate.answered" to GateAnsweredV1.serializer(),
         "gate.resolved" to GateResolvedV1.serializer(),
-        "approach.proposed" to ApproachProposedV1.serializer(),
+        "proposal.proposed" to ProposalProposedV1.serializer(),
         "artifact.added" to ArtifactAddedV1.serializer(),
         "result.posted" to ResultPostedV1.serializer(),
         "handoff.written" to HandoffWrittenV1.serializer(),

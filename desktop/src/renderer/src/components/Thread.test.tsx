@@ -243,13 +243,14 @@ describe("Thread: person messages and agent messages (task-review-layout)", () =
     }
   });
 
-  it("shows the comment of an answer as Markdown in Activity", async () => {
+  it("shows the answer of a gate whose gate.opened is older than the page as a person message", async () => {
     const answered = (task: string, text: string) =>
-      personRow(task, "gate.answered", { gate: "g1", answer: "Request changes", comment: text });
-    show("My choices:\n- **D2**: In memory", "activity", answered);
-    expect(await screen.findByText(/answered: Request changes/)).toBeTruthy();
-    expect(screen.getByText("D2").tagName).toBe("STRONG");
+      personRow(task, "gate.answered", { gate: "g1", answer: "Redis", comment: text });
+    show("Use the **session** Redis:\n- one counter", "activity", answered);
+    expect(await screen.findByText(/· answer · /)).toBeTruthy();
+    expect(screen.getByText("session").tagName).toBe("STRONG");
     expect(screen.getAllByRole("listitem").length).toBe(1);
+    expect(screen.getByText(/^Redis/)).toBeTruthy();
   });
 
   it("shows a subagent report with its label and the report as Markdown", async () => {

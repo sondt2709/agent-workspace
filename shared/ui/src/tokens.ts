@@ -120,8 +120,10 @@ export const tokens: Record<SchemeName, SchemeTokens> = {
 
 /** The font stacks (docs/design.md 3). The app bundles both variable fonts. */
 export const fonts = {
-  sans: '"Inter Variable", Inter, -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", sans-serif',
-  mono: '"Geist Mono Variable", "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace',
+  // "JetBrains Mono AW" (desktop/src/renderer/src/fonts/fonts.css) gives the glyphs that the first
+  // font does not have, for example the box drawing characters of a tree.
+  sans: '"Inter Variable", Inter, "JetBrains Mono AW", -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", sans-serif',
+  mono: '"Geist Mono Variable", "Geist Mono", "JetBrains Mono AW", ui-monospace, "SF Mono", Menlo, monospace',
 };
 
 /** The radii in px (docs/design.md 5). */

@@ -40,26 +40,47 @@ export function PausedChip({ task }: { task: Task }) {
   );
 }
 
-/** The first "Needs you" reason of a task as a chip. */
-export function NeedsYouChip({ task }: { task: Task }) {
+/**
+ * The first "Needs you" reason of a task as a chip. With `onShow` (the task page header), the chip
+ * is a button "Needs you: <reason>" that shows the row that needs the person.
+ */
+export function NeedsYouChip({ task, onShow }: { task: Task; onShow?: () => void }) {
   const reason = task.needs_you_reasons[0];
   if (!reason) return null;
   let label = "Needs you";
   if (reason.reason === "assign") label = "Needs you: assign";
-  else if (reason.reason === "gate" && typeof reason.kind === "string")
-    label = gateLabel(reason.kind);
-  else if (reason.reason === "paused" && typeof reason.cause === "string") {
+  else if (reason.reason === "gate" && typeof reason.kind === "string") {
+    const gate = gateLabel(reason.kind);
+    label = onShow ? `Needs you: ${gate.charAt(0).toLowerCase()}${gate.slice(1)}` : gate;
+  } else if (reason.reason === "paused" && typeof reason.cause === "string") {
     label = `Needs you: ${pauseText(reason.cause)}`;
   }
-  return <Chip icon={<PanTool />} label={label} color="warning" />;
+  return onShow ? (
+    <Chip icon={<PanTool />} label={label} color="warning" onClick={onShow} />
+  ) : (
+    <Chip icon={<PanTool />} label={label} color="warning" />
+  );
 }
 
 /** The chips of a task: "Needs you", else the stage, and the Paused chip. */
-export function TaskChips({ task, queue }: { task: Task; queue?: TaskQueue | undefined }) {
+export function TaskChips({
+  task,
+  queue,
+  onShowNeed,
+}: {
+  task: Task;
+  queue?: TaskQueue | undefined;
+  /** The task page: the "Needs you" chip shows the row that needs the person. */
+  onShowNeed?: () => void;
+}) {
   const moving = details(task).moving_to;
   return (
     <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
-      {task.needs_you_lane ? <NeedsYouChip task={task} /> : <StageChip stage={task.stage} />}
+      {task.needs_you_lane ? (
+        <NeedsYouChip task={task} {...(onShowNeed ? { onShow: onShowNeed } : {})} />
+      ) : (
+        <StageChip stage={task.stage} />
+      )}
       <PausedChip task={task} />
       {moving && (
         <Chip icon={<HourglassEmpty />} label={`Moving to ${moving}`} variant="outlined" />
@@ -69,8 +90,11 @@ export function TaskChips({ task, queue }: { task: Task; queue?: TaskQueue | und
   );
 }
 
-/** Markdown with raw HTML off. A link opens in the default browser (https only). */
-export function MarkdownText({ text }: { text: string }) {
+/**
+ * Markdown with raw HTML off. A link opens in the default browser (https only). `size` (px) sets
+ * the text size of a proposal; the headings then scale with it.
+ */
+export function MarkdownText({ text, size }: { text: string; size?: number }) {
   return (
     <Box
       sx={{
@@ -94,6 +118,13 @@ export function MarkdownText({ text }: { text: string }) {
         "& table": { borderCollapse: "collapse", my: 1, display: "block", overflowX: "auto" },
         "& th, & td": { border: 1, borderColor: "divider", px: 1.5, py: 0.75, textAlign: "left" },
         "& th": { bgcolor: "aw.raised", fontWeight: "fontWeightMedium" },
+        // A proposal with the text size of the device: the headings scale with the text.
+        ...(size !== undefined && {
+          fontSize: size,
+          lineHeight: 1.55,
+          "& h1, & h2": { fontSize: "1.15em", fontWeight: "fontWeightBold", mt: 2, mb: 1 },
+          "& h3, & h4, & h5, & h6": { fontSize: "1em", fontWeight: "fontWeightBold", mt: 2, mb: 1 },
+        }),
       }}
     >
       <Markdown

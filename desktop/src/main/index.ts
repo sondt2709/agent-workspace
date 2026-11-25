@@ -158,9 +158,13 @@ let notificationError: string | null = null;
 /** The Appearance choice of Settings; main reads it from the prefs before the first window. */
 let appearance: Appearance = "system";
 
+/** The text size of a proposal; main reads it from the prefs at the start. */
+let proposalTextPx = 16;
+
 function appSettings(): AppSettings {
   return {
     appearance,
+    proposal_text_px: proposalTextPx,
     login: loginItem(),
     notifications: Notification.isSupported(),
     notification_error: notificationError,
@@ -360,6 +364,7 @@ void app.whenReady().then(async () => {
   // Read the Appearance before the Tray, the notifications or a call can open a window.
   appearance = await prefs.appearance();
   nativeTheme.themeSource = appearance;
+  proposalTextPx = await prefs.proposalTextPx();
   const host: HostDeps = {
     openPath: (path) => shell.openPath(path),
     showItem: (path) => shell.showItemInFolder(path),
@@ -376,6 +381,11 @@ void app.whenReady().then(async () => {
       // The renderer (prefers-color-scheme), the window background (followScheme) and the menus
       // follow the theme source.
       nativeTheme.themeSource = choice;
+      return appSettings();
+    },
+    setProposalTextSize: async (px) => {
+      await prefs!.setProposalTextPx(px);
+      proposalTextPx = px;
       return appSettings();
     },
     phraseConfirmed: (user) => prefs!.phraseConfirmed(user),

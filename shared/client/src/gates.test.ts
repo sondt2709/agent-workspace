@@ -4,28 +4,19 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   agentMessage,
-  canPickDecisions,
-  decisionsAnswer,
-  gateBody,
+  changeProposalTextSize,
   gateContext,
-  gateDecisions,
   gateHasBody,
   gateQuestions,
+  loadProposalTextSize,
+  PROPOSAL_TEXT,
   questionAnswer,
   questionMode,
   recommendedOption,
   type AgentMessage,
   type ContextEvent,
-  type GateDecision,
   type GateQuestion,
 } from "./gates.ts";
-
-interface Case {
-  name: string;
-  text: string;
-  decisions: GateDecision[];
-  body: string;
-}
 
 const fixture = <T>(name: string): T =>
   JSON.parse(
@@ -34,27 +25,6 @@ const fixture = <T>(name: string): T =>
       "utf8",
     ),
   ) as T;
-
-const cases = fixture<{ cases: Case[] }>("cases.json").cases;
-
-describe("gate text (contracts/fixtures/gates)", () => {
-  it.each(cases.map((c) => [c.name, c] as const))("%s", (_name, c) => {
-    expect(gateBody(c.text, c.decisions)).toBe(c.body);
-  });
-
-  it("reads only well-formed decisions", () => {
-    expect(gateDecisions(undefined)).toEqual([]);
-    expect(gateDecisions({ decisions: "x" })).toEqual([]);
-    expect(
-      gateDecisions({
-        decisions: [
-          { question: "Q", options: ["a", "b"], recommended: "a" },
-          { question: "Bad", options: [1], recommended: "a" },
-        ],
-      }),
-    ).toEqual([{ question: "Q", options: ["a", "b"], recommended: "a" }]);
-  });
-});
 
 describe("gate questions (contracts/fixtures/gates/questions.json)", () => {
   const q = fixture<{
@@ -124,21 +94,28 @@ describe("gate context (contracts/fixtures/gates/context.json)", () => {
   });
 });
 
-describe("decision picks (contracts/fixtures/gates/decisions-answer.json)", () => {
+describe("proposal text size (contracts/fixtures/gates/proposal-text-size.json)", () => {
   const f = fixture<{
-    cases: {
-      name: string;
-      decisions: GateDecision[];
-      picks: string[];
-      expected: { answer: string; comment: string } | null;
-    }[];
-    gates: { name: string; options: string[]; can_pick: boolean }[];
-  }>("decisions-answer.json");
-  it.each(f.cases.map((c) => [c.name, c] as const))("%s", (_name, c) => {
-    expect(decisionsAnswer(c.decisions, c.picks)).toEqual(c.expected);
+    min: number;
+    max: number;
+    step: number;
+    default: number;
+    load: { saved: string | null; size: number }[];
+    change: { size: number; action: "larger" | "smaller"; size_after: number }[];
+  }>("proposal-text-size.json");
+  it("has the limits of the fixture", () => {
+    expect({ ...PROPOSAL_TEXT }).toEqual({
+      min: f.min,
+      max: f.max,
+      step: f.step,
+      default: f.default,
+    });
   });
-  it.each(f.gates.map((g) => [g.name, g] as const))("can pick: %s", (_name, g) => {
-    expect(canPickDecisions(g.options)).toBe(g.can_pick);
+  it.each(f.load)("loads $saved as $size", ({ saved, size }) => {
+    expect(loadProposalTextSize(saved)).toBe(size);
+  });
+  it.each(f.change)("$action from $size is $size_after", ({ size, action, size_after }) => {
+    expect(changeProposalTextSize(size, action)).toBe(size_after);
   });
 });
 

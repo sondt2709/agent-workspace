@@ -29,6 +29,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.isSecondaryPressed
 import androidx.compose.ui.input.pointer.pointerInput
@@ -41,13 +43,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.agentworkspace.control.CardStatus
-import com.agentworkspace.control.CommentRule
 import com.agentworkspace.control.GateCard
-import com.agentworkspace.control.GateRules
-import com.agentworkspace.control.GateTexts
 import com.agentworkspace.control.PauseChip
-import com.agentworkspace.control.QuestionMode
 import com.agentworkspace.control.TaskPageLayout
 import com.agentworkspace.control.TaskRowState
 import kotlinx.coroutines.launch
@@ -184,7 +181,8 @@ fun TaskRow(
 /**
  * A gate card, acted on in place: one button per option, a comment when the option needs one, and a
  * free-text answer for a question or a reply. After an answer it shows "Answer sent, waiting for
- * <owner>" until the owner device resolves the gate.
+ * <owner>" until the owner device resolves the gate. A gate card shows no decisions (openspec
+ * proposal-and-discussion).
  */
 @Composable
 fun GateCardView(
@@ -192,14 +190,6 @@ fun GateCardView(
     /** [sent] runs only when the answer was written: a refused answer keeps the typed text (review L2). */
     onAnswer: (answer: String, comment: String?, sent: () -> Unit) -> Unit,
 ) {
-    var text by rememberSaveable(card.gate.gate) { mutableStateOf("") }
-    var comment by rememberSaveable(card.gate.gate) { mutableStateOf("") }
-    var chosen by rememberSaveable(card.gate.gate) { mutableStateOf<String?>(null) }
-    // The decision picks start at the recommended options (openspec task-review-layout, decision 4).
-    var picks by rememberSaveable(card.gate.gate) { mutableStateOf(card.decisions.map { it.recommended }) }
-    val canPick =
-        card.status == CardStatus.Open && card.decisions.isNotEmpty() && GateTexts.canPickDecisions(card.options)
-    val choices = if (canPick) GateTexts.decisionsAnswer(card.decisions, picks) else null
     // The gate card of the prototype: the raised surface with a line in the accent (docs/design.md 8).
     Card(
         modifier = Modifier.listCard(),
@@ -213,117 +203,8 @@ fun GateCardView(
                 color = MaterialTheme.colorScheme.primary,
             )
             if (card.title.isNotBlank()) Text(card.title, style = MaterialTheme.typography.titleMedium)
-            // The details as Markdown, or the agent messages before a gate with no details
-            // (openspec gate-context, polish-prototype-style).
-            if (card.text.isNotBlank()) GateText(card.text, "${card.gate.gate}:text")
-            if (card.context.isNotEmpty()) {
-                Text("Context", style = MaterialTheme.typography.labelMedium)
-                for (message in card.context) {
-                    Text(message.by.orEmpty(), style = MaterialTheme.typography.labelSmall)
-                    ClampedText(message.text.orEmpty(), message.id)
-                }
-            }
-            if (canPick) {
-                DecisionPicks(card.decisions, picks) { i, option ->
-                    picks = card.decisions.indices.map { j -> if (j == i) option else picks.getOrNull(j).orEmpty() }
-                }
-            } else {
-                DecisionsView(card.decisions)
-            }
-            when (val status = card.status) {
-                is CardStatus.Sent -> {
-                    Text(status.text, color = MaterialTheme.colorScheme.primary)
-                }
-
-                is CardStatus.AnsweredElsewhere -> {
-                    Text("${status.device} answered: ${status.answer}")
-                }
-
-                is CardStatus.Resolved -> {
-                    Text("Resolved: ${status.answer.orEmpty()}")
-                }
-
-                CardStatus.Open -> {
-                    val mode = GateTexts.mode(card.questions)
-                    if (mode == QuestionMode.LIST) {
-                        QuestionListView(card.gate.gate, card.questions) { answer -> onAnswer(answer, null) {} }
-                    }
-                    val options = card.options.takeIf { mode != QuestionMode.LIST }.orEmpty()
-                    val recommended = GateTexts.recommended(options)
-                    if (card.freeText) {
-                        // A question or a reply: one full-width button per option, stacked; the
-                        // recommended option is filled (openspec polish-prototype-style).
-                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            options.forEachIndexed { i, option ->
-                                val description =
-                                    card.questions
-                                        .takeIf { mode == QuestionMode.BUTTONS }
-                                        ?.first()
-                                        ?.options
-                                        ?.firstOrNull { it.label == option }
-                                        ?.description
-                                        .orEmpty()
-                                val rule = GateRules.commentRule(option)
-                                OptionButton(
-                                    label = option,
-                                    description = description,
-                                    filled = i == recommended && rule == CommentRule.NONE,
-                                    onClick = {
-                                        if (rule == CommentRule.NONE) onAnswer(option, null) {} else chosen = option
-                                    },
-                                )
-                            }
-                        }
-                    } else {
-                        FlowRow(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            options.forEachIndexed { i, option ->
-                                val rule = GateRules.commentRule(option)
-                                if (rule == CommentRule.NONE && i == recommended && choices != null) {
-                                    // A pick differs: the main button sends "Request changes" with the picks.
-                                    Button(onClick = { onAnswer(choices.answer, choices.comment) {} }) {
-                                        Text("Send my choices")
-                                    }
-                                } else if (rule == CommentRule.NONE && i == recommended) {
-                                    Button(onClick = { onAnswer(option, null) {} }) { Text(option) }
-                                } else if (rule == CommentRule.NONE) {
-                                    OutlinedButton(onClick = { onAnswer(option, null) {} }) { Text(option) }
-                                } else {
-                                    OutlinedButton(onClick = { chosen = option }) { Text(option) }
-                                }
-                            }
-                        }
-                    }
-                    chosen?.let { option ->
-                        val required = GateRules.commentRule(option) == CommentRule.REQUIRED
-                        OutlinedTextField(
-                            value = comment,
-                            onValueChange = { comment = it },
-                            label = { Text(if (required) "Comment (required)" else "Comment (optional)") },
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button(
-                                enabled = !required || comment.isNotBlank(),
-                                onClick = { onAnswer(option, comment.ifBlank { null }) {} },
-                            ) { Text("Send \"$option\"") }
-                            TextButton(onClick = { chosen = null }) { Text("Cancel") }
-                        }
-                    }
-                    if (card.freeText) {
-                        MessageField(
-                            value = text,
-                            onValueChange = { text = it },
-                            label = card.freeTextLabel,
-                            onSend = {
-                                onAnswer(text, null) { text = "" }
-                            },
-                        )
-                    }
-                }
-            }
+            GateBody(card)
+            GateAnswerControls(card, onAnswer)
         }
     }
 }
@@ -359,6 +240,10 @@ fun MessageField(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     placeholder: String? = null,
+    /** The focus of the field: "Discuss" of the proposal puts the cursor in it. */
+    focusRequester: FocusRequester? = null,
+    /** The line under the field, for example "Your message answers the question “…”". */
+    hint: String? = null,
 ) {
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(label, style = MaterialTheme.typography.labelMedium, color = muted())
@@ -372,11 +257,13 @@ fun MessageField(
                 modifier =
                     Modifier
                         .weight(1f)
+                        .then(if (focusRequester == null) Modifier else Modifier.focusRequester(focusRequester))
                         .semantics { contentDescription = label }
                         .sendOnEnter { if (value.isNotBlank()) onSend() },
             )
             OutlinedButton(enabled = enabled && value.isNotBlank(), onClick = onSend) { Text("Send") }
         }
+        hint?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = muted()) }
     }
 }
 

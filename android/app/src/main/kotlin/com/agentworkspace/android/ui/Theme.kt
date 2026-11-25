@@ -9,7 +9,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.agentworkspace.android.R
 
 // The palette of the prototype (docs/design.md 2, openspec polish-prototype-style): the same values
 // as `@aw/ui/tokens` of the desktop. The accent is the prototype yellow, the same value as "Needs
@@ -182,9 +186,17 @@ internal val CompactTypography: Typography =
 @Composable
 fun infoColor(): Color = if (isSystemInDarkTheme()) DarkTokens.run else LightTokens.run
 
-/** The success color (`ok` of `@aw/ui/tokens`): the "Recommended" mark of a decision option. */
-@Composable
-fun successColor(): Color = if (isSystemInDarkTheme()) DarkTokens.ok else LightTokens.ok
+/**
+ * The monospace font of the phone: JetBrains Mono (a variable font, OFL 1.1, see THIRD_PARTY_NOTICES)
+ * has each box drawing glyph (U+2500 to U+257F), so a tree or a table in code never shows a missing glyph.
+ */
+val MonoFont =
+    FontFamily(
+        Font(R.font.jetbrains_mono, FontWeight.Normal),
+        Font(R.font.jetbrains_mono, FontWeight.Medium),
+        Font(R.font.jetbrains_mono, FontWeight.SemiBold),
+        Font(R.font.jetbrains_mono, FontWeight.Bold),
+    )
 
 /** Material 3 with the prototype palette, light and dark, and the compact type scale. */
 @Composable

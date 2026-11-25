@@ -5,7 +5,7 @@ import type { FakeClock } from "../clock.ts";
 import { createdData, event, FIXTURE_TASK, type TestEvent, type TestWorkspace } from "./testing.ts";
 
 export const DEVICES = ["macbook-pro", "ubuntu-01", "pixel-9"] as const;
-const KINDS = ["question", "confirm_approach", "approve_result"] as const;
+const KINDS = ["question", "approve_proposal", "approve_result"] as const;
 
 /** Makes random but schema-valid events, with collisions of keys, claims, gates and answers. */
 export class RandomEvents {
@@ -96,7 +96,7 @@ export class RandomEvents {
             text: "",
             options: [],
             request_id: null,
-            file: this.#random() < 0.5 ? "approach/v1.md" : null,
+            file: this.#random() < 0.5 ? "proposal/v1.md" : null,
           }),
         );
       }

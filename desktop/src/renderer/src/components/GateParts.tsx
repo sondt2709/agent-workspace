@@ -1,7 +1,7 @@
 // The parts of the full context of a gate (openspec gate-full-context, prd TSK-09 to TSK-12): the
-// decisions with their recommended option, the artifacts of a result with "Open", the approach
-// versions with their full text, and the notice of an answer that awd did not use.
-import { questionAnswer, type GateDecision, type GateQuestion } from "@aw/client/gates";
+// artifacts of a result with "Open", the proposal versions with their full text, and the notice of
+// an answer that awd did not use. A gate shows no decisions (openspec proposal-and-discussion).
+import { questionAnswer, type GateQuestion } from "@aw/client/gates";
 import { mainVar, tint } from "@aw/ui";
 import Check from "@mui/icons-material/CheckOutlined";
 import ExpandLess from "@mui/icons-material/ExpandLessOutlined";
@@ -14,89 +14,9 @@ import type { EventRow, Gate } from "../../../shared/channels.ts";
 import { clampText } from "../activity-model.ts";
 import { BridgeCallError, call, errorText } from "../bridge.ts";
 import { sizeText } from "../kb-model.ts";
-import { approachChip, resultArtifacts } from "../model.ts";
+import { proposalChip, resultArtifacts, type ProposalVersion } from "../model.ts";
 import { useGateNotice, useTaskFile } from "../queries.ts";
 import { MarkdownText } from "./common.tsx";
-
-/**
- * The decisions of a gate, each with its options and the recommended option marked. With `onPick`
- * (a gate with "Request changes"), each decision is a radio group with `picks[i]` picked, and a line
- * says how many picks differ from the recommendation (openspec task-review-layout, decision 4).
- */
-export function DecisionList({
-  decisions,
-  picks,
-  onPick,
-  disabled = false,
-}: {
-  decisions: readonly GateDecision[];
-  picks?: readonly string[];
-  onPick?: (index: number, option: string) => void;
-  disabled?: boolean;
-}) {
-  if (decisions.length === 0) return null;
-  const differ = picks ? decisions.filter((d, i) => picks[i] !== d.recommended).length : 0;
-  return (
-    <Stack spacing={1.5} data-testid="gate-decisions">
-      <Typography variant="overline" color="text.secondary">
-        Decisions
-      </Typography>
-      {onPick && (
-        <Typography variant="caption" color="text.secondary">
-          Pick one option for each. The recommended options are picked first.
-        </Typography>
-      )}
-      {decisions.map((d, i) => (
-        <Stack key={`${i}-${d.question}`} spacing={0.75}>
-          <Typography variant="body2" id={`decision-${i}`} sx={{ fontWeight: 500 }}>
-            {i + 1}. {d.question}
-          </Typography>
-          {onPick ? (
-            <Stack spacing={0.75} role="radiogroup" aria-labelledby={`decision-${i}`}>
-              {d.options.map((option) => (
-                <OptionButton
-                  key={option}
-                  label={option}
-                  description={option === d.recommended ? "Recommended" : ""}
-                  role="radio"
-                  checked={picks?.[i] === option}
-                  disabled={disabled}
-                  onClick={() => onPick(i, option)}
-                />
-              ))}
-            </Stack>
-          ) : (
-            <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap", pl: 2 }}>
-              {d.options.map((option) =>
-                option === d.recommended ? (
-                  <Chip
-                    key={option}
-                    color="success"
-                    variant="outlined"
-                    label={`${option} · Recommended`}
-                  />
-                ) : (
-                  <Chip key={option} variant="outlined" label={option} />
-                ),
-              )}
-            </Stack>
-          )}
-        </Stack>
-      ))}
-      {onPick && (
-        <Typography
-          variant="body2"
-          role="status"
-          color={differ > 0 ? "warning.main" : "text.secondary"}
-        >
-          {differ > 0
-            ? `${differ} ${differ === 1 ? "pick differs" : "picks differ"} from the recommendation. "Send my choices" asks the agent for a new approach with your picks.`
-            : "All picks are the recommended options."}
-        </Typography>
-      )}
-    </Stack>
-  );
-}
 
 /** The artifacts of the result of an "Approve result" gate, each with "Open". */
 export function ResultArtifacts(props: {
@@ -141,16 +61,18 @@ export function ResultArtifacts(props: {
   );
 }
 
-/** One approach version: a row with its chip, and its full file text when the person opens it. */
+/** One proposal version: a row with its chip, and its full file text when the person opens it. */
 function VersionRow(props: {
   ws: string;
   task: string;
   version: number;
+  /** The file of the version in the task folder, for example `proposal/v2.md`. */
+  file: string;
   line: string;
-  chip: "confirmed" | "waits" | "replaced";
+  chip: "approved" | "waits" | "replaced";
 }) {
   const [open, setOpen] = useState(false);
-  const path = `tasks/${props.task}/approach/v${props.version}.md`;
+  const path = `tasks/${props.task}/${props.file}`;
   const file = useTaskFile(props.ws, open ? props.task : null, open ? path : null);
   return (
     <Box>
@@ -168,8 +90,8 @@ function VersionRow(props: {
         <Typography variant="body2" noWrap sx={{ flex: 1, minWidth: 0 }} color="text.secondary">
           {props.line}
         </Typography>
-        {props.chip === "confirmed" ? (
-          <Chip label="Confirmed" color="success" variant="outlined" />
+        {props.chip === "approved" ? (
+          <Chip label="Approved" color="success" variant="outlined" />
         ) : props.chip === "waits" ? (
           <Chip label="Waits for you" color="warning" variant="outlined" />
         ) : (
@@ -179,20 +101,20 @@ function VersionRow(props: {
       <Collapse in={open} unmountOnExit>
         <Box sx={{ p: 2, mt: 1, borderRadius: 1, bgcolor: "action.hover" }}>
           {file.isPending ? (
-            <Typography variant="body2">Loading approach v{props.version}…</Typography>
+            <Typography variant="body2">Loading proposal v{props.version}…</Typography>
           ) : file.isError &&
             file.error instanceof BridgeCallError &&
             file.error.code === "not_found" ? (
             <Alert severity="info">
-              The file of approach v{props.version} is not on this device yet.
+              The file of proposal v{props.version} is not on this device yet.
             </Alert>
           ) : file.isError ? (
             <Alert severity="error">{errorText(file.error)}</Alert>
           ) : file.data.text === null ? (
             <Alert severity="info">
               {file.data.reason === "too_large"
-                ? `The file of approach v${props.version} is larger than 1 MB. Open it from the workspace folder.`
-                : `The file of approach v${props.version} is not text.`}
+                ? `The file of proposal v${props.version} is larger than 1 MB. Open it from the workspace folder.`
+                : `The file of proposal v${props.version} is not text.`}
             </Alert>
           ) : (
             <MarkdownText text={file.data.text} />
@@ -203,12 +125,12 @@ function VersionRow(props: {
   );
 }
 
-/** The approach versions of a task, each with its chip and its full text (fix list 0-8). */
-export function ApproachVersions(props: {
+/** The proposal versions of a task, each with its chip and its full text (fix list 0-8). */
+export function ProposalVersions(props: {
   ws: string;
   task: string;
-  versions: { version: number; text: string }[];
-  approach: { latest: number; confirmed: number | null };
+  versions: readonly ProposalVersion[];
+  proposal: { latest: number; approved: number | null };
 }) {
   return (
     <Stack spacing={0.5}>
@@ -218,8 +140,9 @@ export function ApproachVersions(props: {
           ws={props.ws}
           task={props.task}
           version={v.version}
+          file={v.file}
           line={(v.text.split("\n").find((l) => l.trim()) ?? "").replace(/^#+\s*/, "")}
-          chip={approachChip(v.version, props.approach)}
+          chip={proposalChip(v.version, props.proposal)}
         />
       ))}
     </Stack>
@@ -248,8 +171,11 @@ export function longBody(text: string): boolean {
   return text.split("\n").length > BODY_LINES || text.length > BODY_CHARS;
 }
 
-/** The gate body as Markdown above the choices; a long body shows its start and "Show more". */
-export function GateBody({ text }: { text: string }) {
+/**
+ * The gate body as Markdown above the choices; a long body shows its first 240 px and "Show more".
+ * `size` (px) is the text size of a proposal.
+ */
+export function GateBody({ text, size }: { text: string; size?: number }) {
   const [all, setAll] = useState(false);
   const long = longBody(text);
   const shut = long && !all;
@@ -268,7 +194,7 @@ export function GateBody({ text }: { text: string }) {
           }),
         }}
       >
-        <MarkdownText text={text} />
+        <MarkdownText text={text} {...(size === undefined ? {} : { size })} />
       </Box>
       {long && (
         <Button size="small" onClick={() => setAll((v) => !v)} sx={{ mt: 0.5 }}>

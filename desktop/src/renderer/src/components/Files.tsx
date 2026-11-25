@@ -1,6 +1,6 @@
-// The Files view (read-only folder tree of a task: task.yaml, log/<device>.jsonl, approach/v<n>.md,
-// artifacts/…) and the Inbox card "Fix a file" for a document that fails its schema
-// (docs/phase-1.md 6.6.4, docs/workflow.md 3).
+// The Files view (read-only folder tree of a task: task.yaml, log/<device>.jsonl, proposal/v<n>.md
+// (approach/v<n>.md before openspec proposal-and-discussion), artifacts/…) and the Inbox card
+// "Fix a file" for a document that fails its schema (docs/phase-1.md 6.6.4, docs/workflow.md 3).
 import { mainVar, tint } from "@aw/ui";
 import Description from "@mui/icons-material/DescriptionOutlined";
 import ErrorOutline from "@mui/icons-material/ErrorOutlineOutlined";

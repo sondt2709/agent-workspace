@@ -22,7 +22,7 @@ Obey these rules for every change. When a rule blocks you, add an entry to the e
 1. Write all text in ASD-STE100: documents, comments, commit messages, UI copy, error messages. Name the specific file, command, value or error text.
 2. Use one term for one concept. Use the terms of `docs/prd.md` section 6 and `docs/architecture.md` section 12, for example "main device", "remote device", "owner device", "session host", "sync engine".
 3. Say "People". Do not say "teammate".
-4. Write an agent as `agent@device`, for example `claude@ubuntu-01`. Write buttons as a verb and an object: "Confirm approach".
+4. Write an agent as `agent@device`, for example `claude@ubuntu-01`. Write buttons as a verb and an object: "Approve proposal".
 
 ## 3. Open-source hygiene
 1. Do not commit personal data: names, emails, home paths, tokens, hostnames, IP addresses.

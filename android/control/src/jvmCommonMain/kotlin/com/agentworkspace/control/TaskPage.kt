@@ -112,7 +112,7 @@ object TaskPage {
 
     /**
      * The state chip of the header: the first "Needs you" reason (a gate shows its kind, for example
-     * "Confirm approach"), or null. The pause and queue chips show under the title.
+     * "Approve proposal"), or null. The pause and queue chips show under the title.
      */
     fun stateChip(task: TaskView): String? =
         when (val reason = task.needsYouReasons.firstOrNull()) {

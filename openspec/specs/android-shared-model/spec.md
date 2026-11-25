@@ -56,7 +56,7 @@ The Kotlin `MergeEngine` SHALL give the same `{view, presence}` as the TypeScrip
 
 #### Scenario: Rule cases
 - **WHEN** the JVM tests merge the cases `task-rules` and `workspace-rules`
-- **THEN** each rule that the other cases do not use (rekey, first message lock, assignment switch, approach file, unknown session, leases, credential names) gives the TypeScript result
+- **THEN** each rule that the other cases do not use (rekey, first message lock, assignment switch, proposal file, unknown session, leases, credential names) gives the TypeScript result
 
 #### Scenario: Read order
 - **WHEN** the JVM tests merge each case with the reversed order and 39 seeded shuffles of the log files
@@ -144,3 +144,4 @@ The Kotlin merge SHALL apply the revoke rule of the TypeScript merge: an event o
 #### Scenario: Revoke file removed
 - **WHEN** the merge has a verifier and the file of a kept revoke record is removed
 - **THEN** the device stays revoked and the issue reason is `revoke_removed`
+

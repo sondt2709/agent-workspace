@@ -175,35 +175,51 @@ class MobileDataSetting(
     }
 }
 
-/** One approach version of a task and its state (openspec gate-full-context, fix list 0-8). */
-data class ApproachVersion(
+/** One proposal version of a task and its state (openspec proposal-and-discussion). */
+data class ProposalVersion(
     val version: Long,
-    /** "Confirmed", "Waits for you" or "Replaced". */
+    /** "Approved", "Waits for you" or "Replaced". */
     val state: String,
 )
 
-/** The approach versions of a task and their full text (the synced files `approach/v<n>.md`). */
-object ApproachVersions {
-    fun of(task: TaskView): List<ApproachVersion> {
-        val latest = task.approach.latest
-        val confirmed = task.approach.confirmed
+/**
+ * The proposal versions of a task and their full text (the synced files `proposal/v<n>.md`, or
+ * `approach/v<n>.md` from before openspec proposal-and-discussion).
+ */
+object ProposalVersions {
+    fun of(task: TaskView): List<ProposalVersion> {
+        val latest = task.proposal.latest
+        val approved = task.proposal.approved
         return (1..latest).map { v ->
             val state =
                 when {
-                    confirmed == v -> "Confirmed"
-                    v == latest && (confirmed == null || latest > confirmed) -> "Waits for you"
+                    approved == v -> "Approved"
+                    v == latest && (approved == null || latest > approved) -> "Waits for you"
                     else -> "Replaced"
                 }
-            ApproachVersion(v, state)
+            ProposalVersion(v, state)
         }
     }
 
-    /** The full text of a version, or null when the file is not on the phone yet. */
+    /** The file of a version in the task folder: the layout of awd before and after the rename. */
+    val FILE = Regex("^(?:proposal|approach)/v([1-9][0-9]*)\\.md\\z")
+
+    /**
+     * The full text of a version, or null when the file is not on the phone yet. [file] is the path of
+     * its `proposal.proposed` event in the task folder (only a path of the proposal layout); with no
+     * event, the new folder comes first.
+     */
     fun text(
         files: WorkspaceFiles,
         task: String,
         version: Long,
-    ): String? = files.readText("tasks/$task/approach/v$version.md")
+        file: String? = null,
+    ): String? {
+        val paths =
+            listOfNotNull(file?.takeIf { FILE.matches(it) }) +
+                listOf("proposal/v$version.md", "approach/v$version.md")
+        return paths.distinct().firstNotNullOfOrNull { files.readText("tasks/$task/$it") }
+    }
 }
 
 /** A gate of the task that this phone answered too late: its answer became a comment. */

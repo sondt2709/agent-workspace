@@ -18,7 +18,7 @@ export interface GateRule {
 export const GATE_RULES: Record<GateKind, GateRule> = {
   question: { open: true, reminders: [HOUR, 24 * HOUR] },
   reply: { open: true, reminders: [HOUR, 24 * HOUR] },
-  confirm_approach: { open: true, reminders: [HOUR, 24 * HOUR] },
+  approve_proposal: { open: true, reminders: [HOUR, 24 * HOUR] },
   // Only for a task that an agent created (see duePushes).
   assign: { open: true, reminders: [24 * HOUR] },
   approve_command: { open: true, reminders: [] },
@@ -65,9 +65,9 @@ export interface DueInput {
 
 /** The label of a gate kind in a push text. */
 export const GATE_LABELS: Record<GateKind, string> = {
-  question: "Answer question",
-  reply: "Reply",
-  confirm_approach: "Confirm approach",
+  question: "Reply to a question",
+  reply: "Reply to a question",
+  approve_proposal: "Approve proposal",
   assign: "Assign task",
   approve_command: "Approve command",
   approve_result: "Approve result",

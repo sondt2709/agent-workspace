@@ -5,16 +5,20 @@ import android.content.Context
 import android.content.Intent
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.text.TextLinkStyles
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.agentworkspace.control.LinkRule
 import com.mikepenz.markdown.m3.Markdown
@@ -37,10 +41,12 @@ import com.mikepenz.markdown.model.parseMarkdown
 fun MarkdownText(
     text: String,
     modifier: Modifier = Modifier,
+    /** The body size of a proposal (openspec proposal-and-discussion), or null for the theme size. */
+    textSize: Dp? = null,
 ) {
     val context = LocalContext.current
     val links = remember(context) { BrowserLinks(context) }
-    val type = MaterialTheme.typography
+    val type = scaled(MaterialTheme.typography, textSize)
     val body = type.bodyMedium
     val state = remember(text) { ParsedTexts.of(text) }
     CompositionLocalProvider(LocalUriHandler provides links) {
@@ -59,7 +65,7 @@ fun MarkdownText(
                     h5 = type.titleSmall,
                     h6 = type.titleSmall,
                     text = body,
-                    code = type.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                    code = type.bodySmall.copy(fontFamily = MonoFont),
                     quote = body,
                     paragraph = body,
                     ordered = body,
@@ -78,6 +84,32 @@ fun MarkdownText(
         )
     }
 }
+
+/**
+ * The type scale with the body of [size] (a size in dp, so it does not grow twice with the font scale
+ * of the system): the line height is 1.5 times the size, a heading is 2 dp larger, code 1 dp smaller.
+ */
+@Composable
+private fun scaled(
+    type: Typography,
+    size: Dp?,
+): Typography {
+    if (size == null) return type
+    val density = LocalDensity.current
+
+    fun TextStyle.at(dp: Float) =
+        with(density) { copy(fontSize = dp.dp.toSp(), lineHeight = (dp * LINE_HEIGHT).dp.toSp()) }
+    val body = size.value
+    return type.copy(
+        bodyMedium = type.bodyMedium.at(body),
+        bodySmall = type.bodySmall.at(body - 1),
+        titleMedium = type.titleMedium.at(body + 2),
+        titleSmall = type.titleSmall.at(body + 2),
+    )
+}
+
+/** The line height of a proposal text, as a factor of the size. */
+private const val LINE_HEIGHT = 1.5f
 
 /** The parsed Markdown of the newest texts, by text. Only the main thread reads and writes it. */
 private object ParsedTexts {

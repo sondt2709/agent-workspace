@@ -1,6 +1,6 @@
 // TanStack Query keys and hooks: the only store of awd data in the renderer (docs/tech-stack.md
 // 2.4). Each queryFn calls the bridge. Events invalidate the keys (events.ts).
-import { gateContext } from "@aw/client/gates";
+import { gateContext, PROPOSAL_TEXT } from "@aw/client/gates";
 import { deviceNames, withPresencePause } from "@aw/client/pause";
 import {
   QueryClient,
@@ -12,6 +12,7 @@ import {
 import { useCallback, useMemo, useSyncExternalStore } from "react";
 import type {
   AnswerInput,
+  AppSettings,
   CreateTaskInput,
   EventRow,
   GateListQuery,
@@ -168,7 +169,7 @@ export const useThread = (ws: string | undefined, task: string | undefined, page
   });
 
 /**
- * The work events of a task (gate-full-context decision 3): each `gate.opened`, `approach.proposed`,
+ * The work events of a task (gate-full-context decision 3): each `gate.opened`, `proposal.proposed`,
  * `result.posted` and `artifact.added`, the newest 1000. The gate cards and the fields read them,
  * so a long thread never hides the text of a gate.
  */
@@ -348,6 +349,30 @@ export const useIdentity = () =>
 
 export const useAppSettings = () =>
   useQuery({ queryKey: keys.appSettings(), queryFn: () => call("appSettings", {}) });
+
+/**
+ * The text size of a proposal on this device (openspec proposal-and-discussion, design decision 7)
+ * and the function that saves a new size. The card and the full screen view use the new size at
+ * once; main saves it as `proposal_text_px` in `aw-desktop.json`.
+ */
+export function useProposalTextSize(): [number, (px: number) => void] {
+  const client = useQueryClient();
+  const settings = useAppSettings();
+  const save = useMutation({
+    mutationFn: (px: number) => call("setProposalTextSize", { px }),
+    onMutate: (px) => {
+      const before = client.getQueryData<AppSettings>(keys.appSettings());
+      if (before) client.setQueryData(keys.appSettings(), { ...before, proposal_text_px: px });
+      return { before };
+    },
+    onSuccess: (data) => client.setQueryData(keys.appSettings(), data),
+    onError: (_error, _px, context) => {
+      if (context?.before) client.setQueryData(keys.appSettings(), context.before);
+    },
+  });
+  const px = settings.data?.proposal_text_px ?? PROPOSAL_TEXT.default;
+  return [px, save.mutate];
+}
 
 export const usePhraseConfirmed = (user: string | null | undefined) =>
   useQuery({

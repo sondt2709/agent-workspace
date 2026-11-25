@@ -158,10 +158,10 @@ describe("gates with no session", () => {
     const rows = [
       started(S1),
       opened("rep", "reply", T0 + 1000),
-      opened("app", "confirm_approach", T0 + 2000),
+      opened("app", "approve_proposal", T0 + 2000),
       ended(S1, "done", T0 + 60_000),
     ];
-    const task = view([gate("rep", "reply"), gate("app", "confirm_approach")], S1, "ended");
+    const task = view([gate("rep", "reply"), gate("app", "approve_proposal")], S1, "ended");
     expect(answers(rows, task)).toEqual({ rep: SESSION_ENDED, app: SESSION_ENDED });
   });
 
@@ -238,6 +238,6 @@ describe("gates with no session", () => {
     expect(isCloseAnswer(SESSION_ENDED)).toBe(true);
     expect(isCloseAnswer("Denied after 120 s")).toBe(true);
     expect(isCloseAnswer("Deny")).toBe(false);
-    expect(isCloseAnswer("Replaced by approach v2")).toBe(false);
+    expect(isCloseAnswer("Replaced by proposal v2")).toBe(false);
   });
 });

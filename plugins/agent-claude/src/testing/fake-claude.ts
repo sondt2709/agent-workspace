@@ -18,7 +18,7 @@
 //   message-then-reply <m> | <r> runs `aw message <task> <m>` (the Bash tool), then ends the turn
 //                               with <r>; `\n` in <r> is a line break (a long turn text)
 //   use-credential <name> <n>   reads $AW_CREDENTIALS_DIR/<name> and writes the value into
-//                               approach.md, notes.txt, result.md, handoff.md, build.log, ps.txt and image.bin (bytes
+//                               proposal.md, notes.txt, result.md, handoff.md, build.log, ps.txt and image.bin (bytes
 //                               that are not UTF-8) in its folder, then ends the turn with a reply
 //                               of <n> characters (default 40000) that has the value
 //   show-credential-wrapped <name> <n>
@@ -586,7 +586,7 @@ async function turn(text: string): Promise<boolean> {
         return true;
       }
       const files: Record<string, string | Buffer> = {
-        "approach.md": `# Call the staging API\n\nUse the key ${value} in the header.\n`,
+        "proposal.md": `# Call the staging API\n\nUse the key ${value} in the header.\n`,
         "notes.txt": `curl -H "Authorization: Bearer ${value}" https://staging.example.com/v1\n`,
         "result.md": `# Result\n\nThe staging call with ${value} passed.\n`,
         "handoff.md": `# Handoff\n\nThe key is ${value}.\n`,

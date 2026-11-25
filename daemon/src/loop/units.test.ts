@@ -8,11 +8,9 @@ import {
   type GateView,
   type TaskView,
 } from "@aw/core";
-import { readFileSync } from "node:fs";
 import { mkdtemp, readdir, readFile, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import type { SessionRecord } from "../sessions/records.ts";
 import {
@@ -21,13 +19,12 @@ import {
   MAX_GATE_FILE_CHARS,
   MAX_GATE_TEXT_CHARS,
   openCustomGate,
-  proposeApproach,
+  proposeProposal,
   type AgentContext,
-  type Decision,
 } from "./agent.ts";
 import { writeCredentialFiles } from "./credentials.ts";
-import { approachVersion, TaskLoop, type LoopHost } from "./loop.ts";
-import { approachConfirmed, firstStage, readyChecks } from "./ready.ts";
+import { proposalVersion, TaskLoop, type LoopHost } from "./loop.ts";
+import { firstStage, proposalApproved, readyChecks } from "./ready.ts";
 import { duePushes, loginPush, OPEN_PUSH_WINDOW_MS } from "./rules.ts";
 import { syncCheck } from "./sync-check.ts";
 
@@ -171,12 +168,12 @@ describe("ready checks", () => {
     sync: { ok: true } as const,
   };
 
-  it("passes with a ready after the claim, a confirmed approach and an assignee", () => {
+  it("passes with a ready after the claim, an approved proposal and an assignee", () => {
     const ready = row("01a206b8-f29e-7776-b986-0000000000c2", "task.ready", T0 + 1, {
       missing: [],
       gates: [],
     });
-    const t = task({ stage: "ready", approach: { latest: 1, confirmed: 1 } });
+    const t = task({ stage: "ready", proposal: { latest: 1, approved: 1 } });
     expect(readyChecks({ ...base, task: t, rows: [claim, ready] })).toMatchObject({
       pass: true,
       readyReported: true,
@@ -188,13 +185,13 @@ describe("ready checks", () => {
     expect(readyChecks({ ...base, task: t, rows: [before, claim] }).pass).toBe(false);
   });
 
-  it("waits for open missing items, the approach, dependencies and sync", () => {
+  it("waits for open missing items, the proposal, dependencies and sync", () => {
     const q = gate();
     const ready = row("01a206b8-f29e-7776-b986-0000000000c2", "task.ready", T0 + 1, {
       missing: ["test account"],
       gates: [q.gate],
     });
-    const t = task({ approach: { latest: 1, confirmed: 1 }, gates: [q] });
+    const t = task({ proposal: { latest: 1, approved: 1 }, gates: [q] });
     expect(readyChecks({ ...base, task: t, rows: [claim, ready] }).failing).toEqual([
       "1 missing item(s) wait for an answer",
     ]);
@@ -210,28 +207,30 @@ describe("ready checks", () => {
     const deps = task({
       ...answered,
       open_dependencies: ["x"],
-      approach: { latest: 1, confirmed: null },
+      proposal: { latest: 1, approved: null },
     });
     expect(readyChecks({ ...base, task: deps, rows: [claim, ready] }).failing).toEqual([
-      "the approach is not confirmed",
+      "the proposal is not approved",
       "1 dependency task(s) are not done",
     ]);
   });
 
-  it("starts a subtask at Ready with the confirmed approach of its parent", () => {
-    const parent = task({ approach: { latest: 2, confirmed: 2 } });
-    const sub = task({ parent: parent.id, approach: { latest: 0, confirmed: null } });
-    expect(approachConfirmed(sub, parent)).toBe(true);
+  it("starts a subtask at Ready with the approved proposal of its parent", () => {
+    const parent = task({ proposal: { latest: 2, approved: 2 } });
+    const sub = task({ parent: parent.id, proposal: { latest: 0, approved: null } });
+    expect(proposalApproved(sub, parent)).toBe(true);
     expect(firstStage(sub, parent)).toBe("ready");
-    // Its own approach needs its own confirm.
-    const own = task({ parent: parent.id, approach: { latest: 1, confirmed: null } });
+    // Its own proposal needs its own approval.
+    const own = task({ parent: parent.id, proposal: { latest: 1, approved: null } });
     expect(firstStage(own, parent)).toBe("discuss");
     expect(firstStage(task(), null)).toBe("discuss");
   });
 
-  it("reads the version of an approach gate file", () => {
-    expect(approachVersion(gate({ file: "approach/v3.md" }))).toBe(3);
-    expect(approachVersion(gate({ file: null }))).toBeNull();
+  it("reads the version of a proposal gate file, also of an old approach file", () => {
+    expect(proposalVersion(gate({ file: "proposal/v4.md" }))).toBe(4);
+    expect(proposalVersion(gate({ file: "approach/v3.md" }))).toBe(3);
+    expect(proposalVersion(gate({ file: "artifacts/x/v3.md" }))).toBeNull();
+    expect(proposalVersion(gate({ file: null }))).toBeNull();
   });
 });
 
@@ -280,29 +279,11 @@ describe("sync check", () => {
 });
 
 describe("gate text and credentials", () => {
-  it("writes the gate text of the shared cases (contracts/fixtures/gates)", () => {
-    const fixture = JSON.parse(
-      readFileSync(
-        fileURLToPath(new URL("../../../contracts/fixtures/gates/cases.json", import.meta.url)),
-        "utf8",
-      ),
-    ) as { cases: { name: string; text: string; decisions: Decision[]; body: string }[] };
-    for (const c of fixture.cases.filter((x) => x.text !== x.body || x.decisions.length === 0)) {
-      const file = c.name.startsWith("own") ? "approach/v2.md" : "approach/v1.md";
-      expect(gateText(c.body, c.decisions, file), c.name).toBe(c.text);
-    }
-  });
-
-  it("lists the decisions with the recommended option, and cuts a long text", () => {
-    const text = gateText(
-      "# Plan",
-      [{ question: "Store?", options: ["redis", "memory"], recommended: "redis" }],
-      "approach/v1.md",
-    );
-    expect(text).toContain("1. Store?\n   Options: redis · memory\n   Recommended: redis");
-    const long = gateText("x".repeat(20_000), [], "approach/v2.md");
+  it("cuts a long gate text and names the file", () => {
+    expect(gateText("# Plan", "proposal/v1.md")).toBe("# Plan");
+    const long = gateText("x".repeat(20_000), "proposal/v2.md");
     expect(long.length).toBeLessThan(17_000);
-    expect(long).toContain("(the full text is in approach/v2.md)");
+    expect(long).toContain("(the full text is in proposal/v2.md)");
   });
 
   it("redacts the content before the gate title and text cuts (fix list 0-41)", async () => {
@@ -311,7 +292,7 @@ describe("gate text and credentials", () => {
     const writes: { type: string; data: Record<string, unknown> }[] = [];
     const ctx = {
       actor: "claude@ubuntu-01",
-      task: { id: "t1", key: "AW-12", stage: "discuss", approach: { latest: 0 }, gates: [] },
+      task: { id: "t1", key: "AW-12", stage: "discuss", proposal: { latest: 0 }, gates: [] },
       host: {
         clock: new FakeClock(Date.parse("2026-11-23T10:00:00.000Z")),
         me: "ubuntu-01",
@@ -333,7 +314,7 @@ describe("gate text and credentials", () => {
     // The value starts 5 characters before the 16 KiB cut of the gate text.
     const fill = "b".repeat(MAX_GATE_TEXT_CHARS - 5 - title.length - 1);
     const body = `${title}\n${fill}${value}${"c".repeat(100)}`;
-    await proposeApproach(ctx, { content: body });
+    await proposeProposal(ctx, { content: body });
     await openCustomGate(ctx, { content: body });
     const gates = writes.filter((w) => w.type === "gate.opened");
     expect(gates).toHaveLength(2);
@@ -342,6 +323,88 @@ describe("gate text and credentials", () => {
       expect(String(gate.data.text)).not.toContain(value.slice(0, 5));
       expect(String(gate.data.title)).toContain("[redac");
     }
+  });
+
+  describe("proposal and questions (openspec proposal-and-discussion)", () => {
+    const openGate = (id: string, kind: string, title: string) => ({
+      gate: id,
+      kind,
+      version: 1,
+      state: "open",
+      title,
+    });
+    function context(gates: unknown[], files: Record<string, string> = {}, latest = 0) {
+      const writes: { type: string; data: Record<string, unknown> }[] = [];
+      const ctx = {
+        actor: "claude@ubuntu-01",
+        task: { id: "t1", key: "AW-12", stage: "discuss", proposal: { latest }, gates },
+        host: {
+          clock: new FakeClock(Date.parse("2026-11-26T10:00:00.000Z")),
+          me: "ubuntu-01",
+          service: {
+            files: {
+              readText: (path: string) =>
+                path in files ? Promise.resolve(files[path]!) : Promise.reject(new Error("none")),
+              redactText: (text: string) => text,
+            },
+            writeTaskFile: (path: string) => {
+              writes.push({ type: "file", data: { path } });
+              return Promise.resolve("");
+            },
+          },
+          write: (_task: string, type: string, data: Record<string, unknown>) => {
+            writes.push({ type, data });
+            return Promise.resolve({ event: {}, applied: true, reason: null });
+          },
+        },
+      } as unknown as AgentContext;
+      return { ctx, writes };
+    }
+
+    it("replaces the open proposal and the open questions, not a ready item", async () => {
+      const { ctx, writes } = context([
+        openGate("g-old", "approve_proposal", "v1"),
+        openGate("g-q", "question", "Where do the counters live?"),
+        openGate("g-r", "reply", "Shall I go on?"),
+        openGate("g-m", "question", "Missing: test account"),
+        openGate("g-c", "approve_command", "Bash: ls"),
+      ]);
+      const reply = await proposeProposal(ctx, { content: "# Rate limits" });
+      const resolved = writes
+        .filter((w) => w.type === "gate.resolved")
+        .map((w) => [w.data.gate, w.data.answer, w.data.answer_event]);
+      expect(resolved).toEqual([
+        ["g-old", "Replaced by proposal v1", null],
+        ["g-q", "Replaced by proposal v1", null],
+        ["g-r", "Replaced by proposal v1", null],
+      ]);
+      const opened = writes.find((w) => w.type === "gate.opened")!.data;
+      expect(opened).toMatchObject({
+        kind: "approve_proposal",
+        options: ["Approve"],
+        file: "proposal/v1.md",
+      });
+      expect(writes.find((w) => w.type === "proposal.proposed")!.data).toEqual({
+        version: 1,
+        file: "proposal/v1.md",
+      });
+      expect(reply.next).toContain("Proposal v1 sent to the human");
+    });
+
+    it("continues the numbers after the approach files from before the rename", async () => {
+      const { ctx, writes } = context([], { "tasks/t1/approach/v5.md": "# old" }, 4);
+      const reply = await proposeProposal(ctx, { content: "# New" });
+      expect(reply.version).toBe(6);
+      expect(writes[0]).toEqual({ type: "file", data: { path: "tasks/t1/proposal/v6.md" } });
+    });
+
+    it("opens a custom gate with its options and no decisions", async () => {
+      const { ctx, writes } = context([]);
+      await openCustomGate(ctx, { content: "# Pick", options: ["A", "B"] });
+      const opened = writes.find((w) => w.type === "gate.opened")!.data;
+      expect(opened.options).toEqual(["A", "B"]);
+      expect(opened).not.toHaveProperty("decisions");
+    });
   });
 
   it("asks with details: the question is the title, the details are the text (gate-context)", () => {
@@ -488,7 +551,7 @@ describe("the sync pause of the ready checks (fix list 0f)", () => {
   const record = { id: "s1", task: "t", claim_event: claim.id } as SessionRecord;
   const running = task({
     stage: "ready",
-    approach: { latest: 1, confirmed: 1 },
+    proposal: { latest: 1, approved: 1 },
     claim: { epoch: 1, device: "macbook-pro", session: "s1", event: claim.id },
   });
 
@@ -579,5 +642,51 @@ describe("Done at the Stop after Result approved (fix list 0-27)", () => {
     const record = { id: "s1", task: review.id, busy_deliveries: [] } as unknown as SessionRecord;
     expect(await loop.stopped(record, hookWrite(writes))).toBe(false);
     expect(writes).toEqual([]);
+  });
+});
+
+describe("approval of a proposal (openspec proposal-and-discussion)", () => {
+  function loopOf(writes: unknown[][]) {
+    const host = {
+      me: "macbook-pro",
+      write: (...args: unknown[]) => {
+        writes.push(args);
+        return Promise.resolve({});
+      },
+    } as unknown as LoopHost;
+    return new TaskLoop(host, {
+      push: null,
+      sync: () => Promise.resolve({ ok: true }),
+      stateDir: "/x",
+    });
+  }
+  const proposal = gate({ kind: "approve_proposal", file: "proposal/v2.md" });
+  const old = gate({ kind: "approve_proposal", file: "approach/v3.md" });
+
+  it("moves to Ready on Approve, and on Confirm of a gate from before the rename", async () => {
+    for (const [g, answer] of [
+      [proposal, "Approve"],
+      [old, "Confirm"],
+    ] as const) {
+      const writes: unknown[][] = [];
+      await loopOf(writes).resolved(task({ stage: "discuss" }), g, answer);
+      expect(writes.map((w) => [w[1], w[2]])).toEqual([
+        ["task.stage_changed", { from: "discuss", to: "ready" }],
+      ]);
+    }
+  });
+
+  it("stays in Discuss for another answer, and tells the version in the notice", async () => {
+    const writes: unknown[][] = [];
+    const loop = loopOf(writes);
+    await loop.resolved(task({ stage: "discuss" }), proposal, "Replaced by proposal v3");
+    expect(writes).toEqual([]);
+    const key = task({ stage: "discuss" }).key;
+    expect(loop.answerNote(task({ stage: "discuss" }), proposal, "Approve")).toBe(
+      `Proposal v2 approved. Run \`aw ready ${key}\` and end your turn.`,
+    );
+    expect(loop.answerNote(task({ stage: "discuss" }), old, "Confirm")).toContain(
+      "Proposal v3 approved.",
+    );
   });
 });

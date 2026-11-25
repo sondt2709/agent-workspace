@@ -23,7 +23,7 @@ fun toTaskDocument(task: TaskView): TaskV1? {
         paused = task.paused?.let { TaskV1.Paused(it.cause, it.since, it.resumesAt, it.nextStep, it.needsHuman) },
         assignee = task.assignee,
         claim = task.claim?.let { TaskV1.Claim(it.epoch, it.device, it.session) },
-        approach = TaskV1.Approach(task.approach.latest, task.approach.confirmed),
+        proposal = TaskV1.Proposal(task.proposal.latest, task.proposal.approved),
         ready = task.ready?.let { TaskV1.Ready(it.passedOn, it.missing) },
         testServer = task.testServer,
         credentials = task.credentials,

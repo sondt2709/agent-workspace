@@ -19,14 +19,14 @@ import { AW_VERSION } from "../version.ts";
 /** The server instructions: fewer than 4,096 characters (docs/phase-1.md 9.8.4). */
 export const MCP_INSTRUCTIONS = [
   "Agent Workspace (AW) tools for the one task of this session. The human is not at this terminal: the human reads the AW thread on a phone or a desktop app.",
-  "0. Your text output goes only to the Session log: the human reads only what you send through AW. End EACH turn with one AW call: ask, approach, ready, result, gate, message, learn or done. [AW notice <id>] Your turn ended with no AW update means: send that update now.",
+  "0. Your text output goes only to the Session log: the human reads only what you send through AW. End EACH turn with one AW call: ask, proposal, ready, result, gate, message, learn or done. [AW notice <id>] Your turn ended with no AW update means: send that update now.",
   "1. Read the thread first: thread (with ancestors: true for a subtask). Long threads come in pages: call thread again with from: next_from.",
-  "2. Ask each question to the human with ask. It returns at once with a gate id. Then END YOUR TURN: do not wait or poll. The answer arrives as your next input, after [AW answer <gate>].",
+  "2. Ask each question to the human only with ask, never also with message. Put all your questions in one ask. It returns at once with a gate id. Then END YOUR TURN: do not wait or poll. The answer arrives as your next input, after [AW answer <gate>]. A new ask replaces your older open questions.",
   '   Put the full context of a decision (the options, trade-offs, risks, your recommendation) in details of ask, and a description in each option. The human sees only the gate: never write "see the message above".',
   "3. message writes a message to the human in the thread: short, for a phone screen, and never a copy of a gate or a result. stage updates the progress line.",
   "4. artifact_add copies a file of your working folder into the task (at most 50 MB). handoff writes the context for the next session.",
   '5. Knowledge: read the "Read now" files of the session context and search the knowledge first (resource aw://knowledge, aw kb search <terms>). Before done, call learn for each thing you learned (a new knowledge file; shared: true waits for approval), or learn with nothing_new: true.',
-  "6. The work loop: approach (gate Confirm approach), then ready (missing items become questions); AW sends 'Start implementing' when the checks pass. result posts the result (gate Approve result). After 'Result approved' do your last steps, then done. task_create makes a subtask; gate opens a decision. After each gate tool, END YOUR TURN.",
+  "6. The work loop: discuss with message and ask; when no question is open, write one proposal (gate Approve proposal). A proposal has no open question and no choice; never ask for permission to write it. After a message about the proposal, answer it or send a new version. Then ready (missing items become questions); AW sends 'Start implementing' when the checks pass. result posts the result (gate Approve result). After 'Result approved' do your last steps, then done. task_create makes a subtask; gate opens a decision. After each gate tool, END YOUR TURN.",
   "7. The task argument is optional: it is the task of this session. Another task is refused.",
   "8. A result with isError has an error code: refused (not allowed, ask the human), not_ready (awd starts: try once more after 10 s), not_available (not possible here, for example a slot of another device), invalid_input.",
   "9. When these tools are missing or fail, use the aw commands of the AW skill (aw ask, aw message, ...).",
@@ -538,11 +538,20 @@ export function buildMcpServer(context: ToolContext): McpServer {
   return server;
 }
 
-const decisionArg = z.object({
-  question: z.string().min(1).max(2000),
-  options: z.array(z.string().min(1).max(500)).min(1).max(20),
-  recommended: z.string().min(1).max(500).describe("One of the options"),
-});
+/** Decisions are removed (openspec proposal-and-discussion): an old skill text gets the reason. */
+const removedDecisions = z
+  .unknown()
+  .optional()
+  .describe("Removed: ask each question with ask before the proposal");
+
+function noDecisions(decisions: unknown): void {
+  if (decisions !== undefined) {
+    throw new ServiceError(
+      "invalid_input",
+      "decisions are removed: ask each question with ask before you write the proposal",
+    );
+  }
+}
 const markdownArg = z
   .string()
   .min(1)
@@ -552,29 +561,34 @@ const markdownArg = z
 /** The tools of the work loop (add-task-loop): the same manager methods as the aw commands. */
 function registerLoopTools(server: McpServer, context: ToolContext): void {
   const write = { destructiveHint: false, openWorldHint: false };
-  server.registerTool(
-    "approach",
-    {
-      title: "Propose the approach",
-      description:
-        "Write the approach as a new version (approach/v<n>.md) and open the gate Confirm approach. Optional decisions show as choices, each with a recommended option. Then end your turn.",
-      inputSchema: z.object({
-        task: taskArg,
-        content: markdownArg,
-        decisions: z.array(decisionArg).max(20).optional(),
-      }),
-      annotations: write,
-    },
-    (args) =>
-      call(context, "approach", () => {
-        const { caller, manager } = sessionOf(context);
-        return manager.approach(context.session, {
-          task: taskRef(caller, args.task),
-          content: args.content,
-          decisions: args.decisions,
-        });
-      }),
-  );
+  // `approach` is the name of an older skill text (before openspec proposal-and-discussion).
+  for (const name of ["proposal", "approach"] as const) {
+    server.registerTool(
+      name,
+      {
+        title: name === "proposal" ? "Send the proposal" : "Send the proposal (old name)",
+        description:
+          name === "proposal"
+            ? "Write the proposal as a new version (proposal/v<n>.md) and open the gate Approve proposal. Send it only when no question is open; it has no open question and no choice. It replaces your open proposal and questions. Then end your turn."
+            : "The old name of the tool proposal. Use proposal.",
+        inputSchema: z.object({
+          task: taskArg,
+          content: markdownArg,
+          decisions: removedDecisions,
+        }),
+        annotations: write,
+      },
+      (args) =>
+        call(context, name, () => {
+          noDecisions(args.decisions);
+          const { caller, manager } = sessionOf(context);
+          return manager.proposal(context.session, {
+            task: taskRef(caller, args.task),
+            content: args.content,
+          });
+        }),
+    );
+  }
   server.registerTool(
     "ready",
     {
@@ -628,22 +642,22 @@ function registerLoopTools(server: McpServer, context: ToolContext): void {
     {
       title: "Open a decision gate",
       description:
-        "Open a gate with any Markdown and optional decisions, each with a recommended option. The answer arrives as your next input. Then end your turn.",
+        "Open a gate with any Markdown and its answer options. The answer arrives as your next input. Then end your turn.",
       inputSchema: z.object({
         task: taskArg,
         content: markdownArg,
-        decisions: z.array(decisionArg).max(20).optional(),
+        decisions: removedDecisions,
         options: z.array(z.string().min(1).max(500)).max(20).optional(),
       }),
       annotations: write,
     },
     (args) =>
       call(context, "gate", () => {
+        noDecisions(args.decisions);
         const { caller, manager } = sessionOf(context);
         return manager.gate(context.session, {
           task: taskRef(caller, args.task),
           content: args.content,
-          decisions: args.decisions,
           options: args.options,
         });
       }),

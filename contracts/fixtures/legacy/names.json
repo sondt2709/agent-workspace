@@ -1,0 +1,185 @@
+{
+  "source": "Synthetic lines in the format of the task logs and task.yaml of AW before openspec proposal-and-discussion (2026-11-26). Both ports map each input to its expected value.",
+  "events": [
+    {
+      "name": "approach.proposed becomes proposal.proposed; the file path stays",
+      "input": {
+        "v": 1,
+        "id": "01a20000-0000-7000-8000-000000000001",
+        "hlc": "2026-11-25T09:56:41.000Z#0000",
+        "dev": "macbook-pro",
+        "type": "approach.proposed",
+        "task": "01a20000-0000-7000-8000-0000000000aa",
+        "by": "claude@macbook-pro",
+        "data": {
+          "version": 3,
+          "file": "approach/v3.md"
+        }
+      },
+      "expected": {
+        "v": 1,
+        "id": "01a20000-0000-7000-8000-000000000001",
+        "hlc": "2026-11-25T09:56:41.000Z#0000",
+        "dev": "macbook-pro",
+        "type": "proposal.proposed",
+        "task": "01a20000-0000-7000-8000-0000000000aa",
+        "by": "claude@macbook-pro",
+        "data": {
+          "version": 3,
+          "file": "approach/v3.md"
+        }
+      }
+    },
+    {
+      "name": "gate.opened confirm_approach becomes approve_proposal",
+      "input": {
+        "v": 1,
+        "id": "01a20000-0000-7000-8000-000000000002",
+        "hlc": "2026-11-25T09:56:41.000Z#0001",
+        "dev": "macbook-pro",
+        "type": "gate.opened",
+        "task": "01a20000-0000-7000-8000-0000000000aa",
+        "by": "claude@macbook-pro",
+        "data": {
+          "gate": "01a20000-0000-7000-8000-0000000000bb",
+          "kind": "confirm_approach",
+          "version": 1,
+          "title": "Rate limits",
+          "text": "# Rate limits",
+          "options": ["Confirm", "Request changes"],
+          "file": "approach/v3.md"
+        }
+      },
+      "expected": {
+        "v": 1,
+        "id": "01a20000-0000-7000-8000-000000000002",
+        "hlc": "2026-11-25T09:56:41.000Z#0001",
+        "dev": "macbook-pro",
+        "type": "gate.opened",
+        "task": "01a20000-0000-7000-8000-0000000000aa",
+        "by": "claude@macbook-pro",
+        "data": {
+          "gate": "01a20000-0000-7000-8000-0000000000bb",
+          "kind": "approve_proposal",
+          "version": 1,
+          "title": "Rate limits",
+          "text": "# Rate limits",
+          "options": ["Confirm", "Request changes"],
+          "file": "approach/v3.md"
+        }
+      }
+    },
+    {
+      "name": "a question gate stays as it is",
+      "input": {
+        "v": 1,
+        "id": "01a20000-0000-7000-8000-000000000003",
+        "hlc": "2026-11-25T09:57:00.000Z#0000",
+        "dev": "macbook-pro",
+        "type": "gate.opened",
+        "task": "01a20000-0000-7000-8000-0000000000aa",
+        "by": "claude@macbook-pro",
+        "data": {
+          "gate": "01a20000-0000-7000-8000-0000000000cc",
+          "kind": "question",
+          "version": 1,
+          "title": "Which limit?",
+          "options": ["100/min"]
+        }
+      },
+      "expected": {
+        "v": 1,
+        "id": "01a20000-0000-7000-8000-000000000003",
+        "hlc": "2026-11-25T09:57:00.000Z#0000",
+        "dev": "macbook-pro",
+        "type": "gate.opened",
+        "task": "01a20000-0000-7000-8000-0000000000aa",
+        "by": "claude@macbook-pro",
+        "data": {
+          "gate": "01a20000-0000-7000-8000-0000000000cc",
+          "kind": "question",
+          "version": 1,
+          "title": "Which limit?",
+          "options": ["100/min"]
+        }
+      }
+    },
+    {
+      "name": "a new name stays as it is",
+      "input": {
+        "v": 1,
+        "id": "01a20000-0000-7000-8000-000000000004",
+        "hlc": "2026-11-26T10:00:00.000Z#0000",
+        "dev": "macbook-pro",
+        "type": "proposal.proposed",
+        "task": "01a20000-0000-7000-8000-0000000000aa",
+        "by": "claude@macbook-pro",
+        "data": {
+          "version": 4,
+          "file": "proposal/v4.md"
+        }
+      },
+      "expected": {
+        "v": 1,
+        "id": "01a20000-0000-7000-8000-000000000004",
+        "hlc": "2026-11-26T10:00:00.000Z#0000",
+        "dev": "macbook-pro",
+        "type": "proposal.proposed",
+        "task": "01a20000-0000-7000-8000-0000000000aa",
+        "by": "claude@macbook-pro",
+        "data": {
+          "version": 4,
+          "file": "proposal/v4.md"
+        }
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "name": "approach {latest, confirmed} becomes proposal {latest, approved}",
+      "input": {
+        "kind": "task",
+        "schema": 1,
+        "approach": {
+          "latest": 5,
+          "confirmed": 3
+        }
+      },
+      "expected": {
+        "kind": "task",
+        "schema": 1,
+        "proposal": {
+          "latest": 5,
+          "approved": 3
+        }
+      }
+    },
+    {
+      "name": "proposal wins when both are there",
+      "input": {
+        "kind": "task",
+        "schema": 1,
+        "approach": {
+          "latest": 1,
+          "confirmed": null
+        },
+        "proposal": {
+          "latest": 6,
+          "approved": 6
+        }
+      },
+      "expected": {
+        "kind": "task",
+        "schema": 1,
+        "approach": {
+          "latest": 1,
+          "confirmed": null
+        },
+        "proposal": {
+          "latest": 6,
+          "approved": 6
+        }
+      }
+    }
+  ]
+}

@@ -13,9 +13,9 @@ claim:
   epoch: 1
   device: ubuntu-01
   session: 01a20390-53c0-73f3-af1e-cebbd1410ab4
-approach:
+proposal:
   latest: 1
-  confirmed: 1
+  approved: 1
 ready:
   passed_on: ubuntu-01
   missing: []

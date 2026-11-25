@@ -30,18 +30,18 @@ const stages = (rows: EventRow[]) =>
 describe.skipIf(!TEST_TMUX)("the work loop", () => {
   it("runs Discuss, Ready, Implement, Review and Done with the MCP tools", async () => {
     awd = await startSessionDaemon();
-    const plan = JSON.stringify({
-      content: "# Add a limit\n\nUse 1000/min.",
-      decisions: [{ question: "Which store?", options: ["redis", "memory"], recommended: "redis" }],
-    });
-    const task = await awd.createTask(`mcp approach ${plan}`);
-    const approach = await awd.waitRow(
+    const plan = JSON.stringify({ content: "# Add a limit\n\nUse 1000/min." });
+    const task = await awd.createTask(`mcp proposal ${plan}`);
+    const proposal = await awd.waitRow(
       task.id,
-      (r) => r.type === "gate.opened" && data(r).kind === "confirm_approach",
+      (r) => r.type === "gate.opened" && data(r).kind === "approve_proposal",
     );
     const session = awd.session(task.id);
-    expect(data(approach)).toMatchObject({ file: "approach/v1.md", title: "Add a limit" });
-    expect(text(approach)).toContain("Recommended: redis");
+    expect(data(proposal)).toMatchObject({
+      file: "proposal/v1.md",
+      title: "Add a limit",
+      options: ["Approve"],
+    });
     expect((await awd.task(task.id)).stage).toBe("discuss");
     // The VAPID public key of this computer is in its bindings (docs/phase-1.md 8.1).
     const bindings = join(awd.folder, "tasks", "devices", "macbook-pro", "bindings.yaml");
@@ -50,15 +50,15 @@ describe.skipIf(!TEST_TMUX)("the work loop", () => {
       15_000,
     );
 
-    // Confirm: the stage moves to Ready, and the answer tells the agent to run ready.
-    await awd.answerFrom("pixel-9", task.id, String(data(approach).gate), "Confirm");
+    // Approve: the stage moves to Ready, and the answer tells the agent to run ready.
+    await awd.answerFrom("pixel-9", task.id, String(data(proposal).gate), "Approve");
     const delivered = await awd.waitRow(
       task.id,
-      (r) => r.type === "message.human" && data(r).delivery_id === data(approach).gate,
+      (r) => r.type === "message.human" && data(r).delivery_id === data(proposal).gate,
     );
-    expect(text(delivered)).toContain(`Approach v1 confirmed. Run \`aw ready ${task.key}\``);
+    expect(text(delivered)).toContain(`Proposal v1 approved. Run \`aw ready ${task.key}\``);
     expect((await awd.task(task.id)).stage).toBe("ready");
-    expect((await awd.task(task.id)).approach.confirmed).toBe(1);
+    expect((await awd.task(task.id)).proposal.approved).toBe(1);
 
     // A missing item is a question; "Start implementing" waits for its answer.
     await awd.sendMessage("pixel-9", task.id, session, 'mcp ready {"missing":["test account"]}');
@@ -133,16 +133,17 @@ describe.skipIf(!TEST_TMUX)("the work loop", () => {
     expect(awd.server.daemon.sessions!.list().find((s) => s.id === session)?.state).toBe("ended");
   }, 120_000);
 
-  it("never delivers a replaced approach gate to the agent as an answer", async () => {
+  it("never delivers a replaced proposal gate to the agent as an answer", async () => {
     awd = await startSessionDaemon();
     const v1 = JSON.stringify({ content: "# Plan one\n\nStep 1." });
-    const task = await awd.createTask(`mcp approach ${v1}`);
+    const task = await awd.createTask(`mcp proposal ${v1}`);
     const first = await awd.waitRow(
       task.id,
-      (r) => r.type === "gate.opened" && data(r).kind === "confirm_approach",
+      (r) => r.type === "gate.opened" && data(r).kind === "approve_proposal",
     );
     const session = awd.session(task.id);
     const v2 = JSON.stringify({ content: "# Plan two\n\nStep 2." });
+    // `approach` is the old tool name: it still works (an older skill text).
     await awd.sendMessage("pixel-9", task.id, session, `mcp approach ${v2}`);
     await awd.waitRow(
       task.id,
@@ -152,17 +153,63 @@ describe.skipIf(!TEST_TMUX)("the work loop", () => {
       task.id,
       (r) =>
         r.type === "gate.opened" &&
-        data(r).kind === "confirm_approach" &&
-        data(r).file === "approach/v2.md",
+        data(r).kind === "approve_proposal" &&
+        data(r).file === "proposal/v2.md",
     );
     await awd.waitChecks(session, 12);
-    // gate-full-context open issue 2: "Replaced by approach v2" is no answer of a person.
+    // gate-full-context open issue 2: "Replaced by proposal v2" is no answer of a person.
     const rows = await awd.rows(task.id);
     expect(
       rows.some((r) => r.type === "message.human" && data(r).delivery_id === data(first).gate),
     ).toBe(false);
     expect(await awd.screen(task.id)).not.toContain(`[AW answer ${String(data(first).gate)}]`);
   }, 60_000);
+
+  it("replaces an open question with a newer question and with a proposal (proposal-and-discussion)", async () => {
+    awd = await startSessionDaemon();
+    const q1 = JSON.stringify({
+      text: "Where do the counters live?",
+      options: ["Redis", "In memory"],
+    });
+    const task = await awd.createTask(`mcp ask ${q1}`);
+    const first = await awd.waitRow(
+      task.id,
+      (r) => r.type === "gate.opened" && data(r).title === "Where do the counters live?",
+    );
+    const session = awd.session(task.id);
+    const q2 = JSON.stringify({ text: "Limit per key or per IP?" });
+    await awd.sendMessage("pixel-9", task.id, session, `mcp ask ${q2}`);
+    await awd.waitRow(
+      task.id,
+      (r) =>
+        r.type === "gate.resolved" &&
+        data(r).gate === data(first).gate &&
+        data(r).answer === "Replaced by a newer question",
+    );
+    const second = await awd.waitRow(
+      task.id,
+      (r) => r.type === "gate.opened" && data(r).title === "Limit per key or per IP?",
+    );
+    const plan = JSON.stringify({ content: "# Rate limits\n\nOne counter per key in Redis." });
+    await awd.sendMessage("pixel-9", task.id, session, `mcp proposal ${plan}`);
+    await awd.waitRow(
+      task.id,
+      (r) =>
+        r.type === "gate.resolved" &&
+        data(r).gate === data(second).gate &&
+        data(r).answer === "Replaced by proposal v1",
+    );
+    // A late answer to a replaced question is a comment: it never reaches the agent.
+    await awd.answerFrom("pixel-9", task.id, String(data(first).gate), "Redis");
+    await awd.waitChecks(session, 12);
+    const delivered = (await awd.rows(task.id))
+      .filter((r) => r.type === "message.human")
+      .map((r) => data(r).delivery_id);
+    expect(delivered).not.toContain(data(first).gate);
+    expect(delivered).not.toContain(data(second).gate);
+    const open = (await awd.task(task.id)).gates.filter((g) => g.state === "open");
+    expect(open.map((g) => g.kind)).toEqual(["approve_proposal"]);
+  }, 90_000);
 
   it("creates a subtask that waits for the human, with the copy fields of the parent", async () => {
     awd = await startSessionDaemon();
@@ -384,20 +431,21 @@ describe.skipIf(!TEST_TMUX)("the work loop", () => {
       join(cwd, "decisions.json"),
       JSON.stringify([{ question: "Store?", options: ["a", "b"], recommended: "c" }]),
     );
+    // Decisions are removed (proposal-and-discussion): the command says why, with exit code 2.
     const bad = await awd.aw(
-      ["approach", task.id, "--file", "plan.md", "--decisions", "decisions.json"],
+      ["proposal", task.id, "--file", "plan.md", "--decisions", "decisions.json"],
       { env, cwd },
     );
     expect(bad.code).toBe(2);
+    expect(bad.stderr).toContain("--decisions is removed");
     // Fix list 0-3: a file outside the working folder of the session is refused, also through a
     // link, for each agent command that reads a file in the CLI.
     const outside = join(awd.home, "private.md");
     await writeFile(outside, "# Private\n\nkey-material-7788");
     await symlink(outside, join(cwd, "link.md"));
     for (const args of [
-      ["approach", task.id, "--file", outside],
-      ["approach", task.id, "--file", "link.md"],
-      ["approach", task.id, "--file", "plan.md", "--decisions", outside],
+      ["proposal", task.id, "--file", outside],
+      ["proposal", task.id, "--file", "link.md"],
       ["gate", "open", task.id, "--file", outside],
       ["kb", "write", "projects/billing-api/x.md", "--file", outside],
       ["learn", task.id, "--title", "X", "--file", outside],
@@ -408,9 +456,12 @@ describe.skipIf(!TEST_TMUX)("the work loop", () => {
       expect(refused.stderr).toContain("is not in the working folder of the session");
     }
     expect(JSON.stringify(await awd.rows(task.id))).not.toContain("key-material-7788");
-    const ok = await awd.aw(["approach", task.id, "--file", "plan.md"], { env, cwd });
-    expect(ok.stdout).toContain("Approach v1 sent to the human as gate");
+    const ok = await awd.aw(["proposal", task.id, "--file", "plan.md"], { env, cwd });
+    expect(ok.stdout).toContain("Proposal v1 sent to the human as gate");
     expect(ok.code).toBe(0);
+    // The old command name is an alias.
+    const old = await awd.aw(["approach", task.id, "--file", "plan.md"], { env, cwd });
+    expect(old.stdout).toContain("Proposal v2 sent to the human as gate");
     const done = await awd.aw(["done", task.id], { env, cwd });
     expect(done.code).toBe(1);
     expect(done.stderr).toContain("has no approved result");

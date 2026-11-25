@@ -382,16 +382,9 @@ export interface AgentWriteReply {
 
 // ---- The work loop (add-task-loop) ----
 
-export interface GateDecision {
-  question: string;
-  options: string[];
-  recommended: string;
-}
-
-export interface ApproachInput {
+export interface ProposalInput {
   task: string;
   content: string;
-  decisions?: GateDecision[];
 }
 
 export interface ReadyInput {
@@ -414,7 +407,6 @@ export interface SubtaskInput {
 export interface CustomGateInput {
   task: string;
   content: string;
-  decisions?: GateDecision[];
   options?: string[];
 }
 

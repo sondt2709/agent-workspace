@@ -53,10 +53,10 @@ describe("changedPaths", () => {
 });
 
 describe("taskPaths", () => {
-  it("joins the paths of the approach and the changed files, each once", async () => {
+  it("joins the paths of the proposal and the changed files, each once", async () => {
     await writeFile(join(worktree, "src", "api", "tax.ts"), "export {};\n");
     const paths = await taskPaths({
-      approach: "# Plan\n\nChange `src/api/tax.ts` and src/api/rates.ts.",
+      proposal: "# Plan\n\nChange `src/api/tax.ts` and src/api/rates.ts.",
       cwd: worktree,
       checkout,
     });

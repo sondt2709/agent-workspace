@@ -14,9 +14,9 @@ export const BODY_BYTES = 256;
 const QUIET_GATES = new Set(["approve_knowledge", "approve_device", "fix_file"]);
 
 const GATE_LABEL: Record<string, string> = {
-  question: "Answer question",
-  reply: "Reply",
-  confirm_approach: "Confirm approach",
+  question: "Reply to a question",
+  reply: "Reply to a question",
+  approve_proposal: "Approve proposal",
   assign: "Assign task",
   approve_command: "Approve command",
   approve_result: "Approve result",

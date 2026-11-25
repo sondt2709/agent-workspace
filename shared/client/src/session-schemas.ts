@@ -7,7 +7,7 @@ const taskRef = z.string().min(1).max(128).describe("The task key or id of the s
 
 export const sessionParams = z.object({ session: uuid.describe("The session id") });
 
-/** The longest details of a question: the approach limit (MAX_GATE_FILE_CHARS of awd). */
+/** The longest details of a question: the proposal limit (MAX_GATE_FILE_CHARS of awd). */
 export const MAX_ASK_DETAILS_CHARS = 256 * 1024;
 
 /** An answer option of `ask`: a label, or a label with a description (openspec gate-context). */
@@ -100,11 +100,15 @@ export const sessionInfo = z
 
 // ---- The work loop (add-task-loop) ----
 
-export const gateDecisionBody = z.object({
-  question: z.string().min(1).max(2000),
-  options: z.array(z.string().min(1).max(500)).min(1).max(20),
-  recommended: z.string().min(1).max(500).describe("One of the options"),
-});
+/**
+ * Decisions are removed (openspec proposal-and-discussion): a body with `decisions` fails, so an
+ * agent with an old skill text gets the reason.
+ */
+const noDecisions = z
+  .undefined({
+    error: "decisions are removed: ask each question with ask before you write the proposal",
+  })
+  .optional();
 
 const markdown = z
   .string()
@@ -112,10 +116,10 @@ const markdown = z
   .max(256 * 1024)
   .describe("Markdown");
 
-export const approachBody = z.object({
+export const proposalBody = z.object({
   task: taskRef,
   content: markdown,
-  decisions: z.array(gateDecisionBody).max(20).default([]),
+  decisions: noDecisions,
 });
 
 export const readyBody = z.object({
@@ -146,7 +150,7 @@ export const subtaskBody = z.object({
 export const customGateBody = z.object({
   task: taskRef,
   content: markdown,
-  decisions: z.array(gateDecisionBody).max(20).default([]),
+  decisions: noDecisions,
   options: z.array(z.string().min(1).max(500)).max(20).default([]),
 });
 

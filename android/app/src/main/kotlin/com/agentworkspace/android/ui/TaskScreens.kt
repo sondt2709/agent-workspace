@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Card
@@ -31,25 +32,28 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import com.agentworkspace.control.ActivityRule
-import com.agentworkspace.control.LateAnswers
+import com.agentworkspace.control.ActivityContent
+import com.agentworkspace.control.MessageBox
+import com.agentworkspace.control.RowStyle
 import com.agentworkspace.control.ScreenStates
 import com.agentworkspace.control.SessionOptionRows
 import com.agentworkspace.control.SessionOptionsDraft
@@ -155,17 +159,50 @@ private fun TaskMain(
     var assigning by rememberSaveable(task.id) { mutableStateOf(false) }
     val row = ScreenStates.row(task, snapshot)
     val older = { shown += WorkspaceModel.THREAD_PAGE }
+    val activity = ActivityContent.of(task, snapshot, thread, assigning)
+    // The header chip "Needs you" scrolls Activity to the row that needs the person.
+    var scrollTo by remember(task.id) { mutableStateOf<Int?>(null) }
+    var fullScreen by rememberSaveable(task.id) { mutableStateOf<String?>(null) }
+    val messageFocus = remember { FocusRequester() }
+    // "Discuss" of the full screen view: the message box takes the focus after the view closed.
+    var focusMessage by remember(task.id) { mutableStateOf(false) }
+    LaunchedEffect(focusMessage) {
+        if (focusMessage) {
+            if (MessageBox.of(task).enabled) runCatching { messageFocus.requestFocus() }
+            focusMessage = false
+        }
+    }
     Column(modifier.fillMaxHeight()) {
         // The header scrolls with the list and the tab row stays at the top, so a short window (a phone
         // in landscape, the keyboard open) keeps the list. Each tab opens at the top with its own
         // scroll state, so the needs-you line shows. The content is 840 dp wide at most and centred.
         key(tab) {
+            val listState = rememberLazyListState()
+            LaunchedEffect(scrollTo, tab) {
+                val target = scrollTo
+                if (target != null && tab == TaskTab.ACTIVITY) {
+                    listState.animateScrollToItem(target)
+                    scrollTo = null
+                }
+            }
             LazyColumn(
                 Modifier.weight(1f).fillMaxWidth().focusGroup(),
+                state = listState,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 item(key = "header") {
-                    TaskHeader(task, snapshot, row, layout, nav, actions) {
+                    TaskHeader(
+                        task,
+                        snapshot,
+                        row,
+                        layout,
+                        nav,
+                        actions,
+                        onStateChip = {
+                            selected = TaskTab.ACTIVITY
+                            scrollTo = activity.needsYouIndex(thread.hasOlder)
+                        },
+                    ) {
                         assigning = true
                         selected = TaskTab.ACTIVITY
                     }
@@ -186,9 +223,14 @@ private fun TaskMain(
                 }
                 when (tab) {
                     TaskTab.ACTIVITY -> {
-                        cardItems(task, snapshot, row, assigning, actions) { assigning = false }
+                        cardItems(task, snapshot, row, activity, actions) { assigning = false }
                         item(key = "description") { Description(task.firstMessage) }
-                        activityItems(thread, older)
+                        activityItems(
+                            thread,
+                            older,
+                            activity,
+                            ActivityRowParts(task, parts, actions.onAnswer) { fullScreen = it },
+                        )
                     }
 
                     TaskTab.SESSION -> {
@@ -206,16 +248,26 @@ private fun TaskMain(
             }
         }
         if (tab.hasMessageBox) {
-            val can = ScreenStates.canMessage(task)
+            // While a question of the agent is open, the text answers it (as the desktop Composer).
+            val box = MessageBox.of(task)
             HorizontalDivider()
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
                 MessageField(
                     value = draft,
                     onValueChange = { draft = it },
-                    label = "Message to the agent",
-                    placeholder = if (can) SEND_HINT else NO_SESSION,
-                    enabled = can,
-                    onSend = { actions.onSend(draft) { draft = "" } },
+                    label = "Message to ${task.assignee ?: "the agent"}",
+                    placeholder = box.placeholder,
+                    enabled = box.enabled,
+                    onSend = {
+                        val question = box.question
+                        if (question == null) {
+                            actions.onSend(draft) { draft = "" }
+                        } else {
+                            actions.onAnswer(question.gate, draft, null) { draft = "" }
+                        }
+                    },
+                    focusRequester = messageFocus,
+                    hint = box.hint,
                     modifier =
                         Modifier
                             .widthIn(max = MaxContentWidth)
@@ -224,21 +276,31 @@ private fun TaskMain(
             }
         }
     }
+    activity.rows.firstOrNull { it.event == fullScreen && it.style == RowStyle.PROPOSAL }?.let { proposal ->
+        ProposalFullScreenOf(task, proposal, activity, parts, actions.onAnswer, { fullScreen = null }) {
+            fullScreen = null
+            selected = TaskTab.ACTIVITY
+            focusMessage = true
+        }
+    }
 }
 
-/** The open gate cards, the late answers and the Assign card: first in Activity. */
+/**
+ * The late answers, the Assign card and the gate cards that have no row in the thread window: first in
+ * Activity. The other gates show at their place in time (openspec proposal-and-discussion).
+ */
 private fun LazyListScope.cardItems(
     task: TaskView,
     snapshot: WorkspaceSnapshot,
     row: TaskRowState,
-    assigning: Boolean,
+    activity: ActivityContent,
     actions: TaskPageActions,
     onAssigned: () -> Unit,
 ) {
-    items(ScreenStates.gateCards(task, snapshot), key = { it.gate.gate }) { card ->
+    items(activity.topCards, key = { it.gate.gate }) { card ->
         GateCardView(card) { answer, comment, sent -> actions.onAnswer(card.gate.gate, answer, comment, sent) }
     }
-    items(LateAnswers.of(task, snapshot.phone), key = { "late-${it.gate}" }) { late ->
+    items(activity.late, key = { "late-${it.gate}" }) { late ->
         Card(
             modifier = Modifier.listCard(),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
@@ -246,8 +308,9 @@ private fun LazyListScope.cardItems(
             Text(late.text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(16.dp))
         }
     }
-    if (ScreenStates.needsAssign(task) || assigning) {
+    if (activity.assign) {
         item(key = "assign") {
+            val assigning = activity.assigning
             val title = if (assigning) "Assign to another device…" else "${row.label} · Assign task"
             val choices =
                 if (assigning) {
@@ -307,7 +370,7 @@ private fun TerminalCard(state: TerminalPaneState) {
                 SelectionContainer {
                     Text(
                         text.ifEmpty { " " },
-                        style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                        style = MaterialTheme.typography.bodySmall.copy(fontFamily = MonoFont),
                         modifier = Modifier.padding(12.dp).horizontalScroll(rememberScrollState()),
                     )
                 }
@@ -336,14 +399,19 @@ private fun LazyListScope.sessionItems(
     items(thread.items, key = { "event-${it.id}" }) { ThreadLine(it) }
 }
 
-/** The key activity: the rows of the Activity rule, with the same window as the Session view. */
+/**
+ * The key activity: the rows of the Activity rule, oldest first, with the same window as the Session
+ * view: messages, the proposal card and task lines, and the gate card of another kind in its place.
+ */
 private fun LazyListScope.activityItems(
     thread: ThreadWindow,
     onOlder: () -> Unit,
+    activity: ActivityContent,
+    parts: ActivityRowParts,
 ) {
     item(key = "activity-header") { SectionHeader("Activity") }
     olderItem(thread, onOlder)
-    if (thread.activity.isEmpty()) {
+    if (activity.rows.isEmpty()) {
         item(key = "activity-empty") {
             EmptyText(
                 if (thread.hasOlder) {
@@ -354,7 +422,7 @@ private fun LazyListScope.activityItems(
             )
         }
     }
-    items(thread.activity, key = { "activity-${it.id}" }) { ThreadLine(it, activity = true) }
+    items(activity.rows, key = { "activity-${it.event}" }) { row -> ActivityRowView(row, activity, parts) }
 }
 
 private fun LazyListScope.olderItem(
@@ -379,16 +447,12 @@ private fun LazyListScope.olderItem(
 }
 
 /**
- * One row of the thread as a line with a 2 dp edge in the color of its author, as on the desktop
- * (openspec task-review-layout, design decision 9): the info color for an agent and a subagent
- * report, the outline color for a person. [activity]: Activity shows the messages as Markdown with 6
- * lines and "Show more"; the Session view shows each raw event (principle 8).
+ * One raw event of the Session view (principle 8) as a line with a 2 dp edge in the color of its
+ * author, as on the desktop: the info color for an agent, the outline color for a person, the accent
+ * for a gate. The text shows as written.
  */
 @Composable
-private fun ThreadLine(
-    item: ThreadItem,
-    activity: Boolean = false,
-) {
+private fun ThreadLine(item: ThreadItem) {
     val scheme = MaterialTheme.colorScheme
     val edge =
         when (item.kind) {
@@ -397,8 +461,7 @@ private fun ThreadLine(
             ThreadKind.GATE -> scheme.primary
             ThreadKind.SYSTEM -> null
         }
-    val markdown = activity && ActivityRule.markdown(item.kind)
-    // The edge is drawn behind the row: a Markdown table cannot give an intrinsic height.
+    // The edge is drawn behind the row: a long text cannot give an intrinsic height.
     Row(
         Modifier
             .fillMaxWidth()
@@ -410,45 +473,32 @@ private fun ThreadLine(
             Modifier.padding(start = if (edge != null) 16.dp else 0.dp, top = 2.dp, bottom = 2.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            val time =
-                item.hlc
-                    .substringBefore('#')
-                    .replace('T', ' ')
-                    .take(SHOWN_TIME)
-            if (activity && item.kind == ThreadKind.SYSTEM) {
-                // A line of the task, for example "Created by human@macbook-pro".
-                Text("${item.text} · $time", style = MaterialTheme.typography.bodyMedium, color = muted())
-                return@Column
-            }
             Text(
                 buildAnnotatedString {
                     withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, color = scheme.onSurface)) {
                         append(item.who)
                     }
-                    for (part in listOfNotNull(item.note, time)) append(" · $part")
+                    for (part in listOfNotNull(item.note, shownTime(item))) append(" · $part")
                 },
                 style = MaterialTheme.typography.labelSmall,
                 color = muted(),
             )
-            var all by rememberSaveable(item.id) { mutableStateOf(false) }
-            val cut = if (markdown) ActivityRule.clamp(item.text) else ActivityRule.Clamp(item.text, false)
-            val shown = if (cut.cut && !all) cut.head else item.text
-            SelectionContainer {
-                if (markdown) MarkdownText(shown) else Text(shown, style = MaterialTheme.typography.bodyMedium)
-            }
-            if (cut.cut) {
-                TextButton(onClick = { all = !all }) { Text(if (all) "Show less" else "Show more") }
-            }
+            SelectionContainer { Text(item.text, style = MaterialTheme.typography.bodyMedium) }
         }
     }
 }
 
+/**
+ * The index in the Activity list of the row that needs the person (the header chip scrolls to it):
+ * the header and the tab row, the top cards, the late answers, the Assign card, the description, the
+ * "Activity" heading and "Show older", then the rows. With no such row, the first top card.
+ */
+private fun ActivityContent.needsYouIndex(hasOlder: Boolean): Int {
+    val top = 2
+    val row = needsYouRow ?: return top
+    val before = topCards.size + late.size + (if (assign) 1 else 0) + 2 + (if (hasOlder) 1 else 0)
+    return top + before + row
+}
+
 /** The width of the colored edge of a thread row (2 dp, as on the desktop). */
 private val EDGE = 2.dp
-
-/** The placeholders of the message box: with a running session, and with none. */
-private const val SEND_HINT = "It arrives as the next input of the session."
-private const val NO_SESSION = "No session runs: assign the task first"
-
-/** "2026-11-22 14:21:00": the time part of an HLC, to the second. */
-private const val SHOWN_TIME = 19

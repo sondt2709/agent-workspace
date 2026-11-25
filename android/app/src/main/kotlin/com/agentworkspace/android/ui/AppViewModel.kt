@@ -8,7 +8,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.agentworkspace.android.AppGraph
 import com.agentworkspace.control.ActionResult
-import com.agentworkspace.control.ApproachVersions
 import com.agentworkspace.control.ArtifactList
 import com.agentworkspace.control.ArtifactRequests
 import com.agentworkspace.control.ArtifactRow
@@ -18,6 +17,8 @@ import com.agentworkspace.control.NewTaskDraft
 import com.agentworkspace.control.PairingRefused
 import com.agentworkspace.control.PairingState
 import com.agentworkspace.control.PairingStatus
+import com.agentworkspace.control.ProposalTextSize
+import com.agentworkspace.control.ProposalVersions
 import com.agentworkspace.control.Route
 import com.agentworkspace.control.SessionOptionsDraft
 import com.agentworkspace.control.Shortcut
@@ -360,14 +361,29 @@ class AppViewModel(
         limit: Int,
     ): ThreadWindow = workspaceId.value?.let { graph.workspace(it).model.thread(task, limit) } ?: ThreadWindow.EMPTY
 
-    /** The full text of an approach version: its synced file, or null (openspec gate-full-context). */
-    suspend fun approachText(
+    /**
+     * The full text of a proposal version: its synced file (the file of its event, else
+     * `proposal/v<n>.md` or `approach/v<n>.md`), or null (openspec proposal-and-discussion).
+     */
+    suspend fun proposalText(
         task: String,
         version: Long,
+        file: String?,
     ): String? =
         withContext(Dispatchers.IO) {
-            workspaceId.value?.let { ApproachVersions.text(graph.workspace(it).files, task, version) }
+            workspaceId.value?.let { ProposalVersions.text(graph.workspace(it).files, task, version, file) }
         }
+
+    /** The text size of the proposals in dp: the file `proposal-text-px`, read once at the start. */
+    var proposalTextSize by mutableStateOf(graph.proposalText.size())
+        private set
+
+    /** A+ ([larger] true) or A−: the new size shows at once and is kept in its file. */
+    fun changeProposalTextSize(larger: Boolean) {
+        val size = ProposalTextSize.change(proposalTextSize, larger)
+        proposalTextSize = size
+        viewModelScope.launch(Dispatchers.IO) { graph.proposalText.set(size) }
+    }
 
     /** The artifacts of a task with their state on this phone (docs/phase-1.md 10.3). */
     suspend fun artifacts(task: String): List<ArtifactRow> {

@@ -173,7 +173,7 @@ export interface TaskView {
   /** The device of the assignee while the accepted claim is on another device (a move), or null. */
   moving_to: string | null;
   released_epoch: number | null;
-  approach: { latest: number; confirmed: number | null };
+  proposal: { latest: number; approved: number | null };
   ready: { passed_on: string | null; missing: string[] } | null;
   test_server: string | null;
   credentials: string[];

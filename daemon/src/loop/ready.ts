@@ -1,5 +1,5 @@
 // The ready checks of the implementing device (docs/workflow.md 4.7, docs/phase-1.md 9.5.4) as a
-// pure function, and the approach rule of a subtask (task-model decision §5.2).
+// pure function, and the proposal rule of a subtask (task-model decision §5.2).
 import { compareOrder, type EventRow, type TaskView } from "@aw/core";
 import type { Stage } from "@aw/schema";
 
@@ -33,17 +33,17 @@ function data(row: EventRow): Record<string, unknown> {
 }
 
 /**
- * True when the approach is confirmed: the own approach, or for a subtask with no own approach
- * the confirmed approach of its parent (it starts at Ready with it).
+ * True when the proposal is approved: the own proposal, or for a subtask with no own proposal
+ * the approved proposal of its parent (it starts at Ready with it).
  */
-export function approachConfirmed(task: TaskView, parent: TaskView | null): boolean {
-  if (task.approach.confirmed !== null) return true;
-  return task.approach.latest === 0 && parent !== null && parent.approach.confirmed !== null;
+export function proposalApproved(task: TaskView, parent: TaskView | null): boolean {
+  if (task.proposal.approved !== null) return true;
+  return task.proposal.latest === 0 && parent !== null && parent.proposal.approved !== null;
 }
 
-/** The stage at the first claim: Ready for a subtask that starts with the parent approach. */
+/** The stage at the first claim: Ready for a subtask that starts with the parent proposal. */
 export function firstStage(task: TaskView, parent: TaskView | null): Stage {
-  return task.parent !== null && task.approach.latest === 0 && approachConfirmed(task, parent)
+  return task.parent !== null && task.proposal.latest === 0 && proposalApproved(task, parent)
     ? "ready"
     : "discuss";
 }
@@ -66,7 +66,7 @@ export function readyChecks(input: ReadyInput): ReadyResult {
     const open = gates.filter((id) => task.gates.find((g) => g.gate === id)?.state !== "resolved");
     if (open.length > 0) failing.push(`${open.length} missing item(s) wait for an answer`);
   }
-  if (!approachConfirmed(task, input.parent)) failing.push("the approach is not confirmed");
+  if (!proposalApproved(task, input.parent)) failing.push("the proposal is not approved");
   if (task.assignee === null) failing.push("the task has no assignee");
   if (task.open_dependencies.length > 0) {
     failing.push(`${task.open_dependencies.length} dependency task(s) are not done`);

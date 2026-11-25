@@ -89,6 +89,8 @@ export interface HostDeps {
   setOpenAtLogin(open: boolean): AppSettings;
   /** Stores the Appearance choice and applies it to `nativeTheme.themeSource`. */
   setAppearance(appearance: Appearance): Promise<AppSettings>;
+  /** Stores the text size of a proposal (`proposal_text_px`). */
+  setProposalTextSize(px: number): Promise<AppSettings>;
   phraseConfirmed(user: string): Promise<boolean>;
   phraseShown(user: string): Promise<boolean>;
   confirmPhrase(user: string): Promise<void>;
@@ -356,6 +358,8 @@ async function run(request: CallRequest, deps: CallDeps): Promise<unknown> {
       return deps.host.setOpenAtLogin(request.args.open);
     case "setAppearance":
       return deps.host.setAppearance(request.args.appearance);
+    case "setProposalTextSize":
+      return deps.host.setProposalTextSize(request.args.px);
     case "chooseFolder":
       return deps.host.chooseFolder(request.args);
     // ---- Setup check ----

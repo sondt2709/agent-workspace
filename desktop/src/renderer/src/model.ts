@@ -58,7 +58,7 @@ export function sessionLink(session: SessionView): string[] {
 
 export interface TaskDetails {
   paused: PauseView | null;
-  approach: { latest: number; confirmed: number | null };
+  proposal: { latest: number; approved: number | null };
   session: SessionView | null;
   claim: { epoch: number; device: string; session: string } | null;
   test_server: string | null;
@@ -75,7 +75,7 @@ export function details(task: Task): TaskDetails {
   const t = task as Task & Partial<TaskDetails>;
   return {
     paused: t.paused ?? null,
-    approach: t.approach ?? { latest: 0, confirmed: null },
+    proposal: t.proposal ?? { latest: 0, approved: null },
     session: t.session ?? null,
     claim: t.claim ?? null,
     test_server: t.test_server ?? null,
@@ -94,8 +94,8 @@ export { pauseLabel, pauseText } from "../../shared/pause-text.ts";
 /** The short description of each Board column (docs/design.md 8.5.1). */
 export const STAGE_HINT: Record<Stage, string> = {
   backlog: "Not started, or waits for an assignee.",
-  discuss: "The agent reads the task and proposes an approach. You confirm it.",
-  ready: "The approach is confirmed. The work starts when the checks pass.",
+  discuss: "The agent reads the task and writes a proposal. You approve it.",
+  ready: "The proposal is approved. The work starts when the checks pass.",
   implement: "The agent changes the code and runs the tests.",
   review: "You review the result and the artifacts.",
   done: "You approved the result.",
@@ -214,9 +214,9 @@ export function commentRule(option: string): "required" | "optional" | "none" {
 }
 
 export const GATE_LABEL: Record<string, string> = {
-  question: "Answer question",
-  reply: "Reply",
-  confirm_approach: "Confirm approach",
+  question: "Reply to a question",
+  reply: "Reply to a question",
+  approve_proposal: "Approve proposal",
   assign: "Assign task",
   approve_command: "Approve command",
   approve_result: "Approve result",
@@ -252,28 +252,49 @@ export function gateOpened(thread: ThreadReply | undefined, gate: string): Event
   return thread?.events.find((r) => r.type === "gate.opened" && r.event.data.gate === gate) ?? null;
 }
 
-/** The approach versions of a thread, oldest first. */
-export function approachVersions(
-  thread: ThreadReply | undefined,
-): { version: number; text: string }[] {
-  const versions = new Map<number, string>();
+/** One proposal version: its number, the file of its `proposal.proposed` event and its first line. */
+export interface ProposalVersion {
+  version: number;
+  /** The file in the task folder: `proposal/v<n>.md`, or `approach/v<n>.md` from before the rename. */
+  file: string;
+  text: string;
+}
+
+/** The proposal versions of the work events of a task, oldest first. */
+export function proposalVersions(thread: ThreadReply | undefined): ProposalVersion[] {
+  const versions = new Map<number, ProposalVersion>();
   for (const row of thread?.events ?? []) {
     const data = row.event.data;
-    if (row.type === "approach.proposed" && typeof data.version === "number") {
-      versions.set(data.version, versions.get(data.version) ?? "");
+    if (row.type === "proposal.proposed" && typeof data.version === "number") {
+      const file = typeof data.file === "string" ? data.file : `proposal/v${data.version}.md`;
+      versions.set(data.version, {
+        version: data.version,
+        file,
+        text: versions.get(data.version)?.text ?? "",
+      });
     }
     if (
       row.type === "gate.opened" &&
-      data.kind === "confirm_approach" &&
+      data.kind === "approve_proposal" &&
       typeof data.file === "string"
     ) {
       const match = /v(\d+)\.md$/.exec(data.file);
-      if (match) versions.set(Number(match[1]), typeof data.text === "string" ? data.text : "");
+      if (!match) continue;
+      const version = Number(match[1]);
+      versions.set(version, {
+        version,
+        file: versions.get(version)?.file ?? data.file,
+        text: typeof data.text === "string" ? data.text : "",
+      });
     }
   }
-  return [...versions.entries()]
-    .sort((a, b) => a[0] - b[0])
-    .map(([version, text]) => ({ version, text }));
+  return [...versions.values()].sort((a, b) => a.version - b.version);
+}
+
+/** The version number in a proposal file name (`proposal/v3.md`), or null. */
+export function proposalFileVersion(file: string | null): number | null {
+  const match = /v(\d+)\.md$/.exec(file ?? "");
+  return match ? Number(match[1]) : null;
 }
 
 /** "12 s ago", "5 min ago", "3 h ago", "2 days ago". */
@@ -294,16 +315,16 @@ export function taskLabel(task: { id: string; key: string | null }): string {
 // ---- Gate full context (openspec gate-full-context) ----
 
 /** The work events of a task: the gate cards and the fields read them, not the thread window. */
-export const WORK_TYPES = "gate.opened,approach.proposed,result.posted,artifact.added";
+export const WORK_TYPES = "gate.opened,proposal.proposed,result.posted,artifact.added";
 
-/** The chip of an approach version (fix list 0-8). */
-export function approachChip(
+/** The chip of a proposal version (fix list 0-8): Approved, Waits for you or Replaced. */
+export function proposalChip(
   version: number,
-  approach: { latest: number; confirmed: number | null },
-): "confirmed" | "waits" | "replaced" {
-  if (approach.confirmed === version) return "confirmed";
-  const newer = approach.confirmed === null || approach.latest > approach.confirmed;
-  return version === approach.latest && newer ? "waits" : "replaced";
+  proposal: { latest: number; approved: number | null },
+): "approved" | "waits" | "replaced" {
+  if (proposal.approved === version) return "approved";
+  const newer = proposal.approved === null || proposal.latest > proposal.approved;
+  return version === proposal.latest && newer ? "waits" : "replaced";
 }
 
 /** An artifact of a result: its path in the task folder, its name and its size (null: not known). */

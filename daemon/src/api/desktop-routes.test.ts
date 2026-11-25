@@ -96,14 +96,14 @@ describe("task files", () => {
   it("lists the folder of a task with its files and folders", async () => {
     const task = await newTask();
     const root = join(d.folder, "tasks", task.id);
-    await mkdir(join(root, "approach"), { recursive: true });
-    await writeFile(join(root, "approach", "v1.md"), "# Plan\n");
+    await mkdir(join(root, "proposal"), { recursive: true });
+    await writeFile(join(root, "proposal", "v1.md"), "# Plan\n");
     await writeFile(join(root, "log", "x.jsonl.aw-tmp"), "tmp");
     const reply = await desktop.taskFiles("-", "AW-1");
     expect(reply.root).toBe(`tasks/${task.id}`);
     const names = reply.entries.map((e) => `${e.kind}:${e.name}`);
-    expect(names).toContain("dir:approach");
-    expect(names).toContain("file:approach/v1.md");
+    expect(names).toContain("dir:proposal");
+    expect(names).toContain("file:proposal/v1.md");
     expect(names).toContain("dir:log");
     expect(names).toContain("file:log/macbook-pro.jsonl");
     expect(names.some((n) => n.endsWith(".aw-tmp"))).toBe(false);

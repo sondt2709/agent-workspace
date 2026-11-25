@@ -42,14 +42,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.agentworkspace.android.R
-import com.agentworkspace.control.ApproachVersions
 import com.agentworkspace.control.ArtifactList
 import com.agentworkspace.control.ArtifactRow
 import com.agentworkspace.control.NeedYouNav
+import com.agentworkspace.control.ProposalVersions
 import com.agentworkspace.control.QueueTexts
 import com.agentworkspace.control.ScreenStates
 import com.agentworkspace.control.SessionOptionRows
@@ -64,7 +63,7 @@ import kotlinx.coroutines.delay
 // The parts of the task page (openspec task-review-layout): the header with the need-you navigation
 // and the stage bar, the task list of "Show list", and the properties (a tab or the right panel).
 
-/** The properties: the fields, the approach versions and the artifacts (the tab or the right panel). */
+/** The properties: the fields, the proposal versions and the artifacts (the tab or the right panel). */
 internal fun LazyListScope.propertyItems(
     task: TaskView,
     snapshot: WorkspaceSnapshot,
@@ -76,10 +75,12 @@ internal fun LazyListScope.propertyItems(
         QueueTexts.withQueue(ScreenStates.fields(task), snapshot.queueEntries[task.id]),
         key = { "field-${it.first}" },
     ) { (label, value) -> FieldRow(label, value) }
-    val versions = ApproachVersions.of(task)
+    val versions = ProposalVersions.of(task)
     if (versions.isNotEmpty()) {
-        item { SectionHeader("Approach") }
-        items(versions, key = { "approach-${it.version}" }) { v -> ApproachRow(task.id, v, parts.loadApproach) }
+        item { SectionHeader("Proposal") }
+        items(versions, key = { "proposal-${it.version}" }) { v ->
+            ProposalVersionRow(task.id, v, parts.loadProposal)
+        }
     }
     if (artifacts.isNotEmpty()) {
         item { SectionHeader("Artifacts · ${artifacts.size}") }
@@ -144,6 +145,8 @@ internal fun TaskHeader(
     layout: TaskPageLayout,
     nav: TaskPageNavigation,
     actions: TaskPageActions,
+    /** The state chip "Needs you": it shows the row of Activity that needs the person. */
+    onStateChip: () -> Unit = {},
     onAssignElsewhere: () -> Unit,
 ) {
     val need = NeedYouNav.of(ScreenStates.inbox(snapshot).map { it.id }, task.id)
@@ -163,7 +166,14 @@ internal fun TaskHeader(
             Text(row.label, style = MaterialTheme.typography.labelLarge.copy(fontFamily = MONO), color = muted())
             task.project?.let { HeaderChip(it, scheme.surfaceContainerHigh, scheme.onSurface) }
             TaskPage.stateChip(task)?.let {
-                HeaderChip(it, MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.primary)
+                HeaderChip(
+                    if (it.startsWith("Needs you")) it else "Needs you: $it",
+                    MaterialTheme.colorScheme.primaryContainer,
+                    MaterialTheme.colorScheme.primary,
+                    Modifier.clip(CompactShape).clickable(role = Role.Button, onClickLabel = "Show in Activity") {
+                        onStateChip()
+                    },
+                )
             }
             if (task.archived) Text("Archived", style = MaterialTheme.typography.labelMedium, color = muted())
             Spacer(Modifier.weight(1f))
@@ -205,13 +215,14 @@ internal fun HeaderChip(
     text: String,
     container: Color,
     content: Color,
+    modifier: Modifier = Modifier,
 ) = Text(
     text,
     style = MaterialTheme.typography.labelMedium,
     color = content,
     maxLines = 1,
     overflow = TextOverflow.Ellipsis,
-    modifier = Modifier.background(container, CompactShape).padding(horizontal = 8.dp, vertical = 3.dp),
+    modifier = modifier.background(container, CompactShape).padding(horizontal = 8.dp, vertical = 3.dp),
 )
 
 /** The stage progress: 6 segments, the done ones in the info color, and "Discuss · stage 2 of 6". */
@@ -303,7 +314,7 @@ internal fun FieldRow(
 }
 
 /** The font of the task key, as the desktop. */
-private val MONO = FontFamily.Monospace
+private val MONO = MonoFont
 
 /** The wait between 2 reads of the artifact list while a download runs. */
 private const val ARTIFACT_CHECK_MS = 3_000L

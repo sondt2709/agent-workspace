@@ -1,14 +1,12 @@
 {
-  "description": "The Activity rule of the task detail (openspec phone-task-focus, task-view-focus, decision 37): places has one entry for each event type of contracts/samples/schema-samples.json; cases are thread rows with the expected in_activity and the line of the Activity row (null: the row uses its usual text). The desktop (desktop/src/renderer/src/activity-model.ts) and the phone (android/control Activity.kt) run the same cases. Synthetic data, written by hand on 2026-11-24; the message.agent source and the nudge cases on 2026-11-25 (agent-pushes-updates).",
+  "description": "The Activity rule of the task detail (openspec phone-task-focus, task-view-focus, decision 37, proposal-and-discussion): places has one entry for each event type of contracts/samples/schema-samples.json; cases are thread rows with the expected in_activity, the row style (message, line, or null when the row shows only in Session), the author of a message (agent or person) and the line of the Activity row (null: the row uses its usual text). threads are whole threads with the expected Activity rows: the rows that depend on later events (an open or answered question, a replaced or approved proposal, a gate card). The desktop (desktop/src/renderer/src/activity-model.ts) and the phone (android/control Activity.kt) run the same cases. Synthetic data, written by hand on 2026-11-24; the message.agent source and the nudge cases on 2026-11-25 (agent-pushes-updates); the styles and threads on 2026-11-26 (proposal-and-discussion).",
   "clamp_lines": 6,
   "places": {
-    "approach.proposed": "activity",
     "artifact.added": "activity",
     "comment.added": "activity",
     "credential.added": "session",
     "credential.imported": "session",
     "credential.removed": "session",
-    "project.removed": "session",
     "device.heartbeat": "session",
     "gate.answered": "activity",
     "gate.opened": "activity",
@@ -21,12 +19,14 @@
     "message.agent": "activity",
     "message.human": "activity",
     "message.sent": "activity",
+    "project.removed": "session",
+    "proposal.proposed": "activity",
     "queue.reordered": "session",
     "result.posted": "activity",
     "session.ended": "activity",
     "session.resumed": "session",
-    "session.stop_requested": "session",
     "session.started": "session",
+    "session.stop_requested": "session",
     "slot.acquired": "session",
     "slot.released": "session",
     "slot.renewed": "session",
@@ -60,7 +60,9 @@
         "delivery_id": null
       },
       "in_activity": false,
-      "line": null
+      "line": null,
+      "style": null,
+      "author": null
     },
     {
       "name": "text typed in the terminal",
@@ -74,7 +76,9 @@
         "delivery_id": null
       },
       "in_activity": true,
-      "line": null
+      "line": null,
+      "style": "message",
+      "author": "person"
     },
     {
       "name": "text typed in the terminal from the phone",
@@ -88,7 +92,9 @@
         "delivery_id": null
       },
       "in_activity": true,
-      "line": null
+      "line": null,
+      "style": "message",
+      "author": "person"
     },
     {
       "name": "delivered message repeats message.sent",
@@ -102,7 +108,9 @@
         "delivery_id": "01a2038e-8200-7000-8000-000000000001"
       },
       "in_activity": false,
-      "line": null
+      "line": null,
+      "style": null,
+      "author": null
     },
     {
       "name": "typed input with a delivery id repeats a message",
@@ -116,7 +124,9 @@
         "delivery_id": "01a2038e-8200-7000-8000-000000000001"
       },
       "in_activity": false,
-      "line": null
+      "line": null,
+      "style": null,
+      "author": null
     },
     {
       "name": "answer input repeats gate.answered",
@@ -130,7 +140,9 @@
         "delivery_id": "01a2038e-8200-7000-8000-000000000001"
       },
       "in_activity": false,
-      "line": null
+      "line": null,
+      "style": null,
+      "author": null
     },
     {
       "name": "notice input of AW",
@@ -144,7 +156,9 @@
         "delivery_id": "01a2038e-8200-7000-8000-000000000001"
       },
       "in_activity": false,
-      "line": null
+      "line": null,
+      "style": null,
+      "author": null
     },
     {
       "name": "session stopped",
@@ -156,7 +170,9 @@
         "reason": "stopped"
       },
       "in_activity": true,
-      "line": "Session stopped on ubuntu-01: a person stopped it or ended the agent. AW starts no new session until a person starts one."
+      "line": "Session stopped on ubuntu-01: a person stopped it or ended the agent. AW starts no new session until a person starts one.",
+      "style": "line",
+      "author": null
     },
     {
       "name": "session crashed",
@@ -168,7 +184,9 @@
         "reason": "crashed"
       },
       "in_activity": true,
-      "line": "Session crashed on ubuntu-01: the agent process ended and AW did not restart it. AW starts no new session until a person starts one."
+      "line": "Session crashed on ubuntu-01: the agent process ended and AW did not restart it. AW starts no new session until a person starts one.",
+      "style": "line",
+      "author": null
     },
     {
       "name": "session done",
@@ -180,7 +198,9 @@
         "reason": "done"
       },
       "in_activity": false,
-      "line": null
+      "line": null,
+      "style": null,
+      "author": null
     },
     {
       "name": "session moved to another device",
@@ -192,7 +212,9 @@
         "reason": "moved"
       },
       "in_activity": false,
-      "line": null
+      "line": null,
+      "style": null,
+      "author": null
     },
     {
       "name": "session replaced",
@@ -204,7 +226,9 @@
         "reason": "replaced"
       },
       "in_activity": false,
-      "line": null
+      "line": null,
+      "style": null,
+      "author": null
     },
     {
       "name": "session end with no data",
@@ -213,7 +237,9 @@
       "by": "aw@ubuntu-01",
       "data": {},
       "in_activity": false,
-      "line": null
+      "line": null,
+      "style": null,
+      "author": null
     },
     {
       "name": "claim",
@@ -226,7 +252,9 @@
         "session": "01a2038e-8100-7000-8000-000000000001"
       },
       "in_activity": false,
-      "line": null
+      "line": null,
+      "style": null,
+      "author": null
     },
     {
       "name": "session start",
@@ -239,7 +267,9 @@
         "cwd": "~/code/billing-api"
       },
       "in_activity": false,
-      "line": null
+      "line": null,
+      "style": null,
+      "author": null
     },
     {
       "name": "gate resolved repeats the answer",
@@ -251,7 +281,9 @@
         "answer": "100/min"
       },
       "in_activity": false,
-      "line": null
+      "line": null,
+      "style": null,
+      "author": null
     },
     {
       "name": "stage change",
@@ -263,7 +295,9 @@
         "to": "implement"
       },
       "in_activity": true,
-      "line": null
+      "line": null,
+      "style": "line",
+      "author": null
     },
     {
       "name": "agent message",
@@ -274,7 +308,9 @@
         "text": "I add a token bucket."
       },
       "in_activity": true,
-      "line": null
+      "line": null,
+      "style": "message",
+      "author": "agent"
     },
     {
       "name": "unknown type",
@@ -283,7 +319,9 @@
       "by": "aw@ubuntu-01",
       "data": {},
       "in_activity": false,
-      "line": null
+      "line": null,
+      "style": null,
+      "author": null
     },
     {
       "name": "agent message with the source tool",
@@ -296,7 +334,9 @@
         "source": "tool"
       },
       "in_activity": true,
-      "line": null
+      "line": null,
+      "style": "message",
+      "author": "agent"
     },
     {
       "name": "text of an agent turn stays in Session",
@@ -309,7 +349,9 @@
         "source": "turn"
       },
       "in_activity": false,
-      "line": null
+      "line": null,
+      "style": null,
+      "author": null
     },
     {
       "name": "older agent message with no source",
@@ -321,7 +363,9 @@
         "session": "01a2038e-8100-7000-8000-000000000001"
       },
       "in_activity": true,
-      "line": null
+      "line": null,
+      "style": "message",
+      "author": "agent"
     },
     {
       "name": "nudge notice stays in Session",
@@ -335,10 +379,12 @@
         "kind": "nudge"
       },
       "in_activity": false,
-      "line": null
+      "line": null,
+      "style": null,
+      "author": null
     },
     {
-      "name": "notice of AW with no kind",
+      "name": "notice of AW stays in Session (the stage line says it)",
       "type": "message.sent",
       "dev": "ubuntu-01",
       "by": "aw@ubuntu-01",
@@ -347,8 +393,65 @@
         "text": "Start implementing AW-7.",
         "to_session": "01a2038e-8100-7000-8000-000000000001"
       },
+      "in_activity": false,
+      "line": null,
+      "style": null,
+      "author": null
+    },
+    {
+      "name": "comment of a person",
+      "type": "comment.added",
+      "dev": "macbook-pro",
+      "by": "human@macbook-pro",
+      "data": {
+        "text": "See `money.ts`"
+      },
       "in_activity": true,
-      "line": null
+      "line": null,
+      "style": "message",
+      "author": "person"
+    },
+    {
+      "name": "note of AW stays in Session",
+      "type": "comment.added",
+      "dev": "macbook-pro",
+      "by": "aw@macbook-pro",
+      "data": {
+        "text": "Context compacted at 10:51 UTC."
+      },
+      "in_activity": false,
+      "line": null,
+      "style": null,
+      "author": null
+    },
+    {
+      "name": "result posted",
+      "type": "result.posted",
+      "dev": "ubuntu-01",
+      "by": "claude@ubuntu-01",
+      "data": {
+        "file": "result.md",
+        "artifacts": []
+      },
+      "in_activity": true,
+      "line": null,
+      "style": "line",
+      "author": null
+    },
+    {
+      "name": "message that a person sent from the app",
+      "type": "message.sent",
+      "dev": "macbook-pro",
+      "by": "human@macbook-pro",
+      "data": {
+        "id": "01a2038e-8100-7000-8000-0000000000c1",
+        "text": "Use cents.",
+        "to_session": "01a2038e-8100-7000-8000-000000000001"
+      },
+      "in_activity": true,
+      "line": null,
+      "style": "message",
+      "author": "person"
     }
   ],
   "clamp": [
@@ -369,6 +472,474 @@
       "text": "Got: 100/min.",
       "head": "Got: 100/min.",
       "cut": false
+    }
+  ],
+  "threads": [
+    {
+      "name": "question, answer, then a newer question replaces an open one",
+      "rows": [
+        {
+          "id": "e1",
+          "type": "message.agent",
+          "dev": "ubuntu-01",
+          "by": "claude@ubuntu-01",
+          "hlc": "2026-11-26T10:01:00.000Z#0000",
+          "data": {
+            "text": "I read the gateway.",
+            "session": "01a2038e-8100-7000-8000-000000000001",
+            "source": "tool"
+          }
+        },
+        {
+          "id": "e2",
+          "type": "gate.opened",
+          "dev": "ubuntu-01",
+          "by": "claude@ubuntu-01",
+          "hlc": "2026-11-26T10:02:00.000Z#0000",
+          "data": {
+            "gate": "01a2038e-8100-7000-8000-0000000000a1",
+            "kind": "question",
+            "version": 1,
+            "title": "Where do the counters live?",
+            "text": "Redis: one counter for all pods. In memory: one per pod.",
+            "options": ["Redis", "In memory"],
+            "request_id": null,
+            "file": null
+          }
+        },
+        {
+          "id": "e3",
+          "type": "gate.answered",
+          "dev": "macbook-pro",
+          "by": "human@macbook-pro",
+          "hlc": "2026-11-26T10:03:00.000Z#0000",
+          "data": {
+            "gate": "01a2038e-8100-7000-8000-0000000000a1",
+            "version": 1,
+            "answer": "Redis",
+            "comment": "Use the **session** Redis."
+          }
+        },
+        {
+          "id": "e4",
+          "type": "gate.resolved",
+          "dev": "ubuntu-01",
+          "by": "aw@ubuntu-01",
+          "hlc": "2026-11-26T10:04:00.000Z#0000",
+          "data": {
+            "gate": "01a2038e-8100-7000-8000-0000000000a1",
+            "version": 1,
+            "answer_event": "e3",
+            "answer": "Redis"
+          }
+        },
+        {
+          "id": "e5",
+          "type": "gate.opened",
+          "dev": "ubuntu-01",
+          "by": "claude@ubuntu-01",
+          "hlc": "2026-11-26T10:05:00.000Z#0000",
+          "data": {
+            "gate": "01a2038e-8100-7000-8000-0000000000a2",
+            "kind": "question",
+            "version": 1,
+            "title": "Limit per key or per IP?",
+            "text": "",
+            "options": ["Per key", "Per IP"],
+            "request_id": null,
+            "file": null
+          }
+        },
+        {
+          "id": "e6",
+          "type": "gate.resolved",
+          "dev": "ubuntu-01",
+          "by": "aw@ubuntu-01",
+          "hlc": "2026-11-26T10:06:00.000Z#0000",
+          "data": {
+            "gate": "01a2038e-8100-7000-8000-0000000000a2",
+            "version": 1,
+            "answer_event": null,
+            "answer": "Replaced by a newer question"
+          }
+        },
+        {
+          "id": "e7",
+          "type": "gate.opened",
+          "dev": "ubuntu-01",
+          "by": "claude@ubuntu-01",
+          "hlc": "2026-11-26T10:07:00.000Z#0000",
+          "data": {
+            "gate": "01a2038e-8100-7000-8000-0000000000a3",
+            "kind": "question",
+            "version": 1,
+            "title": "Burst of 20?",
+            "text": "",
+            "options": ["Yes", "No"],
+            "request_id": null,
+            "file": null
+          }
+        }
+      ],
+      "expected": [
+        {
+          "event": "e1",
+          "style": "message",
+          "author": "agent"
+        },
+        {
+          "event": "e2",
+          "style": "message",
+          "author": "agent",
+          "kind": "question",
+          "title": "Where do the counters live?",
+          "text": "Redis: one counter for all pods. In memory: one per pod.",
+          "options": [],
+          "note": null
+        },
+        {
+          "event": "e3",
+          "style": "message",
+          "author": "person",
+          "kind": "answer",
+          "text": "Redis\n\nUse the **session** Redis."
+        },
+        {
+          "event": "e5",
+          "style": "message",
+          "author": "agent",
+          "kind": "question",
+          "title": "Limit per key or per IP?",
+          "text": "",
+          "options": [],
+          "note": "Replaced by a newer question"
+        },
+        {
+          "event": "e7",
+          "style": "message",
+          "author": "agent",
+          "kind": "question",
+          "title": "Burst of 20?",
+          "text": "",
+          "options": ["Yes", "No"],
+          "note": null
+        }
+      ]
+    },
+    {
+      "name": "one proposal: a new version replaces the card, approval is a line",
+      "rows": [
+        {
+          "id": "e1",
+          "type": "proposal.proposed",
+          "dev": "ubuntu-01",
+          "by": "claude@ubuntu-01",
+          "hlc": "2026-11-26T10:01:00.000Z#0000",
+          "data": {
+            "version": 1,
+            "file": "proposal/v1.md"
+          }
+        },
+        {
+          "id": "e2",
+          "type": "gate.opened",
+          "dev": "ubuntu-01",
+          "by": "claude@ubuntu-01",
+          "hlc": "2026-11-26T10:02:00.000Z#0000",
+          "data": {
+            "gate": "01a2038e-8100-7000-8000-0000000000a4",
+            "kind": "approve_proposal",
+            "version": 1,
+            "title": "Rate limits",
+            "text": "# Rate limits",
+            "options": ["Approve"],
+            "request_id": null,
+            "file": "proposal/v1.md"
+          }
+        },
+        {
+          "id": "e3",
+          "type": "message.sent",
+          "dev": "macbook-pro",
+          "by": "human@macbook-pro",
+          "hlc": "2026-11-26T10:03:00.000Z#0000",
+          "data": {
+            "id": "01a2038e-8100-7000-8000-0000000000b1",
+            "text": "Also send Retry-After.",
+            "to_session": "01a2038e-8100-7000-8000-000000000001"
+          }
+        },
+        {
+          "id": "e4",
+          "type": "gate.resolved",
+          "dev": "ubuntu-01",
+          "by": "aw@ubuntu-01",
+          "hlc": "2026-11-26T10:04:00.000Z#0000",
+          "data": {
+            "gate": "01a2038e-8100-7000-8000-0000000000a4",
+            "version": 1,
+            "answer_event": null,
+            "answer": "Replaced by proposal v2"
+          }
+        },
+        {
+          "id": "e5",
+          "type": "proposal.proposed",
+          "dev": "ubuntu-01",
+          "by": "claude@ubuntu-01",
+          "hlc": "2026-11-26T10:05:00.000Z#0000",
+          "data": {
+            "version": 2,
+            "file": "proposal/v2.md"
+          }
+        },
+        {
+          "id": "e6",
+          "type": "gate.opened",
+          "dev": "ubuntu-01",
+          "by": "claude@ubuntu-01",
+          "hlc": "2026-11-26T10:06:00.000Z#0000",
+          "data": {
+            "gate": "01a2038e-8100-7000-8000-0000000000a5",
+            "kind": "approve_proposal",
+            "version": 1,
+            "title": "Rate limits v2",
+            "text": "# Rate limits v2",
+            "options": ["Approve"],
+            "request_id": null,
+            "file": "proposal/v2.md"
+          }
+        },
+        {
+          "id": "e7",
+          "type": "gate.answered",
+          "dev": "macbook-pro",
+          "by": "human@macbook-pro",
+          "hlc": "2026-11-26T10:07:00.000Z#0000",
+          "data": {
+            "gate": "01a2038e-8100-7000-8000-0000000000a5",
+            "version": 1,
+            "answer": "Approve",
+            "comment": null
+          }
+        },
+        {
+          "id": "e8",
+          "type": "gate.resolved",
+          "dev": "ubuntu-01",
+          "by": "aw@ubuntu-01",
+          "hlc": "2026-11-26T10:08:00.000Z#0000",
+          "data": {
+            "gate": "01a2038e-8100-7000-8000-0000000000a5",
+            "version": 1,
+            "answer_event": "e7",
+            "answer": "Approve"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "event": "e1",
+          "style": "line",
+          "line": "Proposal v1 · replaced by v2"
+        },
+        {
+          "event": "e3",
+          "style": "message",
+          "author": "person"
+        },
+        {
+          "event": "e5",
+          "style": "proposal",
+          "version": 2,
+          "file": "proposal/v2.md",
+          "gate": "01a2038e-8100-7000-8000-0000000000a5",
+          "state": "approved"
+        },
+        {
+          "event": "e7",
+          "style": "line",
+          "line": "Proposal v2 approved by human@macbook-pro"
+        }
+      ]
+    },
+    {
+      "name": "an open proposal waits",
+      "rows": [
+        {
+          "id": "e1",
+          "type": "proposal.proposed",
+          "dev": "ubuntu-01",
+          "by": "claude@ubuntu-01",
+          "hlc": "2026-11-26T10:01:00.000Z#0000",
+          "data": {
+            "version": 3,
+            "file": "proposal/v3.md"
+          }
+        },
+        {
+          "id": "e2",
+          "type": "gate.opened",
+          "dev": "ubuntu-01",
+          "by": "claude@ubuntu-01",
+          "hlc": "2026-11-26T10:02:00.000Z#0000",
+          "data": {
+            "gate": "01a2038e-8100-7000-8000-0000000000a4",
+            "kind": "approve_proposal",
+            "version": 1,
+            "title": "Rate limits",
+            "text": "# Rate limits",
+            "options": ["Approve"],
+            "request_id": null,
+            "file": "proposal/v3.md"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "event": "e1",
+          "style": "proposal",
+          "version": 3,
+          "file": "proposal/v3.md",
+          "gate": "01a2038e-8100-7000-8000-0000000000a4",
+          "state": "open"
+        }
+      ]
+    },
+    {
+      "name": "another gate kind: no row when closed; an answer is a line, or a person message when it has a comment",
+      "rows": [
+        {
+          "id": "e1",
+          "type": "gate.opened",
+          "dev": "ubuntu-01",
+          "by": "claude@ubuntu-01",
+          "hlc": "2026-11-26T10:01:00.000Z#0000",
+          "data": {
+            "gate": "01a2038e-8100-7000-8000-0000000000a1",
+            "kind": "approve_result",
+            "version": 1,
+            "title": "Result",
+            "text": "Tests pass",
+            "options": ["Approve", "Request changes"],
+            "request_id": null,
+            "file": "result.md"
+          }
+        },
+        {
+          "id": "e2",
+          "type": "gate.answered",
+          "dev": "macbook-pro",
+          "by": "human@macbook-pro",
+          "hlc": "2026-11-26T10:02:00.000Z#0000",
+          "data": {
+            "gate": "01a2038e-8100-7000-8000-0000000000a1",
+            "version": 1,
+            "answer": "Request changes",
+            "comment": "Add the e2e test."
+          }
+        },
+        {
+          "id": "e3",
+          "type": "gate.resolved",
+          "dev": "ubuntu-01",
+          "by": "aw@ubuntu-01",
+          "hlc": "2026-11-26T10:03:00.000Z#0000",
+          "data": {
+            "gate": "01a2038e-8100-7000-8000-0000000000a1",
+            "version": 1,
+            "answer_event": "e2",
+            "answer": "Request changes"
+          }
+        },
+        {
+          "id": "e4",
+          "type": "gate.opened",
+          "dev": "ubuntu-01",
+          "by": "claude@ubuntu-01",
+          "hlc": "2026-11-26T10:04:00.000Z#0000",
+          "data": {
+            "gate": "01a2038e-8100-7000-8000-0000000000a2",
+            "kind": "approve_result",
+            "version": 1,
+            "title": "Result 2",
+            "text": "Tests pass",
+            "options": ["Approve", "Request changes"],
+            "request_id": null,
+            "file": "result.md"
+          }
+        },
+        {
+          "id": "e5",
+          "type": "gate.answered",
+          "dev": "macbook-pro",
+          "by": "human@macbook-pro",
+          "hlc": "2026-11-26T10:05:00.000Z#0000",
+          "data": {
+            "gate": "01a2038e-8100-7000-8000-0000000000a2",
+            "version": 1,
+            "answer": "Approve",
+            "comment": null
+          }
+        },
+        {
+          "id": "e6",
+          "type": "gate.resolved",
+          "dev": "ubuntu-01",
+          "by": "aw@ubuntu-01",
+          "hlc": "2026-11-26T10:06:00.000Z#0000",
+          "data": {
+            "gate": "01a2038e-8100-7000-8000-0000000000a2",
+            "version": 1,
+            "answer_event": "e5",
+            "answer": "Approve"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "event": "e2",
+          "style": "message",
+          "author": "person",
+          "kind": "answer",
+          "label": "Approve result: Request changes",
+          "text": "Add the e2e test."
+        },
+        {
+          "event": "e5",
+          "style": "line",
+          "line": "human@macbook-pro answered Approve result: Approve"
+        }
+      ]
+    },
+    {
+      "name": "an open gate of another kind is a card",
+      "rows": [
+        {
+          "id": "e4",
+          "type": "gate.opened",
+          "dev": "ubuntu-01",
+          "by": "claude@ubuntu-01",
+          "hlc": "2026-11-26T10:04:00.000Z#0000",
+          "data": {
+            "gate": "01a2038e-8100-7000-8000-0000000000a2",
+            "kind": "approve_result",
+            "version": 1,
+            "title": "Result 2",
+            "text": "Tests pass",
+            "options": ["Approve", "Request changes"],
+            "request_id": null,
+            "file": "result.md"
+          }
+        }
+      ],
+      "expected": [
+        {
+          "event": "e4",
+          "style": "card",
+          "gate": "01a2038e-8100-7000-8000-0000000000a2"
+        }
+      ]
     }
   ]
 }

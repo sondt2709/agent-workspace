@@ -45,6 +45,24 @@ class NavigationTest {
     }
 
     @Test
+    fun anInboxItemOpensItsTaskAndBackReturnsToTheInbox() {
+        val stack = mutableListOf<Route>()
+        val nav = Navigator(stack)
+        nav.select(Tab.INBOX)
+        nav.open(Route.InboxItem("a"))
+        assertEquals(listOf<Route>(Route.Inbox, Route.InboxItem("a")), stack)
+        assertEquals("a", nav.openInboxItem)
+        // One item at a time; "Open task" replaces the item with its task page.
+        nav.open(Route.InboxItem("b"))
+        assertEquals(listOf<Route>(Route.Inbox, Route.InboxItem("b")), stack)
+        nav.open(Route.Task("b"))
+        assertEquals(listOf<Route>(Route.Inbox, Route.Task("b")), stack)
+        assertNull(nav.openInboxItem)
+        assertTrue(nav.back())
+        assertEquals(listOf<Route>(Route.Inbox), stack)
+    }
+
+    @Test
     fun theStackOfTabsTasksAndPushes() {
         val stack = mutableListOf<Route>()
         val nav = Navigator(stack)

@@ -80,12 +80,14 @@ describe("SettingsPage", () => {
     const call = installBridge({
       appSettings: () => ({
         appearance: "system",
+        proposal_text_px: 16,
         login: { supported: true, open: false, status: "requires-approval" },
         notifications: false,
         notification_error: null,
       }),
       setOpenAtLogin: () => ({
         appearance: "system",
+        proposal_text_px: 16,
         login: { supported: true, open: true, status: "enabled" },
         notifications: false,
         notification_error: null,
@@ -104,6 +106,7 @@ describe("SettingsPage", () => {
     const call = installBridge({
       appSettings: () => ({
         appearance,
+        proposal_text_px: 16,
         login: { supported: true, open: false, status: null },
         notifications: true,
         notification_error: null,
@@ -112,6 +115,7 @@ describe("SettingsPage", () => {
         appearance = args.appearance;
         return {
           appearance,
+          proposal_text_px: 16,
           login: { supported: true, open: false, status: null },
           notifications: true,
           notification_error: null,
@@ -168,11 +172,18 @@ describe("SettingsPage", () => {
     const login = { supported: true, open: false, status: null };
     const appearance = "system" as const;
     expect(
-      notificationText({ appearance, login, notifications: true, notification_error: null }),
+      notificationText({
+        appearance,
+        proposal_text_px: 16,
+        login,
+        notifications: true,
+        notification_error: null,
+      }),
     ).toMatch(/show as notifications/);
     expect(
       notificationText({
         appearance,
+        proposal_text_px: 16,
         login,
         notifications: true,
         notification_error: "UNErrorDomain error 1",
@@ -181,7 +192,13 @@ describe("SettingsPage", () => {
       "macOS did not show the last notification (UNErrorDomain error 1). Turn on the notifications of Agent Workspace in System Settings > Notifications. An unsigned build cannot show them. The Inbox and the menu bar show the gates.",
     );
     expect(
-      notificationText({ appearance, login, notifications: false, notification_error: null }),
+      notificationText({
+        appearance,
+        proposal_text_px: 16,
+        login,
+        notifications: false,
+        notification_error: null,
+      }),
     ).toMatch(/cannot show notifications/);
   });
 
@@ -189,6 +206,7 @@ describe("SettingsPage", () => {
     expect(
       loginText({
         appearance: "system",
+        proposal_text_px: 16,
         login: { supported: false, open: false, status: null },
         notifications: true,
         notification_error: null,
@@ -422,6 +440,7 @@ describe("Copy and save of the recovery phrase (keys-backup)", () => {
       identity: () => ({ user: "u1", has_master_key: false }),
       appSettings: () => ({
         appearance: "system",
+        proposal_text_px: 16,
         login: { supported: true, open: false, status: null },
         notifications: true,
         notification_error: null,

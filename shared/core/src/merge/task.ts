@@ -58,7 +58,7 @@ const STATE_EVENTS = new Set([
   "task.released",
   "gate.opened",
   "gate.resolved",
-  "approach.proposed",
+  "proposal.proposed",
   "result.posted",
   "handoff.written",
   "session.started",
@@ -111,7 +111,7 @@ export class TaskFold {
   assignee: string | null = null;
   claim: ClaimView | null = null;
   releasedEpoch: number | null = null;
-  approach: { latest: number; confirmed: number | null } = { latest: 0, confirmed: null };
+  proposal: { latest: number; approved: number | null } = { latest: 0, approved: null };
   ready: { passed_on: string | null; missing: string[] } | null = null;
   testServer: string | null = null;
   credentials: string[] = [];
@@ -247,10 +247,10 @@ export class TaskFold {
       case "task.released":
         this.releasedEpoch = e.data.epoch;
         return ok;
-      case "approach.proposed":
-        this.approach = {
-          latest: Math.max(this.approach.latest, e.data.version),
-          confirmed: this.approach.confirmed,
+      case "proposal.proposed":
+        this.proposal = {
+          latest: Math.max(this.proposal.latest, e.data.version),
+          approved: this.proposal.approved,
         };
         return ok;
       case "result.posted":
@@ -461,16 +461,16 @@ export class TaskFold {
     if (gate.state !== "open") return { applied: false, reason: "already_resolved" };
     if (data.version !== gate.version) return { applied: false, reason: "stale_version" };
     this.#resolve(gate, data.answer, data.answer_event, e.dev);
-    // The answer of the "Confirm" option confirms the approach (spec workspace-merge "Gate
-    // answers"): the Kotlin port uses the same rule.
-    if (gate.kind === "confirm_approach" && /^confirm/i.test(data.answer)) {
+    // The answer "Approve" (or "Confirm" of a gate from before openspec proposal-and-discussion)
+    // approves the proposal (spec workspace-merge "Gate answers"): the Kotlin port uses the same rule.
+    if (gate.kind === "approve_proposal" && /^(approve|confirm)/i.test(data.answer)) {
       // A version number above the safe integers counts as no version (the Kotlin port has the
       // same rule: a Long cannot hold each number of the file name).
-      const match = /^approach\/v([1-9][0-9]*)\.md$/.exec(gate.file ?? "");
+      const match = /^(?:proposal|approach)\/v([1-9][0-9]*)\.md$/.exec(gate.file ?? "");
       const version = match ? Number(match[1]) : Number.NaN;
-      this.approach = {
-        latest: this.approach.latest,
-        confirmed: Number.isSafeInteger(version) ? version : this.approach.latest,
+      this.proposal = {
+        latest: this.proposal.latest,
+        approved: Number.isSafeInteger(version) ? version : this.proposal.latest,
       };
     }
     return { applied: true, reason: null };
@@ -539,7 +539,7 @@ export class TaskFold {
       claim: this.claim ? { ...this.claim } : null,
       moving_to: this.movingTo,
       released_epoch: this.releasedEpoch,
-      approach: { ...this.approach },
+      proposal: { ...this.proposal },
       ready: this.ready
         ? { passed_on: this.ready.passed_on, missing: [...this.ready.missing] }
         : null,

@@ -1,6 +1,6 @@
 // Test plan 1: each merge case gives its expected view, for each read order of the files. The
 // expected files are a contract for the Kotlin port (android-shared).
-import { eventV1, taskV1 } from "@aw/schema";
+import { eventV1, taskV1, upgradeEvent } from "@aw/schema";
 import {
   expectedPath,
   FIXTURE_TASK_ID,
@@ -91,7 +91,8 @@ describe("merge cases", () => {
           if (line === "") return;
           let ok: boolean;
           try {
-            ok = eventV1.safeParse(JSON.parse(line)).success;
+            // A line of a case from before the rename is valid after the map of legacy.ts.
+            ok = eventV1.safeParse(upgradeEvent(JSON.parse(line))).success;
           } catch {
             ok = false;
           }
@@ -126,9 +127,9 @@ describe("merge case rules", () => {
       ["pixel-9", "used"],
       ["macbook-pro", "comment"],
     ]);
-    const approach = task.gates.find((g) => g.kind === "confirm_approach")!;
-    expect(approach).toMatchObject({ state: "open", version: 2 });
-    expect(task.needs_you).toEqual([approach.gate]);
+    const proposal = task.gates.find((g) => g.kind === "approve_proposal")!;
+    expect(proposal).toMatchObject({ state: "open", version: 2 });
+    expect(task.needs_you).toEqual([proposal.gate]);
     expect(task.comments.map((c) => c.source)).toEqual([
       "late_answer",
       "late_answer",

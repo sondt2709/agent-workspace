@@ -2,6 +2,7 @@
 // Main parses each payload with `callRequest` before it calls awd (docs/engineering-rules.md 5.2,
 // 5.18). awd checks the bodies again with its own schemas, so these schemas check the shape and
 // the size, not each awd rule.
+import { PROPOSAL_TEXT } from "@aw/client/gates";
 import { z } from "zod";
 import type { CallMethod } from "./channels.ts";
 import { setupCalls } from "./setup-contract.ts";
@@ -261,6 +262,18 @@ export const callRequest = z.discriminatedUnion("method", [
   call("appSettings", none),
   call("setOpenAtLogin", z.object({ open: z.boolean() }).strict()),
   call("setAppearance", z.object({ appearance: z.enum(["system", "light", "dark"]) }).strict()),
+  call(
+    "setProposalTextSize",
+    z
+      .object({
+        px: z
+          .int()
+          .min(PROPOSAL_TEXT.min)
+          .max(PROPOSAL_TEXT.max)
+          .refine((px) => (px - PROPOSAL_TEXT.min) % PROPOSAL_TEXT.step === 0, "a size step"),
+      })
+      .strict(),
+  ),
   // The start folder only: main returns the folder that the person picks (openspec create-flows).
   call(
     "chooseFolder",

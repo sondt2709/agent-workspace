@@ -19,7 +19,7 @@ The merge SHALL read each log file of the workspace (`tasks/log/<device>.jsonl`)
 - **THEN** the task line replaces the workspace line, the workspace log folds again, the last merged HLC drops the HLC of the workspace line, and the view equals a full merge in each read order
 
 ### Requirement: Owner device and claims
-The owner device of a task SHALL be the device of the accepted `task.claimed` with the highest epoch, and before a claim, the device of `task.created`. A claim SHALL be accepted only when its `data.device` is its `dev`, its `dev` is the device of the current assignee (`agent@device`, the newest accepted assignment before the claim in merge order), and its epoch is above each earlier accepted epoch in merge order. A claim of a task with no assignee SHALL be ignored. A claim from another device than the assignee's SHALL be ignored with the reason `not_assignee_device`, and SHALL not change the owner. The merge SHALL never move a task by itself: only a human `task.assigned` (or, with the project switch on, the owner of the parent) changes the device that can claim. `TaskView.moving_to` SHALL be the device of the assignee when an accepted claim exists and its device is another device, else null. A state event (stage, pause, ready, progress, done, learned, released, gate opened or resolved, approach, result, handoff, session and thread message events) SHALL count only when its device is the owner at that point in the order.
+The owner device of a task SHALL be the device of the accepted `task.claimed` with the highest epoch, and before a claim, the device of `task.created`. A claim SHALL be accepted only when its `data.device` is its `dev`, its `dev` is the device of the current assignee (`agent@device`, the newest accepted assignment before the claim in merge order), and its epoch is above each earlier accepted epoch in merge order. A claim of a task with no assignee SHALL be ignored. A claim from another device than the assignee's SHALL be ignored with the reason `not_assignee_device`, and SHALL not change the owner. The merge SHALL never move a task by itself: only a human `task.assigned` (or, with the project switch on, the owner of the parent) changes the device that can claim. `TaskView.moving_to` SHALL be the device of the assignee when an accepted claim exists and its device is another device, else null. A state event (stage, pause, ready, progress, done, learned, released, gate opened or resolved, proposal, result, handoff, session and thread message events) SHALL count only when its device is the owner at that point in the order.
 
 #### Scenario: Move to another device
 - **WHEN** a human assigns a task of `ubuntu-01` (claim epoch 1) to `claude@macbook-pro`, `macbook-pro` claims it with epoch 2, and `ubuntu-01` then writes a stage change and a comment
@@ -46,7 +46,7 @@ The owner device of a task SHALL be the device of the accepted `task.claimed` wi
 - **THEN** the owner stays `ubuntu-01`, the claim is ignored with the reason `not_assignee_device`, the comment is in the task, and the `message.agent` is ignored with the reason `not_owner`
 
 ### Requirement: Gate answers
-Any device SHALL be able to answer a gate. Only the owner SHALL open or resolve a gate, for each gate kind. The owner's `gate.resolved` SHALL decide the used answer. Each other answer to that gate, an answer to an older version and an answer after the resolution SHALL become a comment. A resolved `confirm_approach` gate SHALL confirm an approach version only when the `gate.resolved` answer starts with `confirm`, in any letter case (the answer text of the "Confirm" option); it SHALL confirm the version of the gate file `approach/v<n>.md`, or the latest proposed version when the gate has no such file. Both ports SHALL use this exact rule.
+Any device SHALL be able to answer a gate. Only the owner SHALL open or resolve a gate, for each gate kind. The owner's `gate.resolved` SHALL decide the used answer. Each other answer to that gate, an answer to an older version and an answer after the resolution SHALL become a comment. A resolved `approve_proposal` gate (or `confirm_approach` from before the rename) SHALL approve a proposal version only when the `gate.resolved` answer starts with `approve` or `confirm`, in any letter case (the answer text of the "Approve" option, or "Confirm" of an old gate); it SHALL approve the version of the gate file `proposal/v<n>.md` or `approach/v<n>.md`, or the latest proposed version when the gate has no such file. Both ports SHALL use this exact rule.
 
 #### Scenario: Gate answered twice
 - **WHEN** `macbook-pro` and `pixel-9` answer the same gate, and the session device resolves it with the answer of `pixel-9`
@@ -55,6 +55,10 @@ Any device SHALL be able to answer a gate. Only the owner SHALL open or resolve 
 #### Scenario: Answer to an old version
 - **WHEN** a device answers version 1 of a gate after version 2 opened
 - **THEN** the answer is a comment and the gate stays open
+
+#### Scenario: Approve and the old Confirm
+- **WHEN** the owner resolves an `approve_proposal` gate of `proposal/v6.md` with "Approve", and a `confirm_approach` gate of `approach/v2.md` of another task with "Confirm"
+- **THEN** the first task has the approved version 6 and the second task the approved version 2
 
 #### Scenario: Gate of another device
 - **WHEN** a device that is not the owner opens a gate, and a human answers it
@@ -189,10 +193,10 @@ The task fold SHALL keep `session_options` of an applied `task.created` or `task
 - **WHEN** a person assigns the task again with `session_options {permission_mode: "accept_edits"}`
 - **THEN** the view has the new object
 
-
 ### Requirement: Regular files only
 The merge SHALL read only regular files as sources. A folder or a symbolic link with the name of a log or a document SHALL be no source, and the merge SHALL go on with the other sources (final check fc1-4).
 
 #### Scenario: A folder with the name of a log
 - **WHEN** another device syncs an empty folder `tasks/log/pixel-9.jsonl/`
 - **THEN** each merge update succeeds and the view keeps the events of the other logs
+

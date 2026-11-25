@@ -29,8 +29,9 @@ describe("write guard", () => {
     [`tasks/${TASK}/log/ubuntu-01.jsonl`, macbook, false],
     [`tasks/${TASK}/task.yaml`, ubuntu, true],
     [`tasks/${TASK}/task.yaml`, macbook, false],
-    [`tasks/${TASK}/approach/v2.md`, ubuntu, true],
-    [`tasks/${TASK}/approach/v2.md`, pixel, false],
+    [`tasks/${TASK}/proposal/v2.md`, ubuntu, true],
+    [`tasks/${TASK}/proposal/v2.md`, pixel, false],
+    [`tasks/${TASK}/approach/v2.md`, ubuntu, false],
     [`tasks/${TASK}/artifacts/ubuntu-01/report/index.html`, ubuntu, true],
     [`tasks/${TASK}/artifacts/ubuntu-01/report.html`, macbook, false],
     [`tasks/${TASK}/terminal/ubuntu-01.txt`, ubuntu, true],
@@ -108,8 +109,8 @@ describe("write guard", () => {
     );
   });
 
-  it("refuses a second write of an approach version", () => {
-    expect(allowed(`tasks/${TASK}/approach/v1.md`, ubuntu, true)).toBe(false);
+  it("refuses a second write of a proposal version", () => {
+    expect(allowed(`tasks/${TASK}/proposal/v1.md`, ubuntu, true)).toBe(false);
   });
 
   it("refuses a task snapshot when the owner is not known", () => {

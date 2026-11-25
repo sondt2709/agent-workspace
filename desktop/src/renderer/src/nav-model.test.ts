@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
+import inboxJson from "../../../../contracts/fixtures/inbox/items.json?raw";
 import type { Issue, SyncPeerStatus, SyncStatusReply } from "../../shared/channels.ts";
 import {
   activeCount,
   commandOptions,
   crumbs,
   filterCommands,
+  inboxGroups,
   inboxItems,
   isShortcut,
   needsYouCount,
@@ -96,6 +98,86 @@ describe("counts", () => {
   it("counts the tasks of a project that need you and that work", () => {
     expect(projectCounts(tasks, "billing-api")).toEqual({ you: 2, working: 1 });
     expect(projectCounts(tasks, "web-app")).toEqual({ you: 0, working: 0 });
+  });
+});
+
+interface InboxFixture {
+  cases: {
+    name: string;
+    tasks: {
+      id: string;
+      key: string;
+      title: string;
+      project: string;
+      stage: string;
+      archived: boolean;
+      needs_you_lane: boolean;
+      needs_you_reasons: { reason: string; kind?: string }[];
+      paused: boolean;
+      queued: boolean;
+    }[];
+    rows: { reason: string; title: string; key: string }[];
+    groups: { id: string; label: string; keys: string[] }[];
+  }[];
+}
+
+describe("the shared fixture contracts/fixtures/inbox/items.json", () => {
+  const fixture = JSON.parse(inboxJson) as InboxFixture;
+
+  it("gives the Needs you rows and the groups of each case", () => {
+    expect(fixture.cases.length).toBeGreaterThanOrEqual(2);
+    for (const c of fixture.cases) {
+      // The fixture task as the desktop task view: a pause and a queue entry from their flags.
+      const all = c.tasks.map((t) =>
+        makeTask({
+          id: t.id,
+          key: t.key,
+          title: t.title,
+          project: t.project,
+          stage: t.stage,
+          archived: t.archived,
+          needs_you_lane: t.needs_you_lane,
+          needs_you_reasons: t.needs_you_reasons,
+          ...(t.paused
+            ? {
+                paused: {
+                  cause: "device_offline",
+                  device: "ubuntu-01",
+                  needs_human: false,
+                  next_step: "",
+                },
+              }
+            : {}),
+        }),
+      );
+      const queued = new Set(c.tasks.filter((t) => t.queued).map((t) => t.id));
+      // The Inbox lists the active tasks (Inbox.tsx).
+      const active = all.filter((t) => !t.archived);
+      const items = inboxItems({ tasks: active });
+      expect({
+        name: c.name,
+        rows: items.map((i) => ({ reason: i.reason, title: i.title, key: i.key })),
+        groups: inboxGroups(active, items, queued).map((g) => ({
+          id: g.id,
+          label: g.label,
+          keys: g.tasks.map((t) => t.key),
+        })),
+      }).toEqual({ name: c.name, rows: c.rows, groups: c.groups });
+    }
+  });
+});
+
+describe("inboxGroups", () => {
+  it("leaves a task with a row out of the groups, also a task with an answer notice", () => {
+    const notices = new Set(["t8"]);
+    const items = inboxItems({ tasks, notices });
+    const other = makeTask({ id: "t12", key: "AW-12", stage: "discuss" });
+    const groups = inboxGroups([...tasks, other], items, new Set());
+    expect(items.map((i) => i.key)).toEqual(["AW-1", "AW-7", "AW-8"]);
+    expect(groups.map((g) => [g.label, g.tasks.map((t) => t.key)])).toEqual([
+      ["Working now", ["AW-12"]],
+      ["Paused", ["AW-9"]],
+    ]);
   });
 });
 

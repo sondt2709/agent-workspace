@@ -224,10 +224,6 @@
     "slots": [],
     "tasks": [
       {
-        "approach": {
-          "confirmed": 1,
-          "latest": 1
-        },
         "archived": false,
         "artifacts": [],
         "assignee": "claude@ubuntu-01",
@@ -291,11 +287,11 @@
             "version": 1
           },
           {
-            "answer": "confirm",
+            "answer": "Approve",
             "answer_event": "01a20399-7b80-73e6-b93e-974147ddfe38",
             "answers": [
               {
-                "answer": "confirm",
+                "answer": "Approve",
                 "by": "human@macbook-pro",
                 "comment": null,
                 "dev": "macbook-pro",
@@ -305,18 +301,18 @@
                 "version": 1
               }
             ],
-            "file": "approach/v1.md",
+            "file": "proposal/v1.md",
             "gate": "01a20397-a6c0-7e6c-bb4d-77006b2cc4c0",
-            "kind": "confirm_approach",
+            "kind": "approve_proposal",
             "opened": {
               "dev": "ubuntu-01",
               "event": "01a20397-a6c0-77fa-97ab-af0d3aeaca24",
               "hlc": "2026-11-22T14:10:00.000Z#0001"
             },
-            "options": ["Confirm", "Request changes"],
+            "options": ["Approve"],
             "resolved_by": "ubuntu-01",
             "state": "resolved",
-            "title": "Confirm approach v1",
+            "title": "Proposal v1",
             "version": 1
           }
         ],
@@ -342,6 +338,10 @@
         "priority": null,
         "progress": "Run the tests",
         "project": "billing-api",
+        "proposal": {
+          "approved": 1,
+          "latest": 1
+        },
         "ready": {
           "missing": [],
           "passed_on": "ubuntu-01"
@@ -374,10 +374,6 @@
         "title": "Fix the flaky invoice test"
       },
       {
-        "approach": {
-          "confirmed": 2,
-          "latest": 2
-        },
         "archived": false,
         "artifacts": [],
         "assignee": "claude@ubuntu-01",
@@ -407,7 +403,7 @@
             "answers": [],
             "file": "approach/v2.md",
             "gate": "01a203c7-9060-705d-adc9-5f4d5cb41ffc",
-            "kind": "confirm_approach",
+            "kind": "approve_proposal",
             "opened": {
               "dev": "ubuntu-01",
               "event": "01a203c7-9060-76d0-bae5-2fb0bd269ddc",
@@ -442,6 +438,10 @@
         "priority": "high",
         "progress": null,
         "project": "billing-api",
+        "proposal": {
+          "approved": 2,
+          "latest": 2
+        },
         "ready": null,
         "rekey_by": null,
         "released_epoch": null,
@@ -468,10 +468,6 @@
         "title": "New title"
       },
       {
-        "approach": {
-          "confirmed": 3,
-          "latest": 3
-        },
         "archived": false,
         "artifacts": [],
         "assignee": "claude@ubuntu-01",
@@ -501,7 +497,7 @@
             "answers": [],
             "file": "approach/v99999999999999999999.md",
             "gate": "01a203d0-6a00-7328-9389-3ee233eafe96",
-            "kind": "confirm_approach",
+            "kind": "approve_proposal",
             "opened": {
               "dev": "ubuntu-01",
               "event": "01a203d0-6a00-724d-8b13-6b9506fdc8ae",
@@ -535,6 +531,10 @@
         "priority": null,
         "progress": null,
         "project": "billing-api",
+        "proposal": {
+          "approved": 3,
+          "latest": 3
+        },
         "ready": null,
         "rekey_by": null,
         "released_epoch": null,
@@ -547,10 +547,6 @@
         "title": "Task AW-21"
       },
       {
-        "approach": {
-          "confirmed": null,
-          "latest": 0
-        },
         "archived": false,
         "artifacts": [],
         "assignee": "claude@ubuntu-01",
@@ -589,6 +585,10 @@
         "priority": null,
         "progress": null,
         "project": "billing-api",
+        "proposal": {
+          "approved": null,
+          "latest": 0
+        },
         "ready": null,
         "rekey_by": null,
         "released_epoch": null,
@@ -601,10 +601,6 @@
         "title": "Task AW-22"
       },
       {
-        "approach": {
-          "confirmed": null,
-          "latest": 0
-        },
         "archived": false,
         "artifacts": [],
         "assignee": null,
@@ -647,6 +643,10 @@
         "priority": null,
         "progress": null,
         "project": "billing-api",
+        "proposal": {
+          "approved": null,
+          "latest": 0
+        },
         "ready": null,
         "rekey_by": null,
         "released_epoch": null,

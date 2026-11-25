@@ -1,18 +1,29 @@
-// The thread of a task: the raw text of each human and agent message, the gates, the approach
+// The thread of a task: the raw text of each human and agent message, the gates, the proposal
 // versions and the system lines, in merge order (docs/workflow.md 2 and 4.3). Never a summary.
 // The Session tab shows each event; the Activity tab shows the rows of the Activity rule
-// (activity-model.ts, openspec task-view-focus) in a compact form.
+// (activity-model.ts, openspec task-view-focus and proposal-and-discussion) in 3 row styles: a
+// message, the proposal card and a task line, with the gate card of another gate kind in its place.
 import { agentMessage } from "@aw/client/gates";
 import { Alert, Box, Button, Divider, Stack, TextField, Typography } from "@mui/material";
-import { useState } from "react";
+import { useState, type Ref } from "react";
 import type { EventRow, Task, ThreadPage } from "../../../shared/channels.ts";
-import { activityLine, clampText, inActivity } from "../activity-model.ts";
+import { activityRows, clampText, QUESTION_KINDS, type ActivityRow } from "../activity-model.ts";
 import { errorText } from "../bridge.ts";
 import { useNow } from "../clock.ts";
-import { ago, details, gateLabel, hlcMs, stageLabel } from "../model.ts";
-import { useSendMessage, useThread } from "../queries.ts";
+import {
+  ago,
+  answerNotice,
+  details,
+  gateLabel,
+  hlcMs,
+  refusedNotice,
+  stageLabel,
+} from "../model.ts";
+import { useAnswerGate, useGateNotice, useSendMessage, useThread } from "../queries.ts";
 import { MarkdownText, RawText } from "./common.tsx";
+import { GateCard, QuestionMessage } from "./GateCard.tsx";
 import { LearnedLine, learnedText } from "./LearnedLine.tsx";
+import { ProposalCard } from "./ProposalCard.tsx";
 
 const str = (value: unknown): string => (typeof value === "string" ? value : "");
 
@@ -58,8 +69,8 @@ export function systemLine(row: EventRow): string | null {
       return `${row.event.by ?? row.dev} answered: ${str(d.answer)}${str(d.comment) ? ` · ${str(d.comment)}` : ""}`;
     case "gate.resolved":
       return `${row.dev} resolved the gate: ${str(d.answer)}`;
-    case "approach.proposed":
-      return `Approach v${String(d.version)} (${str(d.file)})`;
+    case "proposal.proposed":
+      return `Proposal v${String(d.version)} (${str(d.file)})`;
     case "artifact.added":
       return `Artifact: ${str(d.path)}`;
     case "result.posted":
@@ -121,25 +132,23 @@ function MessageRow(props: {
   );
 }
 
-function Row({
+/** One event of the Session tab: the raw text of each message, a line for each other event. */
+function SessionRow({
   ws,
   row,
   delivered,
   now,
-  mode,
 }: {
   ws: string;
   row: EventRow;
   delivered: Set<string>;
   now: number;
-  mode: Mode;
 }) {
   const d = row.event.data;
   const when = ago(hlcMs(row.hlc), now);
   const by = row.event.by ?? row.dev;
   const notApplied = !row.applied && row.reason ? ` · not applied: ${row.reason}` : "";
-  // Activity shows the first message once, as the description above the rows.
-  if (row.type === "task.created" && mode === "session") {
+  if (row.type === "task.created") {
     return (
       <MessageRow
         who={by}
@@ -149,32 +158,6 @@ function Row({
     );
   }
   if (row.type === "message.human") {
-    if (mode === "activity") {
-      // A message of another agent of the session reads as that agent, as Markdown; a person
-      // message as Markdown too (openspec task-review-layout, design decision 5).
-      const other = agentMessage(str(d.text));
-      if (other) {
-        return (
-          <MessageRow
-            who={other.kind === "subagent_report" ? "Subagent report" : "Agent message"}
-            tone="agent"
-            meta={`arrived in the terminal · ${when}`}
-            text={other.body}
-            clamp
-            markdown
-          />
-        );
-      }
-      return (
-        <MessageRow
-          who={by}
-          meta={`typed in the terminal · ${when}`}
-          text={str(d.text)}
-          clamp
-          markdown
-        />
-      );
-    }
     const delivery = str(d.delivery_id);
     return (
       <MessageRow
@@ -187,16 +170,7 @@ function Row({
   if (row.type === "message.agent") {
     // The source (openspec agent-pushes-updates): a turn text shows only in Session.
     const source = d.source === "turn" ? "turn text · " : d.source === "tool" ? "message · " : "";
-    return (
-      <MessageRow
-        who={by}
-        tone="agent"
-        meta={mode === "session" ? `${source}${when}` : when}
-        text={str(d.text)}
-        clamp={mode === "activity"}
-        markdown={mode === "activity"}
-      />
-    );
+    return <MessageRow who={by} tone="agent" meta={`${source}${when}`} text={str(d.text)} />;
   }
   if (row.type === "message.sent") {
     const done = delivered.has(str(d.id));
@@ -205,69 +179,192 @@ function Row({
         who={by}
         meta={`${d.kind === "nudge" ? "nudge · " : ""}${done ? "sent" : "not delivered yet"} · ${when}`}
         text={str(d.text)}
-        clamp={mode === "activity"}
-        markdown={mode === "activity"}
       />
     );
   }
   if (row.type === "comment.added") {
-    return (
-      <MessageRow
-        who={by}
-        meta={`comment · ${when}`}
-        text={str(d.text)}
-        clamp={mode === "activity"}
-        markdown={mode === "activity"}
-      />
-    );
+    return <MessageRow who={by} meta={`comment · ${when}`} text={str(d.text)} />;
   }
-  if (row.type === "gate.answered" && mode === "activity" && str(d.comment)) {
-    // The comment of an answer is person text: Markdown, as a message (task-review-layout).
+  if (row.type === "task.learned") {
+    return <LearnedLine ws={ws} row={row} meta={`${when}${notApplied}`} />;
+  }
+  return <TaskLine text={systemLine(row) ?? row.type} when={when} notApplied={notApplied} />;
+}
+
+/** A task line: one muted line of 13 px (openspec proposal-and-discussion, app-style). */
+function TaskLine(props: { text: string; when: string; notApplied?: string }) {
+  return (
+    <Typography variant="body2" color="text.secondary" sx={{ py: 0.5, fontSize: 13 }}>
+      {props.text} · {props.when}
+      {props.notApplied}
+    </Typography>
+  );
+}
+
+/** A message row of Activity: the text of the agent or of a person, as Markdown. */
+function ActivityMessage({
+  row,
+  delivered,
+  now,
+}: {
+  row: EventRow;
+  delivered: Set<string>;
+  now: number;
+}) {
+  const d = row.event.data;
+  const when = ago(hlcMs(row.hlc), now);
+  const by = row.event.by ?? row.dev;
+  if (row.type === "message.human") {
+    // A message of another agent of the session reads as that agent, as Markdown; a person
+    // message as Markdown too (openspec task-review-layout, design decision 5).
+    const other = agentMessage(str(d.text));
+    if (other) {
+      return (
+        <MessageRow
+          who={other.kind === "subagent_report" ? "Subagent report" : "Agent message"}
+          tone="agent"
+          meta={`arrived in the terminal · ${when}`}
+          text={other.body}
+          clamp
+          markdown
+        />
+      );
+    }
     return (
       <MessageRow
         who={by}
-        meta={`answered: ${str(d.answer)} · ${when}${notApplied}`}
-        text={str(d.comment)}
+        meta={`typed in the terminal · ${when}`}
+        text={str(d.text)}
         clamp
         markdown
       />
     );
   }
-  if (row.type === "task.learned") {
-    return <LearnedLine ws={ws} row={row} meta={`${when}${notApplied}`} />;
+  if (row.type === "message.agent") {
+    return <MessageRow who={by} tone="agent" meta={when} text={str(d.text)} clamp markdown />;
   }
-  return (
-    <Typography variant="body2" color="text.secondary" sx={{ py: 0.5 }}>
-      {(mode === "activity" ? activityLine(row) : null) ?? systemLine(row)} · {when}
-      {notApplied}
-    </Typography>
-  );
+  if (row.type === "message.sent") {
+    const meta = `${delivered.has(str(d.id)) ? "sent" : "not delivered yet"} · ${when}`;
+    return <MessageRow who={by} meta={meta} text={str(d.text)} clamp markdown />;
+  }
+  return <MessageRow who={by} meta={`comment · ${when}`} text={str(d.text)} clamp markdown />;
 }
 
-function Page({
+/** One row of Activity in its style. */
+function ActivityItem({
   ws,
-  page,
+  task,
+  item,
+  delivered,
   now,
-  mode = "session",
-  older = false,
 }: {
   ws: string;
-  page: ThreadPage;
+  task: Task;
+  item: ActivityRow;
+  delivered: Set<string>;
   now: number;
-  mode?: Mode;
-  /** True when "Show older" can load more events. */
-  older?: boolean;
 }) {
-  const delivered = new Set(
+  const row = item.row;
+  const when = ago(hlcMs(row.hlc), now);
+  const by = row.event.by ?? row.dev;
+  const notApplied = !row.applied && row.reason ? ` · not applied: ${row.reason}` : "";
+  switch (item.style) {
+    case "message":
+      if (item.kind === "question") {
+        return (
+          <QuestionMessage
+            ws={ws}
+            task={task}
+            gate={task.gates.find((g) => g.gate === item.gate) ?? null}
+            opened={row}
+            title={item.title}
+            text={item.text}
+            open={item.open}
+            note={item.note}
+          />
+        );
+      }
+      if (item.kind === "answer") {
+        // An answer is person text: Markdown, as a message (task-review-layout).
+        return (
+          <MessageRow
+            who={by}
+            meta={`${item.label ?? "answer"} · ${when}${notApplied}`}
+            text={item.text}
+            clamp
+            markdown
+          />
+        );
+      }
+      return <ActivityMessage row={row} delivered={delivered} now={now} />;
+    case "proposal":
+      return (
+        <ProposalCard
+          ws={ws}
+          task={task}
+          version={item.version}
+          file={item.file}
+          by={by}
+          hlc={row.hlc}
+          gate={item.gate}
+          state={item.state}
+          approvedBy={item.approvedBy}
+          gateText={item.gateText}
+        />
+      );
+    case "card": {
+      // The task view decides: a gate that it has as resolved shows no card.
+      const gate = task.gates.find((g) => g.gate === item.gate);
+      if (!gate || gate.state !== "open") return null;
+      return <GateCard ws={ws} task={task} gate={gate} />;
+    }
+    case "line":
+      if (row.type === "task.learned") {
+        return <LearnedLine ws={ws} row={row} meta={`${when}${notApplied}`} />;
+      }
+      return (
+        <TaskLine
+          text={item.line ?? systemLine(row) ?? row.type}
+          when={when}
+          notApplied={notApplied}
+        />
+      );
+  }
+}
+
+/** The ids of the message.sent events that the session got (a `message.human` with the id). */
+function deliveredIds(page: ThreadPage): Set<string> {
+  return new Set(
     page.events
       .filter((r) => r.type === "message.human" && typeof r.event.data.delivery_id === "string")
       .map((r) => str(r.event.data.delivery_id)),
   );
-  const rows = mode === "activity" ? page.events.filter(inActivity) : page.events;
-  if (rows.length === 0 && mode === "activity") {
+}
+
+/**
+ * The Activity rows of a page, oldest first. An open gate whose `gate.opened` is older than the
+ * page shows after the rows, so a gate never hides.
+ */
+function ActivityPage(props: {
+  ws: string;
+  task: Task;
+  page: ThreadPage;
+  now: number;
+  older: boolean;
+}) {
+  const { ws, task, page, now } = props;
+  const delivered = deliveredIds(page);
+  const rows = activityRows(page.events);
+  const inPage = new Set(
+    page.events.filter((r) => r.type === "gate.opened").map((r) => str(r.event.data.gate)),
+  );
+  const older = task.gates.filter(
+    (g) => g.state === "open" && g.kind !== "assign" && !inPage.has(g.gate),
+  );
+  if (rows.length === 0 && older.length === 0) {
     return (
       <Typography variant="body2" color="text.secondary">
-        {older
+        {props.older
           ? `No activity in the newest ${page.events.length} events. "Show older" loads more.`
           : "No activity yet."}{" "}
         The Session tab shows each event of the session.
@@ -275,13 +372,30 @@ function Page({
     );
   }
   return (
-    <Stack
-      spacing={1}
-      component="section"
-      aria-label={mode === "activity" ? "Activity" : "Session events"}
-    >
-      {rows.map((row) => (
-        <Row key={row.id} ws={ws} row={row} delivered={delivered} now={now} mode={mode} />
+    <Stack spacing={1.5} component="section" aria-label="Activity">
+      {rows.map((item) => (
+        <ActivityItem
+          key={item.event}
+          ws={ws}
+          task={task}
+          item={item}
+          delivered={delivered}
+          now={now}
+        />
+      ))}
+      {older.map((gate) => (
+        <GateCard key={gate.gate} ws={ws} task={task} gate={gate} />
+      ))}
+    </Stack>
+  );
+}
+
+function Page({ ws, page, now }: { ws: string; page: ThreadPage; now: number }) {
+  const delivered = deliveredIds(page);
+  return (
+    <Stack spacing={1} component="section" aria-label="Session events">
+      {page.events.map((row) => (
+        <SessionRow key={row.id} ws={ws} row={row} delivered={delivered} now={now} />
       ))}
     </Stack>
   );
@@ -335,58 +449,105 @@ export function Thread({ ws, task, mode = "session" }: { ws: string; task: Task;
           </Typography>
         </Stack>
       )}
-      <Page ws={ws} page={reply} now={now} mode={mode} older={reply.prev !== null} />
+      {mode === "activity" ? (
+        <ActivityPage ws={ws} task={task} page={reply} now={now} older={reply.prev !== null} />
+      ) : (
+        <Page ws={ws} page={reply} now={now} />
+      )}
     </Stack>
   );
 }
 
-/** The message box: raw text to the running session, delivered as its next input. */
-export function Composer({ ws, task }: { ws: string; task: Task }) {
+/**
+ * The message box: raw text to the running session, delivered as its next input. While a question
+ * or a reply of the agent is open, the text is its free-text answer (openspec
+ * proposal-and-discussion); while a proposal waits, the text discusses it and the gate stays open.
+ */
+export function Composer({
+  ws,
+  task,
+  inputRef,
+}: {
+  ws: string;
+  task: Task;
+  /** The text field: "Discuss" of the proposal puts the cursor in it. */
+  inputRef?: Ref<HTMLTextAreaElement>;
+}) {
   const session = details(task).session;
   const running = session?.state === "running";
   const sendMessage = useSendMessage(ws, task.id);
+  const answer = useAnswerGate(ws, task.id);
+  const [, setNotice] = useGateNotice(ws, task.id);
   const [text, setText] = useState("");
+  const open = task.gates.filter((g) => g.state === "open");
+  // A question with an answer that waits for its delivery takes no second answer: a message then.
+  const question =
+    open
+      .filter((g) => QUESTION_KINDS.has(g.kind) && !g.answers.some((a) => a.use === "pending"))
+      .at(-1) ?? null;
+  const proposal = open.some((g) => g.kind === "approve_proposal");
+  const enabled = running || question !== null;
+  const busy = sendMessage.isPending || answer.isPending;
   const send = () => {
-    if (!text.trim() || !running) return;
+    if (!text.trim() || !enabled) return;
     // Principle 8: the agent gets the original words; trim() only checks for an empty text.
+    if (question) {
+      setNotice(null);
+      const sent = text;
+      setText("");
+      answer
+        .mutateAsync({
+          gate: question.gate,
+          body: { answer: sent, comment: null, version: question.version },
+        })
+        .then(
+          (reply) => setNotice(answerNotice(reply)),
+          (error: unknown) => setNotice(refusedNotice(error)),
+        );
+      return;
+    }
     sendMessage.mutate(text, { onSuccess: () => setText("") });
   };
   return (
     <Stack spacing={1}>
       <TextField
-        label="Message to the agent"
+        label={`Message to ${task.assignee ?? "the agent"}`}
         placeholder={
-          running
-            ? task.needs_you.length > 0
-              ? "It does not answer the gate. It arrives as the next input."
-              : "It arrives as the next input of the session."
-            : "No session runs. Assign the task to start a session."
+          question
+            ? "Reply, or ask the agent…"
+            : !running
+              ? "No session runs. Assign the task to start a session."
+              : proposal
+                ? "Discuss the proposal, or ask the agent…"
+                : "It arrives as the next input of the session."
         }
         multiline
         minRows={2}
         maxRows={8}
         value={text}
-        disabled={!running}
+        disabled={!enabled}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) send();
         }}
+        {...(inputRef ? { inputRef } : {})}
       />
       <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
         <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
-          {running
-            ? `⌘↵ to send · ${session.device} delivers it when no dialog is open`
-            : "The next session reads the thread."}
+          {question
+            ? `⌘↵ to send · your message answers the question “${question.title}”`
+            : running
+              ? `⌘↵ to send · ${session.device} delivers it when no dialog is open`
+              : "The next session reads the thread."}
         </Typography>
-        <Button
-          variant="contained"
-          disabled={!running || !text.trim() || sendMessage.isPending}
-          onClick={send}
-        >
+        <Button variant="contained" disabled={!enabled || !text.trim() || busy} onClick={send}>
           Send
         </Button>
       </Stack>
       {sendMessage.isError && <Alert severity="error">{errorText(sendMessage.error)}</Alert>}
+      {answer.isError && refusedNotice(answer.error) === null && (
+        <Alert severity="error">{errorText(answer.error)}</Alert>
+      )}
     </Stack>
   );
 }

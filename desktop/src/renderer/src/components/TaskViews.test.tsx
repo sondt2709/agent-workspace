@@ -48,9 +48,9 @@ describe("Board", () => {
     const discuss = screen.getByRole("region", { name: "Discuss" });
     const lane = within(discuss).getByLabelText("Discuss · Needs you");
     expect(within(lane).getByText("Answer me")).toBeTruthy();
-    expect(within(lane).getByText("Answer question")).toBeTruthy();
+    expect(within(lane).getByText("Reply to a question")).toBeTruthy();
     expect(within(discuss).getByText("1")).toBeTruthy();
-    expect(within(discuss).getByText(/proposes an approach/)).toBeTruthy();
+    expect(within(discuss).getByText(/writes a proposal/)).toBeTruthy();
     const implement = screen.getByRole("region", { name: "Implement" });
     expect(within(implement).getByText("Paused · device offline")).toBeTruthy();
     expect(

@@ -85,7 +85,7 @@ export type ToolGate =
       options: string[];
       questions?: ToolQuestion[];
     }
-  | { kind: "confirm_approach"; title: string; plan: string };
+  | { kind: "approve_proposal"; title: string; plan: string };
 
 /** One hook event, parsed from the payload of the agent. */
 export type AgentHookEvent =

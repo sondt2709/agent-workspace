@@ -1,13 +1,13 @@
-// The full context of a gate (openspec gate-full-context): decisions with the recommendation, the
-// cut text, the result artifacts with Open, the answer notices, the approach versions with their
-// full text and "Waits for you" (0-8), and the thread window with "Show older" (0-7).
+// The full context of a gate (openspec gate-full-context): no decisions (openspec
+// proposal-and-discussion), the result artifacts with Open, the answer notices, the proposal
+// versions with their full text and "Waits for you" (0-8), and the thread window with "Show older"
+// (0-7).
 import { cleanup, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, describe, expect, it } from "vitest";
-import casesJson from "../../../../../contracts/fixtures/gates/cases.json?raw";
 import type { Gate } from "../../../shared/channels.ts";
-import { approachChip } from "../model.ts";
+import { proposalChip } from "../model.ts";
 import {
   eventRow,
   FakeCallError,
@@ -19,15 +19,10 @@ import {
   type Handlers,
 } from "../testing.tsx";
 import { GateCard } from "./GateCard.tsx";
-import { ApproachVersions, GateNotice } from "./GateParts.tsx";
+import { GateNotice, ProposalVersions } from "./GateParts.tsx";
 import { Thread } from "./Thread.tsx";
 
 afterEach(cleanup);
-
-const FIXTURE = JSON.parse(casesJson) as {
-  cases: { name: string; text: string; decisions: unknown[]; body: string }[];
-};
-const WITH_DECISIONS = FIXTURE.cases[0]!;
 
 function renderCard(gate: Gate, rows: ReturnType<typeof eventRow>[], handlers: Handlers = {}) {
   const task = makeTask({ gates: [gate], needs_you: [gate.gate] });
@@ -53,73 +48,35 @@ function renderCard(gate: Gate, rows: ReturnType<typeof eventRow>[], handlers: H
 const argsOf = (call: ReturnType<typeof installBridge>, method: string) =>
   call.mock.calls.filter(([m]) => m === method).map(([, args]) => args);
 
-describe("gate card decisions", () => {
-  it("lists each decision as a radio group with the recommended option picked", async () => {
-    const gate = makeGate({ kind: "confirm_approach", options: ["Confirm", "Request changes"] });
-    renderCard(gate, [
-      gateOpenedRow(gate, { text: WITH_DECISIONS.text, decisions: WITH_DECISIONS.decisions }),
-    ]);
-    expect(await screen.findByText("1. Which limit per API key?")).toBeTruthy();
-    expect(screen.getByText("2. Where do we keep the counters?")).toBeTruthy();
-    const limit = screen.getByRole("radiogroup", { name: "1. Which limit per API key?" });
-    expect(limit.querySelectorAll('[role="radio"]').length).toBe(2);
-    expect(screen.getByRole("radio", { name: "100/min" }).getAttribute("aria-checked")).toBe(
-      "true",
-    );
-    expect(screen.getByRole("radio", { name: "Redis" }).getAttribute("aria-checked")).toBe("true");
-    expect(screen.getByRole("radio", { name: "1000/min" }).getAttribute("aria-checked")).toBe(
-      "false",
-    );
-    expect(screen.getAllByText("Recommended").length).toBe(2);
-    expect(screen.getByText("All picks are the recommended options.")).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Confirm" })).toBeTruthy();
-    expect(screen.queryByText(/Recommended: 100\/min/)).toBeNull();
-    expect(screen.getByText("Add a token bucket per API key.")).toBeTruthy();
-  });
+describe("gate card with old decisions (proposal-and-discussion)", () => {
+  // A custom gate from before the change: awd wrote the decisions in `data.decisions` and as a
+  // block of the text. The card shows the text as written and the options, and no picker.
+  const TEXT =
+    "Add a token bucket per API key.\n\n## Decisions\n\n1. Which limit per API key?\n   - 100/min (recommended)\n   - 1000/min";
+  const DECISIONS = [
+    {
+      question: "Which limit per API key?",
+      options: ["100/min", "1000/min"],
+      recommended: "100/min",
+    },
+    {
+      question: "Where do we keep the counters?",
+      options: ["Redis", "In memory"],
+      recommended: "Redis",
+    },
+  ];
 
-  it("sends Request changes with the changed decisions as Send my choices", async () => {
-    const gate = makeGate({ kind: "confirm_approach", options: ["Confirm", "Request changes"] });
-    const { call } = renderCard(gate, [
-      gateOpenedRow(gate, { text: WITH_DECISIONS.text, decisions: WITH_DECISIONS.decisions }),
-    ]);
-    await userEvent.click(await screen.findByRole("radio", { name: "1000/min" }));
-    expect(screen.getByRole("radio", { name: "1000/min" }).getAttribute("aria-checked")).toBe(
-      "true",
-    );
-    expect(screen.getByRole("status").textContent).toContain("1 pick differs");
-    expect(screen.queryByRole("button", { name: "Confirm" })).toBeNull();
-    await userEvent.click(screen.getByRole("button", { name: "Send my choices" }));
-    await waitFor(() =>
-      expect(argsOf(call, "answerGate")[0]).toMatchObject({
-        gate: gate.gate,
-        body: {
-          answer: "Request changes",
-          comment:
-            "My choices for the decisions:\n- Which limit per API key?: 1000/min\nKeep the recommended option of the other decisions.",
-        },
-      }),
-    );
-  });
-
-  it("shows Confirm again when the person picks the recommended option again", async () => {
-    const gate = makeGate({ kind: "confirm_approach", options: ["Confirm", "Request changes"] });
-    renderCard(gate, [
-      gateOpenedRow(gate, { text: WITH_DECISIONS.text, decisions: WITH_DECISIONS.decisions }),
-    ]);
-    await userEvent.click(await screen.findByRole("radio", { name: "In memory" }));
-    expect(screen.getByRole("button", { name: "Send my choices" })).toBeTruthy();
-    await userEvent.click(screen.getByRole("radio", { name: "Redis" }));
-    expect(screen.getByRole("button", { name: "Confirm" })).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Send my choices" })).toBeNull();
-  });
-
-  it("shows the decisions of a gate with no Request changes as labels", async () => {
-    const gate = makeGate({ kind: "custom", options: ["Yes", "No"] });
-    renderCard(gate, [
-      gateOpenedRow(gate, { text: WITH_DECISIONS.text, decisions: WITH_DECISIONS.decisions }),
-    ]);
-    expect(await screen.findByText("100/min · Recommended")).toBeTruthy();
+  it("shows the text and the options, and no decision picker and no Send my choices", async () => {
+    const gate = makeGate({ kind: "custom", options: ["Yes", "Request changes"] });
+    renderCard(gate, [gateOpenedRow(gate, { text: TEXT, decisions: DECISIONS })]);
+    expect(await screen.findByText("Add a token bucket per API key.")).toBeTruthy();
+    expect(screen.getByText("Which limit per API key?")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Yes" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Request changes" })).toBeTruthy();
+    expect(screen.queryByTestId("gate-decisions")).toBeNull();
     expect(screen.queryByRole("radio")).toBeNull();
+    expect(screen.queryByText("Where do we keep the counters?")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Send my choices" })).toBeNull();
   });
 });
 
@@ -320,13 +277,13 @@ describe("answer notice after the card closes", () => {
   });
 });
 
-describe("approach versions", () => {
-  it("shows Waits for you for a version after the confirmed one (0-8)", () => {
-    expect(approachChip(1, { latest: 2, confirmed: 1 })).toBe("confirmed");
-    expect(approachChip(2, { latest: 2, confirmed: 1 })).toBe("waits");
-    expect(approachChip(1, { latest: 2, confirmed: null })).toBe("replaced");
-    expect(approachChip(2, { latest: 2, confirmed: null })).toBe("waits");
-    expect(approachChip(1, { latest: 2, confirmed: 2 })).toBe("replaced");
+describe("proposal versions", () => {
+  it("shows Waits for you for a version after the approved one (0-8)", () => {
+    expect(proposalChip(1, { latest: 2, approved: 1 })).toBe("approved");
+    expect(proposalChip(2, { latest: 2, approved: 1 })).toBe("waits");
+    expect(proposalChip(1, { latest: 2, approved: null })).toBe("replaced");
+    expect(proposalChip(2, { latest: 2, approved: null })).toBe("waits");
+    expect(proposalChip(1, { latest: 2, approved: 2 })).toBe("replaced");
   });
 
   it("opens a version to the full text of its file", async () => {
@@ -335,27 +292,52 @@ describe("approach versions", () => {
         path: args.path,
         size: 30,
         modified: "2026-11-23T10:00:00.000Z",
-        text: "# Approach v2\n\nFULL-TEXT-END-MARKER",
+        text: "# Proposal v2\n\nFULL-TEXT-END-MARKER",
         reason: null,
       }),
     });
     renderApp(
-      <ApproachVersions
+      <ProposalVersions
         ws="ws-1"
         task="t1"
-        approach={{ latest: 2, confirmed: 1 }}
+        proposal={{ latest: 2, approved: 1 }}
         versions={[
-          { version: 1, text: "# Approach v1" },
-          { version: 2, text: "# Approach v2" },
+          { version: 1, file: "proposal/v1.md", text: "# Proposal v1" },
+          { version: 2, file: "proposal/v2.md", text: "# Proposal v2" },
         ]}
       />,
     );
-    expect(screen.getByText("Confirmed")).toBeTruthy();
+    expect(screen.getByText("Approved")).toBeTruthy();
     expect(screen.getByText("Waits for you")).toBeTruthy();
     await userEvent.click(screen.getByRole("button", { name: "v2" }));
     expect(await screen.findByText("FULL-TEXT-END-MARKER")).toBeTruthy();
     expect(argsOf(call, "taskFile")).toEqual([
-      { ws: "ws-1", task: "t1", path: "tasks/t1/approach/v2.md" },
+      { ws: "ws-1", task: "t1", path: "tasks/t1/proposal/v2.md" },
+    ]);
+  });
+
+  it("opens a version from before the rename in its file approach/v<n>.md", async () => {
+    const call = installBridge({
+      taskFile: (args: { path: string }) => ({
+        path: args.path,
+        size: 30,
+        modified: "2026-11-23T10:00:00.000Z",
+        text: "OLD-APPROACH-TEXT",
+        reason: null,
+      }),
+    });
+    renderApp(
+      <ProposalVersions
+        ws="ws-1"
+        task="t1"
+        proposal={{ latest: 3, approved: null }}
+        versions={[{ version: 3, file: "approach/v3.md", text: "# Rate limits" }]}
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "v3" }));
+    expect(await screen.findByText("OLD-APPROACH-TEXT")).toBeTruthy();
+    expect(argsOf(call, "taskFile")).toEqual([
+      { ws: "ws-1", task: "t1", path: "tasks/t1/approach/v3.md" },
     ]);
   });
 
@@ -374,24 +356,24 @@ describe("approach versions", () => {
       },
     });
     renderApp(
-      <ApproachVersions
+      <ProposalVersions
         ws="ws-1"
         task="t1"
-        approach={{ latest: 2, confirmed: 1 }}
+        proposal={{ latest: 2, approved: 1 }}
         versions={[
-          { version: 1, text: "# Approach v1" },
-          { version: 2, text: "# Approach v2" },
+          { version: 1, file: "proposal/v1.md", text: "# Proposal v1" },
+          { version: 2, file: "proposal/v2.md", text: "# Proposal v2" },
         ]}
       />,
     );
     await userEvent.click(screen.getByRole("button", { name: "v2" }));
     expect(
-      await screen.findByText("The file of approach v2 is not on this device yet."),
+      await screen.findByText("The file of proposal v2 is not on this device yet."),
     ).toBeTruthy();
     await userEvent.click(screen.getByRole("button", { name: "v1" }));
     expect(
       await screen.findByText(
-        "The file of approach v1 is larger than 1 MB. Open it from the workspace folder.",
+        "The file of proposal v1 is larger than 1 MB. Open it from the workspace folder.",
       ),
     ).toBeTruthy();
   });

@@ -1,6 +1,6 @@
 // The redaction journey on 2 awd containers (e2e/compose.yaml with e2e/compose.redaction.yaml;
 // openspec credential-redaction, gap M13). macbook-pro runs a session of the fake agent with the
-// credential staging-api-key. The agent writes the value in a long reply, approach versions, a
+// credential staging-api-key. The agent writes the value in a long reply, proposal versions, a
 // copied text file, a result, a handoff and a binary file, and its token in a long message. On both
 // computers, no synced text file has the value or the token: each has the redaction marker. The
 // binary keeps its bytes. Run it with "task e2e". Each step writes one "EVIDENCE {json}" line.
@@ -35,11 +35,11 @@ const MARKER = "[redacted:staging-api-key]";
 const STEPS = [
   "steps",
   "use-credential staging-api-key 40000",
-  'bash aw approach "$AW_TASK" --file approach.md',
+  'bash aw proposal "$AW_TASK" --file proposal.md',
   'bash aw artifact add "$AW_TASK" notes.txt',
   'bash aw handoff "$AW_TASK" --file handoff.md',
   'bash aw result "$AW_TASK" --file result.md --artifact image.bin',
-  "plan-file approach.md",
+  "plan-file proposal.md",
   "plan-file notes.txt",
   // A long message with the session token: it goes to a text file of the task.
   `bash aw message "$AW_TASK" "token $AW_MCP_TOKEN $(head -c 40000 /dev/zero | tr '\\0' y)"`,
@@ -195,7 +195,7 @@ describe("redaction of agent files on 2 computers", () => {
     const rows = await thread();
     evidence("agent-thread", {
       types: rows.map((r) => r.type),
-      approach_gates: rows
+      proposal_gates: rows
         .filter((r) => r.type === "gate.opened")
         .map((r) => (r.event.data as { file?: string }).file ?? null),
     });
@@ -204,10 +204,10 @@ describe("redaction of agent files on 2 computers", () => {
         .filter(
           (r) =>
             r.type === "gate.opened" &&
-            (r.event.data as { kind?: string }).kind === "confirm_approach",
+            (r.event.data as { kind?: string }).kind === "approve_proposal",
         )
         .map((r) => (r.event.data as { file?: string }).file),
-    ).toEqual(["approach/v1.md", "approach/v1.md", "approach/v2.md"]);
+    ).toEqual(["proposal/v1.md", "proposal/v1.md", "proposal/v2.md"]);
     expect(rows.filter((r) => r.type === "artifact.added")).toHaveLength(2);
   }, 180_000);
 
@@ -241,8 +241,8 @@ describe("redaction of agent files on 2 computers", () => {
       expect(result[`token_${device}`]).toEqual([]);
       expect(result[`marker_${device}`]).toEqual(
         expect.arrayContaining([
-          "tasks/*/approach/v1.md",
-          "tasks/*/approach/v2.md",
+          "tasks/*/proposal/v1.md",
+          "tasks/*/proposal/v2.md",
           `tasks/*/artifacts/${A}/handoff-*.md`,
           `tasks/*/artifacts/${A}/notes.txt`,
           `tasks/*/artifacts/${A}/result-*.md`,

@@ -68,7 +68,12 @@ export interface WorkspaceOptions {
  * The layout rules of the text files of a task: AW redacts them before they sync (docs/phase-1.md
  * 3.3.5). An artifact is redacted only when its content is text.
  */
-const REDACTED_RULES = new Set(["task-terminal", "task-approach", "task-artifact"]);
+const REDACTED_RULES = new Set([
+  "task-terminal",
+  "task-proposal",
+  "task-approach",
+  "task-artifact",
+]);
 
 export type WriteHook = (path: string, content: string | Uint8Array | null) => void;
 
@@ -273,9 +278,9 @@ export class WorkspaceFiles {
   }
 
   /**
-   * Writes another file of the layout atomically: an approach version, an artifact, knowledge.
+   * Writes another file of the layout atomically: a proposal version, an artifact, knowledge.
    * AW redacts the credential values and the session tokens in each text file of a task first: the
-   * terminal snapshot, the approach versions and the artifacts (docs/phase-1.md 3.3.5). A string is
+   * terminal snapshot, the proposal versions and the artifacts (docs/phase-1.md 3.3.5). A string is
    * text; bytes are text when they are strict UTF-8 with no NUL byte. A binary file and each other
    * file (sealed, credential, schema) are written as they are. Returns the written content, so a
    * caller hashes the file that syncs (`artifact.added`).

@@ -419,6 +419,7 @@ describe("setAppearance (openspec screens-align)", () => {
     const setAppearance = vi.fn((appearance: Appearance) =>
       Promise.resolve({
         appearance,
+        proposal_text_px: 16,
         login: { supported: false, open: false, status: null },
         notifications: false,
         notification_error: null,
@@ -433,6 +434,29 @@ describe("setAppearance (openspec screens-align)", () => {
       expect(refused).toMatchObject({ ok: false, error: { code: "invalid_input" } });
     }
     expect(setAppearance).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("setProposalTextSize (proposal-and-discussion)", () => {
+  it("sends a size of 14 to 24 px in steps of 2 to the host, and refuses another value", async () => {
+    const setProposalTextSize = vi.fn((px: number) =>
+      Promise.resolve({
+        appearance: "system" as const,
+        proposal_text_px: px,
+        login: { supported: false, open: false, status: null },
+        notifications: false,
+        notification_error: null,
+      }),
+    );
+    const d = deps({}, { host: { setProposalTextSize } });
+    const ok = await dispatchCall({ method: "setProposalTextSize", args: { px: 18 } }, d);
+    expect(ok).toMatchObject({ ok: true, value: { proposal_text_px: 18 } });
+    expect(setProposalTextSize).toHaveBeenCalledWith(18);
+    for (const args of [{ px: 12 }, { px: 26 }, { px: 17 }, { px: 16.5 }, { px: "16" }, {}]) {
+      const refused = await dispatchCall({ method: "setProposalTextSize", args }, d);
+      expect(refused).toMatchObject({ ok: false, error: { code: "invalid_input" } });
+    }
+    expect(setProposalTextSize).toHaveBeenCalledTimes(1);
   });
 });
 

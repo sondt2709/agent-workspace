@@ -27,7 +27,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.agentworkspace.android.R
 import com.agentworkspace.control.DeviceRowState
@@ -151,7 +150,7 @@ private fun NoticesDialog(onClose: () -> Unit) {
                 text,
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 style = MaterialTheme.typography.bodySmall,
-                fontFamily = FontFamily.Monospace,
+                fontFamily = MonoFont,
             )
         },
     )

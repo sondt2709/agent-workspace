@@ -42,8 +42,6 @@ data class WorkspaceSnapshot(
     val health: Map<String, JsonObject> = emptyMap(),
     /** The time of the load in ms, from the clock of the model. */
     val loadedAtMs: Long = 0L,
-    /** The decisions of the `gate.opened` event of each shown gate, by gate id (gate-full-context). */
-    val gateDecisions: Map<String, List<GateDecision>> = emptyMap(),
     /** Each key of a `task.created` or `task.rekeyed`, also of a removed task (openspec project-remove). */
     val knownKeys: List<String> = emptyList(),
     /** The questions of the `gate.opened` event of each shown gate, by gate id (gate-context). */
@@ -384,9 +382,8 @@ object ScreenStates {
                             CardStatus.Open
                         }
                     }
-                val decisions = snapshot.gateDecisions[gate.gate].orEmpty()
                 val questions = snapshot.gateQuestions[gate.gate].orEmpty()
-                val body = GateTexts.body(snapshot.gateTexts[gate.gate].orEmpty(), decisions)
+                val body = snapshot.gateTexts[gate.gate].orEmpty()
                 GateCard(
                     task = task.id,
                     taskLabel = Texts.taskLabel(task.id, task.key),
@@ -394,7 +391,6 @@ object ScreenStates {
                     label = Texts.gateLabel(gate.kind),
                     title = gate.title,
                     text = if (GateTexts.hasBody(gate.title, body, questions)) body else "",
-                    decisions = decisions,
                     questions = questions,
                     context = snapshot.gateContexts[gate.gate].orEmpty(),
                     options = gate.options,
@@ -417,15 +413,15 @@ object ScreenStates {
             add("Stage" to Texts.stageLabel(task.stage))
             task.project?.let { add("Project" to it) }
             add("Assignee" to (task.assignee ?: "None"))
-            val latest = task.approach.latest
-            val confirmed = task.approach.confirmed
-            val approach =
+            val latest = task.proposal.latest
+            val approved = task.proposal.approved
+            val proposal =
                 when {
                     latest == 0L -> "None yet"
-                    confirmed != null -> "v$confirmed confirmed (latest v$latest)"
-                    else -> "v$latest, not confirmed"
+                    approved != null -> "v$approved approved (latest v$latest)"
+                    else -> "v$latest, not approved"
                 }
-            add("Approach" to approach)
+            add("Proposal" to proposal)
             task.testServer?.let { add("Test server" to it) }
             if (task.credentials.isNotEmpty()) add("Credentials" to task.credentials.joinToString(", "))
             task.parent?.let { add("Parent" to it) }

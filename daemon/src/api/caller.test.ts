@@ -40,6 +40,7 @@ describe("route access", () => {
     await app.close();
     // The slot routes of add-continuity are agent routes too (integrate-continuity).
     for (const path of [
+      "proposal",
       "approach",
       "ready",
       "tasks",

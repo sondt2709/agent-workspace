@@ -79,7 +79,7 @@ class SchemaSamplesTest {
                 ).value
         assertEquals("high", task.getValue("priority_hint").jsonPrimitive.content)
         assertEquals(JsonNull, task.getValue("paused"))
-        assertEquals(TaskV1.Approach(0, null), AwJson.decodeFromJsonElement(TaskV1.serializer(), task).approach)
+        assertEquals(TaskV1.Proposal(0, null), AwJson.decodeFromJsonElement(TaskV1.serializer(), task).proposal)
     }
 
     @Test

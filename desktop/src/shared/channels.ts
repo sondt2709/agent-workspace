@@ -92,6 +92,8 @@ export interface ChosenFolder {
 export interface AppSettings {
   /** The Appearance choice of Settings (`aw-desktop.json`). */
   appearance: Appearance;
+  /** The text size of a proposal in px, 14 to 24 (`proposal_text_px` of `aw-desktop.json`). */
+  proposal_text_px: number;
   login: LoginItemState;
   /** False in a build that cannot show notifications (for example an unsigned app). */
   notifications: boolean;
@@ -209,6 +211,8 @@ export interface CallMap extends SetupCallMap {
   appSettings: { args: Record<string, never>; result: AppSettings };
   setOpenAtLogin: { args: { open: boolean }; result: AppSettings };
   setAppearance: { args: { appearance: Appearance }; result: AppSettings };
+  /** Saves the text size of a proposal (openspec proposal-and-discussion). */
+  setProposalTextSize: { args: { px: number }; result: AppSettings };
   /** The native folder dialog of main (openspec create-flows); `default_path` is the start folder. */
   chooseFolder: {
     args: { purpose: FolderPurpose; default_path?: string };

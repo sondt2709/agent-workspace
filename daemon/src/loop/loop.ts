@@ -76,11 +76,14 @@ const isApprove = (answer: string) => /^approve/i.test(answer.trim());
 const isRequestChanges = (answer: string) => /^request changes/i.test(answer.trim());
 const isReject = (answer: string) => /^reject/i.test(answer.trim());
 
-/** The version of an approach gate file `approach/v<n>.md`, or null. */
-export function approachVersion(gate: GateView): number | null {
-  const match = /^approach\/v([1-9][0-9]*)\.md$/.exec(gate.file ?? "");
+/** The version of a proposal gate file `proposal/v<n>.md` (or `approach/v<n>.md` from before the rename), or null. */
+export function proposalVersion(gate: GateView): number | null {
+  const match = /^(?:proposal|approach)\/v([1-9][0-9]*)\.md$/.exec(gate.file ?? "");
   return match ? Number(match[1]) : null;
 }
+
+/** True for the answer that approves a proposal: "Approve", or "Confirm" of a gate from before the rename. */
+const approvesProposal = (answer: string) => isApprove(answer) || isConfirm(answer);
 
 /** The gate id of the "Approve knowledge change" gate of a suggestion: the same on each check. */
 export function knowledgeGateId(suggestion: Pick<Suggestion, "id" | "hlc">): string {
@@ -108,7 +111,7 @@ export class TaskLoop {
 
   // ---- Stages ------------------------------------------------------------------------------
 
-  /** The stage of a task at its first claim: Discuss, or Ready for a subtask with an approach. */
+  /** The stage of a task at its first claim: Discuss, or Ready for a subtask with a proposal. */
   firstStage(task: TaskView): Stage {
     return firstStage(task, this.#parent(task));
   }
@@ -119,7 +122,7 @@ export class TaskLoop {
 
   /** The effects of a gate resolution of the session device (docs/workflow.md 3). */
   async resolved(task: TaskView, gate: GateView, answer: string): Promise<void> {
-    if (gate.kind === "confirm_approach" && isConfirm(answer) && task.stage === "discuss") {
+    if (gate.kind === "approve_proposal" && approvesProposal(answer) && task.stage === "discuss") {
       await this.#stage(task, "discuss", "ready");
     } else if (gate.kind === "approve_result" && isRequestChanges(answer)) {
       if (task.stage === "review") await this.#stage(task, "review", "implement");
@@ -129,9 +132,9 @@ export class TaskLoop {
   /** The line after the answer of a gate that moved the task, or null. */
   answerNote(task: TaskView, gate: GateView, answer: string): string | null {
     const key = task.key ?? task.id;
-    if (gate.kind === "confirm_approach" && isConfirm(answer)) {
-      const version = approachVersion(gate) ?? task.approach.confirmed ?? task.approach.latest;
-      return `Approach v${version} confirmed. Run \`aw ready ${key}\` and end your turn.`;
+    if (gate.kind === "approve_proposal" && approvesProposal(answer)) {
+      const version = proposalVersion(gate) ?? task.proposal.approved ?? task.proposal.latest;
+      return `Proposal v${version} approved. Run \`aw ready ${key}\` and end your turn.`;
     }
     if (gate.kind === "approve_result" && isApprove(answer)) {
       return `Result approved. Do the last steps of your workflow (for example archive, retrospective, clean-up). Record what you learned: ${learnCommands(key)}. Then run \`aw done ${key}\` or end your turn: AW then closes this session.`;
@@ -281,7 +284,7 @@ export class TaskLoop {
       task.id,
       record.id,
       startId,
-      `Start implementing ${key}. AW checked on ${this.#host.me}: the approach is confirmed, nothing is missing, and the knowledge is in sync.`,
+      `Start implementing ${key}. AW checked on ${this.#host.me}: the proposal is approved, nothing is missing, and the knowledge is in sync.`,
     );
   }
 

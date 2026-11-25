@@ -129,6 +129,16 @@ describe("@aw/agent-claude plugin directory", () => {
     expect(text).toMatch(/never .*see the message above/i);
   });
 
+  it("tells the agent the Discuss loop: questions in ask, one proposal (proposal-and-discussion)", async () => {
+    const text = await plugin("skills/aw/SKILL.md");
+    expect(text).toContain("only with the MCP tool `ask`, never also with `message`");
+    expect(text).toContain("Write the proposal with `proposal` only when no question is open.");
+    expect(text).toContain("A proposal has no open question and no choice");
+    expect(text).toContain("Never ask for permission to write a proposal.");
+    expect(text).toContain('after "Proposal v<n> approved"');
+    expect(text).not.toMatch(/approach/i);
+  });
+
   it("tells the agent to commit and that AW pushes the task branch (move-paused-task)", async () => {
     const text = await plugin("skills/aw/SKILL.md");
     expect(text).toContain(
@@ -452,8 +462,8 @@ describe("Claude adapter", () => {
       title: long,
     });
     expect(toolGate("ExitPlanMode", { plan: "1. Do it" })).toEqual({
-      kind: "confirm_approach",
-      title: "Confirm approach",
+      kind: "approve_proposal",
+      title: "Proposal",
       plan: "1. Do it",
     });
     expect(toolGate("Bash", { command: "ls" })).toBeNull();

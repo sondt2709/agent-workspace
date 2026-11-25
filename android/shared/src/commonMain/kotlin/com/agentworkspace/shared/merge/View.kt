@@ -165,9 +165,9 @@ data class SessionOptionsView(
 )
 
 @Serializable
-data class ApproachView(
+data class ProposalView(
     val latest: Long,
-    val confirmed: Long?,
+    val approved: Long?,
 )
 
 @Serializable
@@ -202,7 +202,7 @@ data class TaskView(
     val claim: ClaimView?,
     @SerialName("moving_to") val movingTo: String?,
     @SerialName("released_epoch") val releasedEpoch: Long?,
-    val approach: ApproachView,
+    val proposal: ProposalView,
     val ready: ReadyView?,
     @SerialName("test_server") val testServer: String?,
     val credentials: List<String>,

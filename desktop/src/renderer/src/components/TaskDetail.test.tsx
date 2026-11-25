@@ -4,8 +4,9 @@
 import { cleanup, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import casesJson from "../../../../../contracts/fixtures/activity/cases.json?raw";
 import samplesJson from "../../../../../contracts/samples/schema-samples.json?raw";
-import type { EventRow, Task, ThreadReply } from "../../../shared/channels.ts";
+import type { EventRow, Gate, Task, ThreadReply } from "../../../shared/channels.ts";
 import threadJson from "../fixtures/thread-aw-8.json?raw";
 import { installBridge, makeGate, makeTask, renderApp } from "../testing.tsx";
 import { DialogsProvider } from "./dialogs.tsx";
@@ -510,7 +511,7 @@ describe("Task route", () => {
       </DialogsProvider>,
       { route: "/w/:ws/tasks/:task", url: `/w/ws-1/tasks/${AW8_TASK.id}` },
     );
-    const box = await screen.findByRole("textbox", { name: "Message to the agent" });
+    const box = await screen.findByRole("textbox", { name: "Message to claude@macbook-pro" });
     box.focus();
     await userEvent.keyboard("{Escape}");
     expect(router.state.location.pathname).toBe(`/w/ws-1/tasks/${AW8_TASK.id}`);
@@ -590,5 +591,263 @@ describe("session options (session-options)", () => {
     await userEvent.click(within(properties).getByRole("button", { name: "Copy" }));
     expect(writeText).toHaveBeenCalledWith("/Users/example/.aw/worktrees/aw-AW-8");
     expect(await within(properties).findByRole("button", { name: "Copied" })).toBeTruthy();
+  });
+});
+
+// ---- openspec proposal-and-discussion ----
+
+interface FixtureRow {
+  id: string;
+  type: string;
+  dev: string;
+  by: string;
+  hlc: string;
+  data: Record<string, unknown>;
+}
+const ACTIVITY = JSON.parse(casesJson) as { threads: { name: string; rows: FixtureRow[] }[] };
+
+/** The rows of a thread of contracts/fixtures/activity/cases.json, as a thread reply. */
+function fixtureThread(name: string): ThreadReply {
+  const rows = ACTIVITY.threads.find((t) => t.name.startsWith(name))!.rows;
+  return {
+    task: { id: AW8_TASK.id, key: "AW-12", title: "Rate limits" },
+    events: rows.map((r) => ({
+      id: r.id,
+      task: AW8_TASK.id,
+      hlc: r.hlc,
+      dev: r.dev,
+      type: r.type,
+      path: `tasks/${AW8_TASK.id}/log/${r.dev}.jsonl`,
+      line: 1,
+      applied: true,
+      reason: null,
+      event: { v: 1, id: r.id, hlc: r.hlc, dev: r.dev, type: r.type, by: r.by, data: r.data },
+    })),
+    next: null,
+    prev: null,
+    ancestors: [],
+  };
+}
+
+function openGate(reply: ThreadReply, at: number): Gate {
+  const opened = reply.events[at]!;
+  const d = opened.event.data;
+  return makeGate({
+    gate: String(d.gate),
+    kind: String(d.kind),
+    title: String(d.title),
+    options: d.options as string[],
+    file: typeof d.file === "string" ? d.file : null,
+    opened: { event: opened.id, dev: opened.dev, hlc: opened.hlc },
+  });
+}
+
+const RUNNING = {
+  session: "01a2038e-8100-7000-8000-000000000001",
+  device: "ubuntu-01",
+  host: "tmux",
+  state: "running",
+  reason: null,
+};
+
+describe("Activity of a Discuss stage (proposal-and-discussion)", () => {
+  it("scrolls to the row that needs the person from the header chip, also from another tab", async () => {
+    const reply = fixtureThread("an open proposal waits");
+    const gate = openGate(reply, 1);
+    const task = makeTask({
+      ...AW8_TASK,
+      gates: [gate],
+      needs_you: [gate.gate],
+      needs_you_lane: true,
+      needs_you_reasons: [{ reason: "gate", kind: "approve_proposal" }],
+    });
+    const scrolled: Element[] = [];
+    const scroll = vi.fn(function (this: Element) {
+      scrolled.push(this);
+    });
+    Element.prototype.scrollIntoView = scroll;
+    try {
+      show(task, reply);
+      const card = await screen.findByRole("article", { name: "Proposal v3" });
+      const chip = screen.getByRole("button", { name: "Needs you: approve proposal" });
+      await userEvent.click(chip);
+      await waitFor(() => expect(scrolled).toEqual([card]));
+      await userEvent.click(screen.getByRole("tab", { name: "Session" }));
+      await userEvent.click(screen.getByRole("button", { name: "Needs you: approve proposal" }));
+      expect(screen.getByRole("tab", { name: "Activity", selected: true })).toBeTruthy();
+      await waitFor(() => expect(scrolled).toHaveLength(2));
+      expect(scrolled[1]).toBe(screen.getByRole("article", { name: "Proposal v3" }));
+    } finally {
+      Reflect.deleteProperty(Element.prototype, "scrollIntoView");
+    }
+  });
+
+  it("closes the full screen view with Discuss and puts the cursor in the message box", async () => {
+    const reply = fixtureThread("an open proposal waits");
+    const task = makeTask({ ...AW8_TASK, gates: [openGate(reply, 1)], session: RUNNING });
+    show(task, reply);
+    const card = await screen.findByRole("article", { name: "Proposal v3" });
+    await userEvent.click(
+      within(card).getByRole("button", { name: "Open the proposal in full screen" }),
+    );
+    const view = await screen.findByRole("dialog", { name: "Proposal v3" });
+    await userEvent.click(within(view).getByRole("button", { name: "Discuss" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        screen.getByRole("textbox", { name: "Message to claude@macbook-pro" }),
+      ),
+    );
+  });
+
+  it("sends the message box as the answer of an open question, also with no running session", async () => {
+    const reply = fixtureThread("question, answer");
+    const short = { ...reply, events: reply.events.slice(0, 2) };
+    const gate = openGate(short, 1);
+    const task = makeTask({ ...AW8_TASK, gates: [gate] });
+    const call = installBridge({
+      task: () => task,
+      tasks: () => [task],
+      thread: () => short,
+      answerGate: () => ({ applied: true }),
+      sendMessage: () => ({ applied: true }),
+    });
+    renderApp(
+      <DialogsProvider ws="ws-1">
+        <TaskDetail ws="ws-1" taskId={task.id} />
+      </DialogsProvider>,
+    );
+    const box = await screen.findByRole("textbox", { name: "Message to claude@macbook-pro" });
+    expect(
+      screen.getByText(/your message answers the question “Where do the counters live\?”/),
+    ).toBeTruthy();
+    await userEvent.type(box, "Redis, with a TTL");
+    await userEvent.click(screen.getByRole("button", { name: "Send" }));
+    await waitFor(() =>
+      expect(call.mock.calls.filter(([m]) => m === "answerGate").map(([, a]) => a)).toEqual([
+        {
+          ws: "ws-1",
+          gate: gate.gate,
+          body: { answer: "Redis, with a TTL", comment: null, version: 1 },
+        },
+      ]),
+    );
+    expect(call.mock.calls.some(([m]) => m === "sendMessage")).toBe(false);
+  });
+
+  it("sends a message to the session while a proposal waits, and the card keeps Approve proposal", async () => {
+    const reply = fixtureThread("an open proposal waits");
+    const task = makeTask({ ...AW8_TASK, gates: [openGate(reply, 1)], session: RUNNING });
+    const call = installBridge({
+      task: () => task,
+      tasks: () => [task],
+      thread: () => reply,
+      answerGate: () => ({ applied: true }),
+      sendMessage: () => ({ applied: true }),
+    });
+    renderApp(
+      <DialogsProvider ws="ws-1">
+        <TaskDetail ws="ws-1" taskId={task.id} />
+      </DialogsProvider>,
+    );
+    const box = await screen.findByRole("textbox", { name: "Message to claude@macbook-pro" });
+    expect(box.getAttribute("placeholder")).toBe("Discuss the proposal, or ask the agent…");
+    await userEvent.type(box, "Also send Retry-After");
+    await userEvent.click(screen.getByRole("button", { name: "Send" }));
+    await waitFor(() =>
+      expect(call.mock.calls.filter(([m]) => m === "sendMessage").map(([, a]) => a)).toEqual([
+        { ws: "ws-1", task: task.id, text: "Also send Retry-After" },
+      ]),
+    );
+    expect(call.mock.calls.some(([m]) => m === "answerGate")).toBe(false);
+    const card = screen.getByRole("article", { name: "Proposal v3" });
+    expect(within(card).getByRole("button", { name: "Approve proposal" })).toBeTruthy();
+  });
+
+  it("keeps the Assign card at the top of Activity, above the description and the rows", async () => {
+    const reply = fixtureThread("question, answer");
+    const task = makeTask({
+      ...AW8_TASK,
+      assignee: null,
+      needs_you_lane: true,
+      needs_you_reasons: [{ reason: "assign" }],
+    });
+    show(task, reply);
+    const activity = await screen.findByRole("region", { name: "Activity" });
+    const assign = screen.getByText("Assign task");
+    const description = screen.getByRole("region", { name: "Description" });
+    expect(
+      assign.compareDocumentPosition(description) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      assign.compareDocumentPosition(activity) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(within(activity).queryByText("Assign task")).toBeNull();
+  });
+
+  it("keeps an open Assign gate at the top of Activity", async () => {
+    const task = makeTask({
+      ...AW8_TASK,
+      assignee: null,
+      gates: [makeGate({ kind: "assign", title: "Assign task", options: [] })],
+      needs_you_lane: true,
+      needs_you_reasons: [{ reason: "gate", kind: "assign" }],
+    });
+    show(task, fixtureThread("question, answer"));
+    const activity = await screen.findByRole("region", { name: "Activity" });
+    const assign = screen.getByText("Assign task");
+    expect(
+      assign.compareDocumentPosition(activity) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(screen.getAllByText("Assign task")).toHaveLength(1);
+  });
+
+  it("lists the proposal versions in Properties, with the file of an old version", async () => {
+    stubWidth(700);
+    const reply: ThreadReply = {
+      ...fixtureThread("an open proposal waits"),
+      events: [
+        {
+          ...fixtureThread("an open proposal waits").events[0]!,
+          id: "old",
+          event: {
+            ...fixtureThread("an open proposal waits").events[0]!.event,
+            id: "old",
+            data: { version: 2, file: "approach/v2.md" },
+          },
+        },
+        ...fixtureThread("an open proposal waits").events,
+      ],
+    };
+    const task = makeTask({ ...AW8_TASK, proposal: { latest: 3, approved: 2 } });
+    const call = installBridge({
+      task: () => task,
+      tasks: () => [task],
+      thread: () => reply,
+      taskFile: (args: { path: string }) => ({
+        path: args.path,
+        size: 10,
+        modified: "2026-11-26T10:00:00.000Z",
+        text: "OLD-VERSION-TEXT",
+        reason: null,
+      }),
+    });
+    renderApp(
+      <DialogsProvider ws="ws-1">
+        <TaskDetail ws="ws-1" taskId={task.id} />
+      </DialogsProvider>,
+    );
+    await userEvent.click(await screen.findByRole("tab", { name: "Properties" }));
+    const properties = screen.getByRole("region", { name: "Properties" });
+    expect(within(properties).getByText("Proposal")).toBeTruthy();
+    expect(within(properties).getByText("Approved")).toBeTruthy();
+    expect(within(properties).getByText("Waits for you")).toBeTruthy();
+    await userEvent.click(within(properties).getByRole("button", { name: "v2" }));
+    expect(await within(properties).findByText("OLD-VERSION-TEXT")).toBeTruthy();
+    expect(call.mock.calls.filter(([m]) => m === "taskFile").map(([, a]) => a)).toContainEqual({
+      ws: "ws-1",
+      task: task.id,
+      path: `tasks/${task.id}/approach/v2.md`,
+    });
   });
 });
