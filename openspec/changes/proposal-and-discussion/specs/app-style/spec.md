@@ -35,3 +35,10 @@ Activity on the desktop and the phone SHALL have 3 row styles only: a message (a
 #### Scenario: Styles of a Discuss stage
 - **WHEN** Activity of AW-12 has an agent message, a question, an answer, a replaced proposal and the newest proposal
 - **THEN** it shows 3 messages with the same text size, one task line and one proposal card
+
+### Requirement: Fallback font for box drawing characters
+Both apps SHALL bundle JetBrains Mono 2.304 (the release file, SIL Open Font License 1.1, with its notice in `THIRD_PARTY_NOTICES`). The desktop SHALL list it after Inter in the sans stack and after Geist Mono in the mono stack; the phone SHALL use it as its monospace font. Each box drawing character from U+2500 to U+257F SHALL then show with a glyph, in a code block, a terminal snapshot and a message. The app SHALL load no font from the network.
+
+#### Scenario: Tree in a code block
+- **WHEN** an agent message has a code block with `├── src` and `└── tests`
+- **THEN** each line shows the box drawing characters, with the same character width as the letters

@@ -67,6 +67,7 @@ Each status color has a tint for chips and banners: the color at 12 % to 14 % op
 
 ## 3. Typography
 1. Font: Inter (variable) for all text, Geist Mono (variable) for task keys, paths, commands and the terminal. Both are bundled in the app from maintained npm packages. The app loads no font from the network (CSP `font-src 'self'`).
+1a. Fallback font: JetBrains Mono 2.304 (variable, OFL 1.1, `THIRD_PARTY_NOTICES`) is the font after Inter and Geist Mono on the desktop (`desktop/src/renderer/src/fonts/`), and the monospace font of the phone (`res/font/jetbrains_mono.ttf`). It has each box drawing character (U+2500 to U+257F), so a tree or a table of an agent shows with no missing glyph. The npm package of JetBrains Mono has no box drawing range, so the app bundles the release file.
 2. Turn on the Inter features `cv11` (single-story a) and `ss01` (open digits), and `tnum` for counts and times.
 3. Use sentence case for all labels. Do not use uppercase section labels.
 

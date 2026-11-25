@@ -287,7 +287,7 @@ describe("Inbox list and detail", () => {
         .map((b) => b.getAttribute("aria-label")),
     ).toEqual([
       "Assign task: AW-1 Add an audit log",
-      "Answer question: AW-4 Fix rounding",
+      "Reply to a question: AW-4 Fix rounding",
       "Fix a file: tasks/projects/broken/project.yaml",
     ]);
     // The other active tasks are under the rows.

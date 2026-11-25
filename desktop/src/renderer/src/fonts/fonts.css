@@ -1,0 +1,14 @@
+/*
+ * JetBrains Mono 2.304 (SIL Open Font License 1.1, THIRD_PARTY_NOTICES): the fallback of the mono
+ * and sans stacks for the glyphs that Geist Mono and Inter do not have, for example the box drawing
+ * characters U+2500 to U+257F of a tree or a table in a terminal snapshot or a code block. Source:
+ * https://github.com/JetBrains/JetBrainsMono/releases/tag/v2.304, the file
+ * fonts/variable/JetBrainsMono[wght].ttf, converted to WOFF2 with fontTools.
+ */
+@font-face {
+  font-family: "JetBrains Mono AW";
+  src: url("./jetbrains-mono-wght.woff2") format("woff2");
+  font-weight: 100 800;
+  font-style: normal;
+  font-display: swap;
+}

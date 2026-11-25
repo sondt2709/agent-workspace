@@ -1,7 +1,7 @@
 // The Inbox (openspec navigation-prototype, docs/phase-1.md 10.8): a list and a detail with the
 // tabs "Needs you" and "Updates". "Needs you" lists each task in the lane and each file to fix,
-// then the working, paused and queued tasks; the detail of a task has its gate cards to act in
-// place. A task with an answer notice keeps its row until the notice closes. The tab and the
+// then the working, paused and queued tasks; the detail of a task has the Activity row of each
+// open gate to act in place (openspec proposal-and-discussion). A task with an answer notice keeps its row until the notice closes. The tab and the
 // selection are the search params `tab` and `item`.
 import AutoAwesome from "@mui/icons-material/AutoAwesomeOutlined";
 import ErrorOutline from "@mui/icons-material/ErrorOutlineOutlined";
@@ -26,8 +26,8 @@ import { useNavigate, useParams, useSearchParams } from "react-router";
 import type { Task } from "../../../shared/channels.ts";
 import { errorText } from "../bridge.ts";
 import { digestLine } from "../kb-model.ts";
-import { listGroups, taskLabel } from "../model.ts";
-import { inboxItems, type InboxItem, type InboxTab } from "../nav-model.ts";
+import { taskLabel } from "../model.ts";
+import { inboxGroups, inboxItems, type InboxItem, type InboxTab } from "../nav-model.ts";
 import {
   useGateNoticeTasks,
   useIssues,
@@ -51,13 +51,6 @@ const ITEM_ICON: Record<InboxItem["kind"], ReactNode> = {
   digest: <AutoAwesome sx={{ fontSize: 16 }} />,
   sync: <SyncProblem sx={{ fontSize: 16 }} />,
 };
-
-/** The groups under the "Needs you" rows: the other active tasks (the List rule). */
-const OTHER_GROUPS = [
-  { id: "running", label: "Working now" },
-  { id: "paused", label: "Paused" },
-  { id: "queued", label: "Queued" },
-] as const;
 
 function ItemRow(props: { item: InboxItem; selected: boolean; onOpen: () => void }) {
   const { item } = props;
@@ -118,7 +111,11 @@ function TaskRow({ task, onOpen }: { task: Task; onOpen: () => void }) {
   );
 }
 
-/** The detail of an Inbox row: the gate cards of a task, a file to fix, the knowledge, the sync. */
+/**
+ * The detail of an Inbox row: the Activity row of each open gate of a task (a question with its
+ * reply field, the proposal card, a gate card), Assign or a pause; a file to fix; the knowledge;
+ * the sync.
+ */
 function ItemDetail({ ws, item }: { ws: string; item: InboxItem }) {
   const navigate = useNavigate();
   const dialogs = useDialogs();
@@ -158,7 +155,7 @@ function ItemDetail({ ws, item }: { ws: string; item: InboxItem }) {
           {task.title ?? "(no title)"}
         </Typography>
         <Box role="region" aria-label={`${taskLabel(task)} needs you`}>
-          <NeedsYouCards ws={ws} task={task} />
+          <NeedsYouCards ws={ws} task={task} inbox />
         </Box>
       </>
     );
@@ -274,14 +271,7 @@ export function Inbox() {
   // From 840 px the first row shows when none is selected (prototype), and when the selected row
   // left the list (for example after its gate is answered).
   const selected = shown.find((i) => i.id === chosen) ?? (wide ? shown[0] : undefined);
-  const inRows = new Set(shown.flatMap((i) => (i.kind === "task" ? [i.task.id] : [])));
-  const groups =
-    tab === "you"
-      ? listGroups(
-          active.filter((t) => !inRows.has(t.id)),
-          queues,
-        )
-      : [];
+  const groups = tab === "you" ? inboxGroups(active, shown, queues) : [];
   const open = (item: InboxItem) =>
     setParams({ ...(tab === "updates" ? { tab } : {}), item: item.id });
   const count = (t: InboxTab) => items.filter((i) => i.tab === t).length;
@@ -305,30 +295,26 @@ export function Inbox() {
             The knowledge of today and the devices that wait for sync show here.
           </Empty>
         ))}
-      {OTHER_GROUPS.map(({ id, label }) => {
-        const group = groups.find((g) => g.id === id);
-        if (!group) return null;
-        return (
-          <List
-            key={id}
-            aria-label={label}
-            disablePadding
-            subheader={
-              <ListSubheader
-                sx={{ px: 4, mt: 2 }}
-              >{`${label} · ${group.tasks.length}`}</ListSubheader>
-            }
-          >
-            {group.tasks.map((task) => (
-              <TaskRow
-                key={task.id}
-                task={task}
-                onOpen={() => void navigate(`/w/${ws}/tasks/${task.id}`)}
-              />
-            ))}
-          </List>
-        );
-      })}
+      {groups.map((group) => (
+        <List
+          key={group.id}
+          aria-label={group.label}
+          disablePadding
+          subheader={
+            <ListSubheader
+              sx={{ px: 4, mt: 2 }}
+            >{`${group.label} · ${group.tasks.length}`}</ListSubheader>
+          }
+        >
+          {group.tasks.map((task) => (
+            <TaskRow
+              key={task.id}
+              task={task}
+              onOpen={() => void navigate(`/w/${ws}/tasks/${task.id}`)}
+            />
+          ))}
+        </List>
+      ))}
     </Box>
   );
   const detail = selected ? (

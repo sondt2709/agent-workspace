@@ -11,6 +11,7 @@ import { StrictMode, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import { RouterProvider } from "react-router";
 import { useBridgeEvents } from "./events.ts";
+import "./fonts/fonts.css";
 import { createQueryClient } from "./queries.ts";
 import { createAppRouter } from "./routes.tsx";
 

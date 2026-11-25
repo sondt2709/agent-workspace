@@ -39,3 +39,7 @@
 - [ ] 6.2 E2E with the fake agent: question, answer, a second question closes the first, proposal v1, a message, proposal v2 replaces v1, Approve moves to Ready
 - [ ] 6.3 Screenshots before and after: desktop and phone (Activity, proposal full screen, Inbox)
 - [ ] 6.4 One real Claude Code session on a synthetic task: it asks with `ask` only, writes one proposal with no question, and never asks for permission to write it
+
+## 7. Fallback font
+
+- [ ] 7.1 JetBrains Mono 2.304 bundled on the desktop (WOFF2, after Inter and Geist Mono) and on the phone (`res/font/jetbrains_mono.ttf`, the monospace font), with its notice in `THIRD_PARTY_NOTICES`

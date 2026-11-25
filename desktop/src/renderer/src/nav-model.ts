@@ -9,7 +9,7 @@ import type {
   Task,
   WorkspaceSummary,
 } from "../../shared/channels.ts";
-import { ago, details, gateLabel, pauseText, taskLabel } from "./model.ts";
+import { ago, details, gateLabel, listGroups, pauseText, taskLabel } from "./model.ts";
 
 /** The name of a workspace: its name, else the last part of its folder. */
 export function workspaceName(ws: Pick<WorkspaceSummary, "id" | "name" | "path">): string {
@@ -180,6 +180,33 @@ export function inboxItems(input: {
     });
   }
   return items;
+}
+
+/** The groups under the "Needs you" rows of the Inbox, in this order. */
+export const INBOX_GROUPS = [
+  { id: "running", label: "Working now" },
+  { id: "paused", label: "Paused" },
+  { id: "queued", label: "Queued" },
+] as const;
+
+/**
+ * The groups of the "Needs you" tab under its rows (openspec proposal-and-discussion): Working now,
+ * Paused and Queued, only when not empty. A task with a row (`rows`) is in no group.
+ */
+export function inboxGroups(
+  tasks: readonly Task[],
+  rows: readonly InboxItem[],
+  queued: ReadonlySet<string> | ReadonlyMap<string, unknown> = new Set(),
+): { id: (typeof INBOX_GROUPS)[number]["id"]; label: string; tasks: Task[] }[] {
+  const inRows = new Set(rows.flatMap((i) => (i.kind === "task" ? [i.task.id] : [])));
+  const groups = listGroups(
+    tasks.filter((t) => !t.archived && !inRows.has(t.id)),
+    queued,
+  );
+  return INBOX_GROUPS.flatMap(({ id, label }) => {
+    const group = groups.find((g) => g.id === id);
+    return group ? [{ id, label, tasks: group.tasks }] : [];
+  });
 }
 
 // ---- Sync ----

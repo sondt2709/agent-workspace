@@ -4,18 +4,22 @@ import {
   boardLanes,
   commentRule,
   countdown,
+  details,
+  gateLabel,
   GROUP_LABEL,
   hlcMs,
   listGroups,
   needYouNav,
   pauseText,
   pendingAnswer,
+  proposalFileVersion,
+  proposalVersions,
   sessionLink,
   switchGroups,
   taskPageLayout,
   titleFromFirstMessage,
 } from "./model.ts";
-import { makeGate, makeTask, PROJECT } from "./testing.tsx";
+import { eventRow, makeGate, makeTask, PROJECT } from "./testing.tsx";
 
 const paused = {
   cause: "device_offline",
@@ -260,5 +264,54 @@ describe("sessionLink (agent-pushes-updates)", () => {
     expect(sessionLink({ ...base, host: "tmux" })).toEqual([
       "Claude session 01a20a1c-5e55-7000-8000-000000000009",
     ]);
+  });
+});
+
+describe("proposals (openspec proposal-and-discussion)", () => {
+  it("names the gates of the Inbox rows: Reply to a question and Approve proposal", () => {
+    expect(gateLabel("question")).toBe("Reply to a question");
+    expect(gateLabel("reply")).toBe("Reply to a question");
+    expect(gateLabel("approve_proposal")).toBe("Approve proposal");
+    expect(gateLabel("approve_result")).toBe("Approve result");
+  });
+
+  it("lists the versions with the file of their proposal.proposed event, old files too", () => {
+    const thread = {
+      task: { id: "t", key: null, title: null },
+      events: [
+        eventRow("proposal.proposed", { version: 5, file: "approach/v5.md" }, 1),
+        eventRow(
+          "gate.opened",
+          { gate: "g5", kind: "approve_proposal", file: "approach/v5.md", text: "# Old plan" },
+          2,
+        ),
+        eventRow("proposal.proposed", { version: 6, file: "proposal/v6.md" }, 3),
+        eventRow(
+          "gate.opened",
+          { gate: "g6", kind: "approve_proposal", file: "proposal/v6.md", text: "# New plan" },
+          4,
+        ),
+        // A version whose gate is not here yet.
+        eventRow("proposal.proposed", { version: 7, file: "proposal/v7.md" }, 5),
+      ],
+      next: null,
+      prev: null,
+      ancestors: [],
+    };
+    expect(proposalVersions(thread)).toEqual([
+      { version: 5, file: "approach/v5.md", text: "# Old plan" },
+      { version: 6, file: "proposal/v6.md", text: "# New plan" },
+      { version: 7, file: "proposal/v7.md", text: "" },
+    ]);
+    expect(proposalFileVersion("proposal/v12.md")).toBe(12);
+    expect(proposalFileVersion(null)).toBeNull();
+  });
+
+  it("reads the task field proposal, with no proposal as latest 0", () => {
+    expect(details(makeTask()).proposal).toEqual({ latest: 0, approved: null });
+    expect(details(makeTask({ proposal: { latest: 2, approved: 1 } })).proposal).toEqual({
+      latest: 2,
+      approved: 1,
+    });
   });
 });

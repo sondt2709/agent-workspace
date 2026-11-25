@@ -63,7 +63,7 @@ describe("gateNotification", () => {
     expect(spec).toMatchObject({
       id: "g1:v2",
       groupId: "t1",
-      title: "AW-3 · Answer question",
+      title: "AW-3 · Reply to a question",
       actions: ["100/min", "1000/min"],
       hasReply: false,
       answer: { gate: "g1", version: 2 },
@@ -109,13 +109,17 @@ describe("gateNotification", () => {
     expect(new TextEncoder().encode(long.body).length).toBeLessThanOrEqual(BODY_BYTES);
   });
 
-  it("gives no action to Confirm approach and Approve result", () => {
-    for (const kind of ["confirm_approach", "approve_result"]) {
+  it("gives no action to Approve proposal and Approve result", () => {
+    for (const [kind, title] of [
+      ["approve_proposal", "AW-3 · Approve proposal"],
+      ["approve_result", "AW-3 · Approve result"],
+    ] as const) {
       const spec = gateNotification(
         "w",
         task(),
         gate({ kind, options: ["Approve", "Request changes"] }),
       )!;
+      expect(spec.title).toBe(title);
       expect(spec.actions).toEqual([]);
       expect(spec.hasReply).toBe(false);
     }

@@ -1,6 +1,7 @@
 // The task page, as an issue (docs/design.md 8.6, openspec task-view-focus, task-review-layout): the
 // header with the need-you navigation, "Show list" and the stage progress, then the tabs Activity
-// (gates, the description, the key activity), Session (the session summary and each raw event:
+// (Assign and a pause, the description, the activity rows with the gates in their place in time:
+// openspec proposal-and-discussion), Session (the session summary and each raw event:
 // principle 8), Terminal and Files. The properties are a right panel when the task page is wide,
 // else a Properties tab. The width is the width of the task page itself. The Android app has the
 // same page (android/app TaskScreens.kt).
@@ -26,18 +27,18 @@ import {
   useMediaQuery,
   type Theme,
 } from "@mui/material";
-import { useCallback, useId, useState, type ReactNode } from "react";
+import { useCallback, useId, useRef, useState, type ReactNode } from "react";
 import { Link as RouterLink, useNavigate, useSearchParams } from "react-router";
 import type { Task } from "../../../shared/channels.ts";
 import { errorText } from "../bridge.ts";
 import {
-  approachVersions,
   CONTENT_MAX_PX,
   details,
   GROUP_LABEL,
   needYouNav,
   pauseLabel,
   PROPERTIES_PANEL_PX,
+  proposalVersions,
   sessionLink,
   stageLabel,
   STAGES,
@@ -53,7 +54,8 @@ import { Empty, LoadingRows, MarkdownText, RawText, TaskChips } from "./common.t
 import { useDialogs } from "./dialogs.tsx";
 import { FileText, TaskTree } from "./Files.tsx";
 import { AssignCard, GateCard } from "./GateCard.tsx";
-import { ApproachVersions, GateNotice } from "./GateParts.tsx";
+import { GateNotice, ProposalVersions } from "./GateParts.tsx";
+import { MessageBoxFocus } from "./ProposalCard.tsx";
 import { SessionOptionChips, SessionOptionRows } from "./SessionOptions.tsx";
 import { TaskActionsMenu } from "./TaskActions.tsx";
 import { OpenTerminalButton, TerminalView } from "./TerminalView.tsx";
@@ -148,7 +150,7 @@ function Properties({ ws, task }: { ws: string; task: Task }) {
   const work = useWorkEvents(ws, task.id);
   const all = useTasks(ws).data ?? [];
   const queue = useQueues(ws).data?.get(task.id);
-  const versions = approachVersions(work.data);
+  const versions = proposalVersions(work.data);
   const dialogs = useDialogs();
   return (
     <Stack spacing={3} component="section" aria-label="Properties">
@@ -171,21 +173,22 @@ function Properties({ ws, task }: { ws: string; task: Task }) {
           <Typography variant="body2">{task.project}</Typography>
         </Field>
       )}
-      <Field label="Approach">
-        {versions.length === 0 && d.approach.latest === 0 ? (
+      <Field label="Proposal">
+        {versions.length === 0 && d.proposal.latest === 0 ? (
           <Typography variant="body2" color="text.secondary">
             Not written yet
           </Typography>
         ) : (
-          <ApproachVersions
+          <ProposalVersions
             ws={ws}
             task={task.id}
-            approach={d.approach}
+            proposal={d.proposal}
             versions={
               versions.length > 0
                 ? versions
-                : Array.from({ length: d.approach.latest }, (_, i) => ({
+                : Array.from({ length: d.proposal.latest }, (_, i) => ({
                     version: i + 1,
+                    file: `proposal/v${i + 1}.md`,
                     text: "",
                   }))
             }
@@ -369,19 +372,23 @@ function TaskFiles({ ws, task }: { ws: string; task: string }) {
 }
 
 /**
- * The cards of what needs the person: each open gate, Assign, and a pause that needs the person.
- * `away` (each tab except Activity): the items show as one line with "Show in Activity", so a
- * gate never hides behind a tab. The Terminal tab (`away.terminal`) keeps the cards that act on
+ * The cards of what needs the person. Activity (the default): Assign and a pause at the top; the
+ * gates show at their place in time in the activity rows (openspec proposal-and-discussion).
+ * `inbox` (the Inbox detail): the Activity row of each open gate too, a question with its reply
+ * field. `away` (each tab except Activity): the items show as one line with "Show in Activity", so
+ * a gate never hides behind a tab. The Terminal tab (`away.terminal`) keeps the cards that act on
  * the terminal (Take over terminal, Sign in).
  */
 export function NeedsYouCards({
   ws,
   task,
   away,
+  inbox = false,
 }: {
   ws: string;
   task: Task;
   away?: { onShowActivity: () => void; terminal?: boolean };
+  inbox?: boolean;
 }) {
   const open = task.gates.filter((g) => g.state === "open");
   const assign =
@@ -390,7 +397,14 @@ export function NeedsYouCards({
   const paused = details(task).paused;
   const dialogs = useDialogs();
   const terminal = away?.terminal === true;
-  const gates = !away ? open : terminal ? open.filter((g) => g.kind === "take_over_terminal") : [];
+  // Activity keeps an Assign gate at the top; the other gates are in the activity rows.
+  const gates = inbox
+    ? open
+    : terminal
+      ? open.filter((g) => g.kind === "take_over_terminal")
+      : away
+        ? []
+        : open.filter((g) => g.kind === "assign");
   const showPause = paused && (!away || (terminal && paused.cause === "login_expired"));
   const others =
     open.length -
@@ -398,6 +412,10 @@ export function NeedsYouCards({
     (away && assign ? 1 : 0) +
     (paused?.needs_human && !showPause ? 1 : 0);
   if (away && others === 0 && gates.length === 0 && !showPause) return null;
+  if (!away && !inbox && !assign && !showPause && gates.length === 0) {
+    // Activity: only the notice; the gates are in the activity rows.
+    return <GateNotice ws={ws} task={task.id} />;
+  }
   return (
     <Stack spacing={2}>
       {!away && <GateNotice ws={ws} task={task.id} />}
@@ -415,11 +433,12 @@ export function NeedsYouCards({
         </Alert>
       )}
       {gates.map((gate) => (
-        <GateCard key={gate.gate} ws={ws} task={task} gate={gate} />
+        <GateCard key={gate.gate} ws={ws} task={task} gate={gate} reply={inbox} />
       ))}
       {assign && !away && <AssignCard ws={ws} task={task} />}
       {showPause && (
         <Alert
+          {...(paused.needs_human ? { "data-needs-you": "true" } : {})}
           severity={paused.needs_human ? "warning" : "info"}
           variant="outlined"
           action={
@@ -574,6 +593,21 @@ export function TaskDetail({
     setTab("activity");
     document.getElementById(tabId("activity"))?.focus();
   };
+  // The header chip "Needs you" scrolls to the newest row that needs the person, in Activity.
+  const panel = useRef<HTMLDivElement>(null);
+  const showNeed = () => {
+    setTab("activity");
+    setTimeout(() => {
+      const rows = panel.current?.querySelectorAll<HTMLElement>("[data-needs-you]") ?? [];
+      rows[rows.length - 1]?.scrollIntoView?.({ block: "center", behavior: "smooth" });
+    }, 0);
+  };
+  // "Discuss" of a proposal puts the cursor in the message box.
+  const messageBox = useRef<HTMLTextAreaElement>(null);
+  const focusMessageBox = useCallback(() => {
+    setTab((t) => (t === "activity" || t === "session" ? t : "activity"));
+    setTimeout(() => messageBox.current?.focus(), 0);
+  }, []);
   let body: ReactNode;
   if (query.isPending) body = <LoadingRows rows={6} label="Loading the task" />;
   else if (query.isError) {
@@ -632,7 +666,7 @@ export function TaskDetail({
             </Typography>
             {task.project && <Chip label={task.project} />}
             {task.archived && <Chip label="Archived" variant="outlined" />}
-            <TaskChips task={task} queue={queue} />
+            <TaskChips task={task} queue={queue} onShowNeed={showNeed} />
             <SessionOptionChips ws={ws} task={task} />
             <Box sx={{ flex: 1 }} />
             <NeedYouNavigation ws={ws} task={task.id} />
@@ -678,6 +712,7 @@ export function TaskDetail({
               {!wide && <Tab value="properties" label="Properties" id={tabId("properties")} />}
             </Tabs>
             <Box
+              ref={panel}
               role="tabpanel"
               aria-labelledby={tabId(tab)}
               sx={{ overflow: "auto", p: 4, flex: 1, minHeight: 0 }}
@@ -700,7 +735,7 @@ export function TaskDetail({
             {reading && (
               <Box sx={{ px: 4, py: 2, borderTop: 1, borderColor: "divider" }}>
                 <Box sx={READ_SX}>
-                  <Composer ws={ws} task={task} />
+                  <Composer ws={ws} task={task} inputRef={messageBox} />
                 </Box>
               </Box>
             )}
@@ -717,7 +752,9 @@ export function TaskDetail({
   return (
     <Box ref={ref} sx={{ height: "100%", minHeight: 0, display: "flex" }}>
       {layout.list && <TaskSwitchList ws={ws} current={taskId} />}
-      <Stack sx={{ flex: 1, minWidth: 0, minHeight: 0 }}>{body}</Stack>
+      <MessageBoxFocus.Provider value={focusMessageBox}>
+        <Stack sx={{ flex: 1, minWidth: 0, minHeight: 0 }}>{body}</Stack>
+      </MessageBoxFocus.Provider>
     </Box>
   );
 }

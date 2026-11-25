@@ -72,3 +72,38 @@ describe("DesktopPrefs appearance (openspec screens-align)", () => {
     expect(await new DesktopPrefs(path).appearance()).toBe("system");
   });
 });
+
+describe("DesktopPrefs proposal text size (openspec proposal-and-discussion)", () => {
+  it("is 16 px with no key, and keeps a size for a new instance as proposal_text_px", async () => {
+    const path = join(dir, "aw-desktop.json");
+    await writeFile(path, `${JSON.stringify({ phrase_confirmed: ["u0"], appearance: "dark" })}\n`);
+    const prefs = new DesktopPrefs(path);
+    expect(await prefs.proposalTextPx()).toBe(16);
+    await prefs.setProposalTextPx(20);
+    expect(await new DesktopPrefs(path).proposalTextPx()).toBe(20);
+    expect(await new DesktopPrefs(path).appearance()).toBe("dark");
+    expect(JSON.parse(await readFile(path, "utf8"))).toEqual({
+      phrase_confirmed: ["u0"],
+      phrase_shown: [],
+      appearance: "dark",
+      proposal_text_px: 20,
+    });
+    expect((await stat(path)).mode & 0o777).toBe(0o600);
+  });
+
+  it("reads a saved value with the shared rule: limits, steps and bad values", async () => {
+    const path = join(dir, "aw-desktop.json");
+    for (const [saved, px] of [
+      [30, 24],
+      [10, 14],
+      [17, 16],
+      [16.5, 16],
+      ["22", 22],
+      [true, 16],
+      [null, 16],
+    ] as const) {
+      await writeFile(path, `${JSON.stringify({ proposal_text_px: saved })}\n`);
+      expect({ saved, px: await new DesktopPrefs(path).proposalTextPx() }).toEqual({ saved, px });
+    }
+  });
+});

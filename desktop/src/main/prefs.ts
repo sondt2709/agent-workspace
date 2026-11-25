@@ -1,8 +1,10 @@
 // The preferences of the desktop app that are not awd data: the users whose recovery phrase the
 // person confirmed (design decision 6 of add-desktop-devices-knowledge), the users whose phrase
-// the app showed by itself one time (owner decision Q10, fix list 0-34), and the appearance
-// (System, Light, Dark; openspec screens-align). One JSON file in the
-// Electron user data folder, mode 0600, written with a temporary file and a rename.
+// the app showed by itself one time (owner decision Q10, fix list 0-34), the appearance
+// (System, Light, Dark; openspec screens-align) and the text size of a proposal (openspec
+// proposal-and-discussion). One JSON file in the Electron user data folder, mode 0600, written
+// with a temporary file and a rename.
+import { loadProposalTextSize } from "@aw/client/gates";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { z } from "zod";
@@ -15,6 +17,8 @@ const prefsFile = z.looseObject({
   phrase_shown: z.array(z.string()).default([]),
   // An unknown value counts as "system"; a file with no key keeps no key.
   appearance: z.enum(APPEARANCES).optional().catch(undefined),
+  // The rule of `loadProposalTextSize` reads the value: a bad value is the default size.
+  proposal_text_px: z.unknown().optional(),
 });
 type PrefsFile = z.infer<typeof prefsFile>;
 
@@ -74,6 +78,22 @@ export class DesktopPrefs {
   /** The appearance of the app: "system" when the file has none. */
   async appearance(): Promise<Appearance> {
     return (await this.#load()).appearance ?? "system";
+  }
+
+  /** The text size of a proposal in px: 16 when the file has none (`loadProposalTextSize`). */
+  async proposalTextPx(): Promise<number> {
+    const saved = (await this.#load()).proposal_text_px;
+    return loadProposalTextSize(
+      typeof saved === "number" || typeof saved === "string" ? String(saved) : null,
+    );
+  }
+
+  async setProposalTextPx(px: number): Promise<void> {
+    const data = await this.#load();
+    if (data.proposal_text_px === px) return;
+    const next = { ...data, proposal_text_px: px };
+    await this.#save(next);
+    this.#data = next;
   }
 
   async setAppearance(appearance: Appearance): Promise<void> {

@@ -1,4 +1,4 @@
-import { cleanup, screen, waitFor } from "@testing-library/react";
+import { cleanup, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 import type { Gate, Task } from "../../../shared/channels.ts";
@@ -19,7 +19,13 @@ const OPENED = Date.parse("2026-11-23T10:00:00.000Z");
 
 function setup(
   gate: Gate,
-  options: { now?: number; data?: Record<string, unknown>; task?: Partial<Task> } = {},
+  options: {
+    now?: number;
+    data?: Record<string, unknown>;
+    task?: Partial<Task>;
+    /** The Inbox detail: a question has its own reply field. */
+    reply?: boolean;
+  } = {},
 ) {
   const task = makeTask({ gates: [gate], needs_you: [gate.gate], ...options.task });
   const call = installBridge({
@@ -31,7 +37,7 @@ function setup(
     }),
     answerGate: () => ({ applied: true }),
   });
-  renderApp(<GateCard ws="ws-1" task={task} gate={gate} />, {
+  renderApp(<GateCard ws="ws-1" task={task} gate={gate} reply={options.reply ?? false} />, {
     clock: fixedClock(options.now ?? OPENED),
   });
   return call;
@@ -234,30 +240,30 @@ describe("GateCard", () => {
     expect(screen.queryByTestId("gate-text")).toBeNull();
   });
 
-  it("answers a question with free text", async () => {
-    const call = setup(makeGate());
-    await userEvent.type(screen.getByLabelText("Or type your answer"), "500/min for now");
-    await userEvent.click(screen.getByRole("button", { name: "Submit answer" }));
+  it("answers a question with free text in the reply field of the Inbox", async () => {
+    const call = setup(makeGate(), { reply: true });
+    await userEvent.type(screen.getByLabelText("Or write your answer"), "500/min for now");
+    await userEvent.click(screen.getByRole("button", { name: "Send" }));
     await waitFor(() =>
       expect(answerCalls(call)[0]).toMatchObject({ body: { answer: "500/min for now" } }),
     );
   });
 
   it("sends the free text with its spaces and line breaks (desktop-shell review 10)", async () => {
-    const call = setup(makeGate());
-    const field = screen.getByLabelText("Or type your answer");
+    const call = setup(makeGate(), { reply: true });
+    const field = screen.getByLabelText("Or write your answer");
     await userEvent.type(field, "    indented code");
-    await userEvent.click(screen.getByRole("button", { name: "Submit answer" }));
+    await userEvent.click(screen.getByRole("button", { name: "Send" }));
     await waitFor(() =>
       expect(answerCalls(call)[0]).toMatchObject({ body: { answer: "    indented code" } }),
     );
   });
 
-  it("needs a comment to request changes of an approach", async () => {
+  it("needs a comment to request changes of a result", async () => {
     const gate = makeGate({
-      kind: "confirm_approach",
-      title: "Approach v1",
-      options: ["Confirm", "Request changes"],
+      kind: "approve_result",
+      title: "Result of AW-3",
+      options: ["Approve", "Request changes"],
     });
     const call = setup(gate, { data: { text: "1. Add a token bucket" } });
     expect(await screen.findByText("Add a token bucket")).toBeTruthy();
@@ -274,10 +280,14 @@ describe("GateCard", () => {
     );
   });
 
-  it("shows a short approach in full, with no scroll box (task-review-layout)", async () => {
-    const gate = makeGate({ kind: "confirm_approach", title: "Approach v1", options: ["Confirm"] });
-    setup(gate, { data: { text: "# Plan\n\nA long approach." } });
-    expect(await screen.findByText("A long approach.")).toBeTruthy();
+  it("shows a short gate text in full, with no scroll box (task-review-layout)", async () => {
+    const gate = makeGate({
+      kind: "approve_result",
+      title: "Result of AW-3",
+      options: ["Approve"],
+    });
+    setup(gate, { data: { text: "# Result\n\nThe tests pass." } });
+    expect(await screen.findByText("The tests pass.")).toBeTruthy();
     const box = getComputedStyle(screen.getByTestId("gate-text"));
     expect([box.maxHeight, box.overflowY]).toEqual(["none", "visible"]);
   });
@@ -303,6 +313,26 @@ describe("GateCard", () => {
     await userEvent.click(screen.getByRole("button", { name: "Allow once (late)" }));
     await waitFor(() =>
       expect(answerCalls(call)[0]).toMatchObject({ body: { answer: "Allow once" } }),
+    );
+  });
+
+  it("shows an approve_proposal gate as the proposal card with its version (proposal-and-discussion)", async () => {
+    const gate = makeGate({
+      kind: "approve_proposal",
+      title: "Rate limits",
+      options: ["Approve"],
+      file: "proposal/v4.md",
+    });
+    const call = setup(gate, { data: { text: "# Rate limits\n\nA token bucket." } });
+    const card = await screen.findByRole("article", { name: "Proposal v4" });
+    expect(await within(card).findByText("A token bucket.")).toBeTruthy();
+    expect(screen.queryByTestId("gate-card")).toBeNull();
+    await userEvent.click(screen.getByRole("button", { name: "Approve proposal" }));
+    await waitFor(() =>
+      expect(answerCalls(call)[0]).toMatchObject({
+        gate: gate.gate,
+        body: { answer: "Approve", comment: null, version: 1 },
+      }),
     );
   });
 
