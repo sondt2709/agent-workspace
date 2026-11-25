@@ -6735,11 +6735,11 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorEnvelope"
-  /v1/sessions/{session}/approach:
+  /v1/sessions/{session}/proposal:
     post:
-      operationId: proposeApproach
-      summary: "aw approach: approach/v<n>.md, approach.proposed and the gate Confirm
-        approach"
+      operationId: proposeProposal
+      summary: "aw proposal: proposal/v<n>.md, proposal.proposed and the gate Approve
+        proposal"
       tags: *a2
       requestBody:
         required: true
@@ -6758,34 +6758,90 @@ paths:
                   minLength: 1
                   maxLength: 262144
                   description: Markdown
-                decisions:
-                  default: []
-                  maxItems: 20
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      question:
-                        type: string
-                        minLength: 1
-                        maxLength: 2000
-                      options:
-                        minItems: 1
-                        maxItems: 20
-                        type: array
-                        items:
-                          type: string
-                          minLength: 1
-                          maxLength: 500
-                      recommended:
-                        type: string
-                        minLength: 1
-                        maxLength: 500
-                        description: One of the options
-                    required:
-                      - question
-                      - options
-                      - recommended
+                decisions: {}
+              required:
+                - task
+                - content
+      parameters:
+        - schema:
+            type: string
+            pattern: ^[0-9a-f-]{36}$
+          in: path
+          name: session
+          required: true
+          description: The session id
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoopReply"
+        "400":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "401":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "403":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "409":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "503":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /v1/sessions/{session}/approach:
+    post:
+      operationId: proposeProposalOldRoute
+      summary: The old route of aw proposal, for an older aw CLI
+      tags: *a2
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                task:
+                  type: string
+                  minLength: 1
+                  maxLength: 128
+                  description: The task key or id of the session
+                content:
+                  type: string
+                  minLength: 1
+                  maxLength: 262144
+                  description: Markdown
+                decisions: {}
               required:
                 - task
                 - content
@@ -7055,7 +7111,7 @@ paths:
   /v1/sessions/{session}/gate:
     post:
       operationId: openGate
-      summary: "aw gate open: a custom gate with Markdown and decisions"
+      summary: "aw gate open: a custom gate with Markdown and options"
       tags: *a2
       requestBody:
         required: true
@@ -7074,34 +7130,7 @@ paths:
                   minLength: 1
                   maxLength: 262144
                   description: Markdown
-                decisions:
-                  default: []
-                  maxItems: 20
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      question:
-                        type: string
-                        minLength: 1
-                        maxLength: 2000
-                      options:
-                        minItems: 1
-                        maxItems: 20
-                        type: array
-                        items:
-                          type: string
-                          minLength: 1
-                          maxLength: 500
-                      recommended:
-                        type: string
-                        minLength: 1
-                        maxLength: 500
-                        description: One of the options
-                    required:
-                      - question
-                      - options
-                      - recommended
+                decisions: {}
                 options:
                   default: []
                   maxItems: 20

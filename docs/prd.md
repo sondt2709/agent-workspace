@@ -17,10 +17,10 @@ Agent Workspace (AW) lets you manage the work of your AI agents from anywhere. I
 - **Your laptop is the main device.** You install AW on your local device, for example a MacBook Pro. AW works with that device only (principle 2).
 - **An optional 24/7 remote device keeps the work going.** Add a cloud VM, a home PC or a Mac mini. Agents keep working while the laptop is closed (principle 2).
 - **The phone is a remote control.** You do each human action from the phone. When you close the apps, no work stops (principle 1).
-- **A task starts from your own words, and the human decides.** You write a first message. The agent discusses it, writes the approach and works with any workflow. You decide at gates. Each later session reads the original messages, not a summary (principles 3, 4 and 8).
+- **A task starts from your own words, and the human decides.** You write a first message. The agent discusses it, writes the proposal and works with any workflow. You decide at gates. Each later session reads the original messages, not a summary (principles 3, 4 and 8).
 - **You own all of it.** Your data are open files on your own devices. A built-in sync engine syncs them between your devices. No central AW service keeps your data (principles 5 and 9).
 
-AW ships in 3 phases (section 10). Phase 1 is one person, their own devices, Claude Code and no cloud account. Phase 2 adds storage, the relay and People. Phase 3 adds the vault, schedules, meetings and more agents. The phase 1 approach was verified on real devices: a Mac, a Linux remote device and an Android 14 emulator (`feasibility.md`).
+AW ships in 3 phases (section 10). Phase 1 is one person, their own devices, Claude Code and no cloud account. Phase 2 adds storage, the relay and People. Phase 3 adds the vault, schedules, meetings and more agents. The phase 1 design was verified on real devices: a Mac, a Linux remote device and an Android 14 emulator (`feasibility.md`).
 
 ## 2. Problem
 1. Agent work stops when the laptop closes.
@@ -74,11 +74,11 @@ Claude Code already gives Remote Control for one local session, background sessi
 | Project | One product or repository in a workspace. It holds tasks, project knowledge, links, device bindings and an ordered list of implementing devices. |
 | Task | One unit of work in one project. It has an internal id and a short key for display, for example AW-7. A human or an agent creates it. An agent does the work. A human decides at the gates. |
 | First message | The first input of the agent session, written by the creator of the task. It can start with a command, for example `/my-team:implement`. It replaces the description: AW builds the description as a view from the fields (TSK-23). |
-| Approach | What the agent and the human agreed to do. The agent writes it, and each change makes a new version. The human confirms it. |
+| Proposal | What the agent will do, written after the discussion, with no open question and no choice. Each change makes a new version, which replaces the open one. The human approves it, or discusses it with a message. |
 | Thread | The original messages of a task, word for word: the first message, each human and agent message, questions, answers, gates and artifacts. A summary never replaces it. |
 | Credential | A project test account or an API key that a task uses. It is encrypted. Only local and remote devices get it. |
 | Workflow | The method that the agent follows, for example the skill `my-team:implement` or OpenSpec only. AW does not read it. |
-| Gate | A decision that only a human makes. Phase 1 gates: "Answer question", "Reply", "Confirm approach", "Assign task", "Approve command", "Approve result", "Approve knowledge change", "Approve device", "Continue after usage limit", "Take over terminal", "Fix a file". A workflow can open other gates with `aw gate`. The gate table in `workflow.md` section 3 is the canonical list. |
+| Gate | A decision that only a human makes. Phase 1 gates: "Answer question", "Reply", "Approve proposal", "Assign task", "Approve command", "Approve result", "Approve knowledge change", "Approve device", "Continue after usage limit", "Take over terminal", "Fix a file". A workflow can open other gates with `aw gate`. The gate table in `workflow.md` section 3 is the canonical list. |
 | Agent | An agent runtime on one device, written `claude@ubuntu-01`. It has a credential owner, a maximum of parallel working sessions and an ordered queue. |
 | Session | One run of an agent on a task, with a Claude session id. It runs in a session host (tmux, Orca or a direct terminal) that survives an AW restart. A task has at most 1 running session. |
 | awd | The AW service on each computer. It runs the agents, the session host and the sync engine. Agents use it through the `aw` CLI or its MCP server. The desktop app uses it through a local socket. |
@@ -119,7 +119,7 @@ Phase 2 adds People, members, Send, sources, subscriptions, signals, your relay 
 2. The human assigns the task to `claude@ubuntu-01` in the same form. Without an assignee, the task waits at "Needs you: assign", because AW never assigns a task alone (TSK-26).
 3. ubuntu-01 starts the session with the first message as is. The agent asks "Which limit per client?" with its own question tool. AW turns it into the gate "Answer question" and sends a push. The MacBook Pro shows a notification with one action per option; a click opens the task.
 4. The human answers on the phone. The card shows "Not synced" until ubuntu-01 has the answer. ubuntu-01 uses the first answer, delivers it as the next input and writes "resolved". A later answer becomes a comment.
-5. The agent proposes the approach. The phone shows the push "AW-12 · Confirm approach · v2". The human confirms it. The thread keeps each message word for word.
+5. The agent sends the proposal. The phone shows the push "AW-12 · Approve proposal · v2". The human approves it. The thread keeps each message word for word.
 6. The agent runs `aw ready` with no missing item. AW checks that the knowledge and secure folders are complete on ubuntu-01. Then AW sends "Start implementing".
 7. The agent implements and tests on `k3d`. It posts the result with a PR link and a test report. The human approves it, and the task is Done.
 
@@ -129,7 +129,7 @@ When the phone cannot reach ubuntu-01, the card shows "Not synced · ubuntu-01 n
 1. At 23:00, `claude@macbook-pro` works on AW-21. `claude@ubuntu-01` has 2 working sessions and 3 queued tasks.
 2. The human selects "Sync". The app shows "Synced 3 s ago". The human closes the laptop.
 3. The phone shows "AW-21 · Paused: MacBook Pro is asleep." with the action "Assign to another device…". AW suggests no device and moves nothing by itself (`decisions/2026-11-23-manual-move.md`).
-4. The human selects the action and `claude@ubuntu-01`. ubuntu-01 claims the task and starts a new session from the branch `aw/AW-21` (decision D10). Its first input holds the first message and the confirmed approach.
+4. The human selects the action and `claude@ubuntu-01`. ubuntu-01 claims the task and starts a new session from the branch `aw/AW-21` (decision D10). Its first input holds the first message and the approved proposal.
 5. ubuntu-01 works all night. Each gate reaches the phone as in journey 7.3.
 6. At 08:00, the laptop wakes. Its old session sees the newer claim and stops. AW pushes its unpushed work as a branch (CNT-27). Home shows "While you were away: 6 tasks done, 1 needs you, agents learned 5 things".
 
@@ -148,21 +148,21 @@ Phase: P1, P2 or P3 (section 10). "Must" means required for the release of that 
 | TSK-03, TSK-04 | A drag to another column must open a confirmation that names the effect. Each card also has a "Move to" menu and keyboard moves (WCAG 2.5.7). | P1 |
 | TSK-05 | The agent reports the stage. Only a gate action of the human moves a task past a gate. | P1 |
 | TSK-06, TSK-07 | The list view must group tasks by attention: Needs you, Working, Paused, Queued, Waiting for sync, Waiting for test slot, Backlog, Done. "All tasks" shows the tasks of all projects of the workspace. "My tasks" shows the tasks of the user in all workspaces. | P1 |
-| TSK-08 | A task must show the first message, the approach with its versions, the test server, the credential names, the thread, the terminal output, the diff and the artifacts. | P1 |
+| TSK-08 | A task must show the first message, the proposal with its versions, the test server, the credential names, the thread, the terminal output, the diff and the artifacts. | P1 |
 | TSK-18 | A new task must have a first message. There is no description field and no start prompt setting. AW passes the first message as is as the first input of the session. | P1 |
 | TSK-22 | A task can reference a test server and credentials by name. The human sets them, or the agent proposes them and the human confirms. | P1 |
-| TSK-23 | The description must be a view that AW builds from the fields: first message, confirmed approach, test server name, links and subtasks. It never holds a credential. Each target platform has its own template. | P1 / P2 |
-| TSK-19, TSK-28 | After the discussion, the agent writes the approach. Each change makes a new version. The gate "Confirm approach" confirms it. The first input of a new session holds the first message and the confirmed approach word for word, plus "Read `aw thread --ancestors` first". The context from hooks stays at 10,000 characters or less. | P1 |
+| TSK-23 | The description must be a view that AW builds from the fields: first message, approved proposal, test server name, links and subtasks. It never holds a credential. Each target platform has its own template. | P1 / P2 |
+| TSK-19, TSK-28 | After the discussion, the agent writes the proposal. Each change makes a new version. The gate "Approve proposal" approves it; a message of the human is the discussion. The first input of a new session holds the first message and the approved proposal word for word, plus "Read `aw thread --ancestors` first". The context from hooks stays at 10,000 characters or less. | P1 |
 | TSK-24 | The thread must hold each message as raw text: the first message, text typed in the terminal, each delivered answer and each agent reply. The owner device writes them. AW never replaces them with a summary (principle 8). | P1 |
-| TSK-25 | When the agent asks in the terminal, AW must open a gate. A question tool call becomes "Answer question". A plan-mode exit becomes "Confirm approach". A turn that ends with a question becomes "Reply". | P1 |
-| TSK-20 | AW must start Implement only when the approach is confirmed, the task has an assignee, and `aw ready` passed with no missing item on the implementing device after the sync before implement. Then AW sends "Start implementing". | P1 |
-| TSK-21 | AW must work with any workflow, or with none. The `aw` CLI and the MCP server (MCP-01) give the same generic primitives: message, question, gate, approach, ready, create task or subtask, report stage, artifact, handoff. AW never parses the files of a workflow. | P1 |
-| TSK-09 to TSK-12 | A question must show answer options and a free text field. An approach shows the steps, the test method, the risk and its decisions with a recommendation. A result shows the artifacts and a summary. Each has Approve and Request changes. A comment at a gate does not change the state (TSK-12). | P1 |
+| TSK-25 | When the agent asks in the terminal, AW must open a gate. A question tool call becomes "Answer question". A plan-mode exit becomes "Approve proposal". A turn that ends with a question becomes "Reply". | P1 |
+| TSK-20 | AW must start Implement only when the proposal is approved, the task has an assignee, and `aw ready` passed with no missing item on the implementing device after the sync before implement. Then AW sends "Start implementing". | P1 |
+| TSK-21 | AW must work with any workflow, or with none. The `aw` CLI and the MCP server (MCP-01) give the same generic primitives: message, question, gate, proposal, ready, create task or subtask, report stage, artifact, handoff. AW never parses the files of a workflow. | P1 |
+| TSK-09 to TSK-12 | A question must be a message of the agent with answer options and a free text field. A proposal shows the steps, the test method and the risk, with no open question and no choice; it has Approve, and a message of the human is the discussion. A result shows the artifacts and a summary, with Approve and Request changes. A comment at a gate does not change the state (TSK-12). | P1 |
 | TSK-14 | A task created from a GitHub issue (P1), a Linear ticket or a Google Doc (P2) must keep a link to its source. | P1 / P2 |
 | TSK-15 | A queued task must show its position and its agent, for example "Queued · 2nd for claude@ubuntu-01". | P1 |
 | TSK-16 | Each device creates task keys with no other device online. On a collision, the task of the higher-priority device (local > remote > mobile) keeps the key. The other task gets the next free number, and its thread shows the change. Folders and links use the internal id. | P1 |
 | TSK-17, TSK-26 | Agents on local and remote devices can create tasks and subtasks. A task with no assignee, from a human or an agent, must show "Needs you: assign" (gate "Assign task"). AW never assigns it alone. The only exception is the project switch "Assign new subtasks to the default device", off by default. | P1 |
-| TSK-27 | A subtask must start at Ready with the confirmed approach of its parent. The agent can copy fields from the parent: approach, test server, credential names, links. Its workflow can still open "Confirm approach" for its own approach. | P1 |
+| TSK-27 | A subtask must start at Ready with the approved proposal of its parent. The agent can copy fields from the parent: proposal, test server, credential names, links. Its workflow can still open "Approve proposal" for its own proposal. | P1 |
 
 ### 8.2 Continuity (principle 2)
 `architecture.md` 4.6.5 lists the pause causes and their texts.
@@ -193,8 +193,8 @@ Phase: P1, P2 or P3 (section 10). "Must" means required for the release of that 
 |---|---|---|
 | AGT-01, AGT-02 | The assignee must be one agent on one device (`agent@device`). The human selects it (TSK-26). The picker shows each agent's queue length, and the reason for a sleeping device. | P1 |
 | AGT-03 | Each running task must link to exactly one session: the Claude session id and the window in the session host. A claim with an epoch names the session that runs. A session with a lower epoch stops and shows "Moved to ubuntu-01". | P1 |
-| AGT-04 | The user must create a new session with 6 fields: agent, session host (AGT-19), context (the thread and the confirmed approach, or fresh), work folder (new worktree or checkout), permission mode, first message. | P1 |
-| AGT-06, AGT-07 | A change of assignee must ask for confirmation and keep the approach, the thread and the branch. When a device sleeps or goes offline, only its own sessions pause, for example "Paused: MacBook Pro is asleep." The task waits; AW never changes the agent or the device by itself. A paused task offers the human action "Assign to another device…" (a change of assignee). | P1 |
+| AGT-04 | The user must create a new session with 6 fields: agent, session host (AGT-19), context (the thread and the approved proposal, or fresh), work folder (new worktree or checkout), permission mode, first message. | P1 |
+| AGT-06, AGT-07 | A change of assignee must ask for confirmation and keep the proposal, the thread and the branch. When a device sleeps or goes offline, only its own sessions pause, for example "Paused: MacBook Pro is asleep." The task waits; AW never changes the agent or the device by itself. A paused task offers the human action "Assign to another device…" (a change of assignee). | P1 |
 | AGT-08 | The user must open the terminal of a session, take control of the input and give it back. The desktop gives full takeover. The phone shows the terminal and sends free text as the next input. | P1 |
 | AGT-17 | AW must deliver each answer and each human message to the session only when no dialog is open: one paste, then one Enter. A hook confirms each delivery id. Without a confirmation, AW retries, then shows "Answer not delivered". | P1 |
 | AGT-18 | A session must start with no hidden dialog. AW trusts the worktree before the start and allows the `aw` commands. A fixed launcher reads the first message from a file. | P1 |
@@ -281,13 +281,13 @@ Phase: P1, P2 or P3 (section 10). "Must" means required for the release of that 
 | ID | Requirement | Phase |
 |---|---|---|
 | INB-01 | The Inbox must collect all items that need the human. P1: gates, pauses that need the human, the daily digest, schema errors, credentials to rotate and sync problems. P2: shares, connection requests, signals, stopped sources. | P1 / P2 |
-| INB-02 to INB-04 | Each item must name the reason, for example "Confirm approach". The user acts on it inside the Inbox, marks it as done or snoozes it. It comes back on new activity. | P1 |
+| INB-02 to INB-04 | Each item must name the reason, for example "Approve proposal". The user acts on it inside the Inbox, marks it as done or snoozes it. It comes back on new activity. | P1 |
 | INB-05 | The phone gets a push only when the human must act, when work finished, or when work stopped and cannot continue alone. | P1 |
 | INB-07 to INB-09 | The notification center must have the tabs All, Unread and Errors. AW groups items with the same cause, for example one usage-limit item per login. After an absence, Home must show a summary, for example "While you were away: 6 tasks done, 1 needs you, agents learned 5 things". | P1 |
 | INB-10 | Push is required in phase 1. The owner device of a gate sends a standard Web Push (VAPID keys, encrypted content) through the UnifiedPush embedded FCM distributor, with no AW server. Fallback: the person's own ntfy server. A spike comes before the phone release. | P1 |
 | INB-11, INB-12 | Without a push path, the phone gets alerts only while the app is open, and Settings say so. The push must hold an encrypted preview: the task key, the gate and one line. The phone then syncs and shows the full gate card. | P1 |
 | INB-13 | Each gate must have a push, timeout or reminder rule. The gate table in `workflow.md` section 3 has the rule of each gate. "Approve command" waits 120 s, then denies, and a late "Allow" approves that request id once. Most other gates have no timeout (principle 4) and a reminder push after 1 h and 24 h. A test slot lease expires 30 min after the last session heartbeat. | P1 |
-| INB-14 | On macOS, the desktop app must show a native notification for each gate and for finished work. A question has one action per option, and Reply has an inline reply. "Approve command" has "Allow once" only when the full command fits in the notification. Confirm approach and Approve result have no action, because the human must read the text. A click opens the task in every case. | P1 |
+| INB-14 | On macOS, the desktop app must show a native notification for each gate and for finished work. A question has one action per option, and Reply has an inline reply. "Approve command" has "Allow once" only when the full command fits in the notification. Approve proposal and Approve result have no action, because the human must read the text. A click opens the task in every case. | P1 |
 | INB-15 | The desktop app must run as a login item with a menu bar icon that shows the count of items that need you. Notifications arrive while the window is closed, and closing the window stops no work. Notifications and the login item need a signed and notarized app. They cannot break through a Focus mode. | P1 |
 
 ### 8.8 Knowledge (principle 3)
@@ -309,9 +309,9 @@ Phase: P1, P2 or P3 (section 10). "Must" means required for the release of that 
 | ID | Requirement | Phase |
 |---|---|---|
 | RUL-01 | Rules must exist at 3 levels: workspace, project and user. A higher level wins. The workspace owner can lock a rule. | P1 |
-| RUL-03 to RUL-05 | The AW skill, the `aw` CLI and the MCP server must give the rules, the task, the thread and the knowledge to the agent. The agent uses the CLI or the MCP tools for questions, approaches, results, artifacts, test slots and learned knowledge. Command rules allow or deny a command before AW opens "Approve command" (RUL-05). | P1 |
+| RUL-03 to RUL-05 | The AW skill, the `aw` CLI and the MCP server must give the rules, the task, the thread and the knowledge to the agent. The agent uses the CLI or the MCP tools for questions, proposals, results, artifacts, test slots and learned knowledge. Command rules allow or deny a command before AW opens "Approve command" (RUL-05). | P1 |
 | PLG-03 | Plugin types: agent, session host, sync transport, knowledge storage, link. P1 ships them built in, with tmux and Orca as session hosts. | P1 |
-| MCP-01 | awd must give agents an MCP server with the Streamable HTTP transport. Its tools match the `aw` primitives: thread, ask, approach, ready, task create (with fields copied from the parent), message, gate, stage, slot acquire and release, artifact add, result, handoff, learn, done. `workflow.md` section 8 is the single list. Read-only resources give the task fields and the knowledge list. | P1 |
+| MCP-01 | awd must give agents an MCP server with the Streamable HTTP transport. Its tools match the `aw` primitives: thread, ask, proposal, ready, task create (with fields copied from the parent), message, gate, stage, slot acquire and release, artifact add, result, handoff, learn, done. `workflow.md` section 8 is the single list. Read-only resources give the task fields and the knowledge list. | P1 |
 | MCP-02 | The MCP server must listen on 127.0.0.1 only. Each session gets its own token, which acts only on that session and its task. The AW plugin registers the server for Claude Code. | P1 |
 | MCP-03 | The `aw` CLI must stay for hooks, scripts and agents without MCP. A tool and the CLI command give the same result, because both call the same awd code. Gates and answers never depend on MCP. When the MCP tools are missing, the skill tells the agent to use the CLI. | P1 |
 | MCP-04 | Devices must show the MCP state of each computer, for example "MCP: on · 3 session tokens active · last call 12 s ago". | P1 |
@@ -355,7 +355,7 @@ The phases are accepted (`decisions/2026-11-22-phases.md`).
 
 ### Phase 1 (now): all P1 requirements
 In:
-- **Work:** workspaces, projects with GitHub links, tasks with first message, approach, test server and credentials, board, list, Inbox, the task loop with gates.
+- **Work:** workspaces, projects with GitHub links, tasks with first message, proposal, test server and credentials, board, list, Inbox, the task loop with gates.
 - **Agents:** Claude Code in terminal mode with the user's own `claude`, in tmux (default) or in Orca where the person turned it on, the agent queue, safe delivery of answers, one session per task.
 - **Agent interface:** the `aw` CLI and the MCP server (Streamable HTTP) with the same primitives.
 - **Continuity:** resume after a reboot, a crash or an update, usage limits, login checks, Paused with a cause.
@@ -447,6 +447,6 @@ The owner's answers to the questions Q1–Q5 of the verification are in `decisio
 | v0.10 | Session hosts: tmux (default) and Orca when turned on per device, both tested in phase 1, with a "Session host" choice (AGT-04, AGT-10, AGT-19, D19). |
 | v0.10 | Desktop app: a Unix socket to awd (RMT-04), React with MUI and Material Design on both apps (RMT-09), macOS notifications with actions, a menu bar icon and a login item (INB-14, INB-15, D21). Journeys 7.1 and 7.3 show them. |
 | v0.10 | New concept "Session host", the MCP rule in NFR-06, and 3 new risks (MCP server down at start, Orca changes, unsigned builds). |
-| v0.9 | Task model and sessions (decision task-model): first message, approach, test server, credentials, the description as a view, the thread word for word (principle 8), new TSK-22 to TSK-28 and goal G15. Terminal questions become gates, with the new gate "Reply". "Start implementing" only after `aw ready` on the implementing device (TSK-20). Remote agents create tasks (DEV-16). AW never assigns a task alone (TSK-26), and subtasks start at Ready (TSK-27). One session per task with a claim and an epoch (AGT-03), safe delivery (AGT-17), a launcher with no hidden dialog (AGT-18). "Approve command" waits 120 s, not 24 h, with a request id (CNT-20, CNT-21, D6). One gate table with a rule for each gate (INB-13). |
+| v0.9 | Task model and sessions (decision task-model): first message, proposal, test server, credentials, the description as a view, the thread word for word (principle 8), new TSK-22 to TSK-28 and goal G15. Terminal questions become gates, with the new gate "Reply". "Start implementing" only after `aw ready` on the implementing device (TSK-20). Remote agents create tasks (DEV-16). AW never assigns a task alone (TSK-26), and subtasks start at Ready (TSK-27). One session per task with a claim and an epoch (AGT-03), safe delivery (AGT-17), a launcher with no hidden dialog (AGT-18). "Approve command" waits 120 s, not 24 h, with a request id (CNT-20, CNT-21, D6). One gate table with a rule for each gate (INB-13). |
 | v0.9 | Data and sync: task folders by internal id (DAT-01), credential redaction (DAT-09), 3 sync folders (SYN-12), settings before the first engine start (SYN-02), a scan after each write and before "Sync now", a write journal for conflict copies (SYN-08), presence by heartbeat (DEV-03), Undo of the device's own edits (KB-13, D16). Phone: a foreground service with a permanent notification, a "Restricted" battery warning and an engine restart at each app open (SYN-07, D14). Push is required with a spike first. Free text and write-only credentials. |
 | v0.9 | Removed: the gate "Approve plan", open questions 6 and 7 (now task-model §5.5 and §5.4), the list of proposed defaults (now task-model §5), the repeated phase 2 and 3 list, and the separate journey "Answer a gate from the phone" (now in journey 7.3). Several rows are merged with their IDs kept. |

@@ -1,7 +1,6 @@
-// The agent commands of the work loop (docs/workflow.md 8): approach, ready, task_create, gate,
+// The agent commands of the work loop (docs/workflow.md 8): proposal, ready, task_create, gate,
 // result and done. The MCP tools, the local API routes and the aw CLI call these functions through
 // the session manager, which checks the session and the task first (SessionManager.agentSession).
-import { DECISIONS_HEADING } from "@aw/client/gates";
 import type { TaskView } from "@aw/core";
 import { newId, type EventData } from "@aw/schema";
 import { createHash } from "node:crypto";
@@ -12,14 +11,10 @@ import type { SessionRecord } from "../sessions/records.ts";
 import { hasLearningStep, learnReminder } from "./learning.ts";
 import type { LoopHost } from "./loop.ts";
 
-/** The longest Markdown of an approach, a custom gate or a result file. */
+/** The longest Markdown of a proposal, a custom gate or a result file. */
 export const MAX_GATE_FILE_CHARS = 256 * 1024;
 /** The Markdown in the gate event; a longer text stays in its file, and the event has its start. */
 export const MAX_GATE_TEXT_CHARS = 16 * 1024;
-
-export type Decision = EventData<"gate.opened">["decisions"] extends (infer D)[] | undefined
-  ? D
-  : never;
 
 export interface AgentContext {
   record: SessionRecord;
@@ -34,17 +29,6 @@ export interface AgentContext {
 export const END_TURN =
   "End your turn now. Do not wait or poll: the answer arrives as your next input.";
 
-function checkDecisions(decisions: Decision[]): Decision[] {
-  decisions.forEach((d, i) => {
-    if (!d.options.includes(d.recommended)) {
-      throw invalid(`Decision ${i + 1}: the recommended option must be one of its options`, [
-        { path: `decisions.${i}.recommended`, message: "not one of the options" },
-      ]);
-    }
-  });
-  return decisions;
-}
-
 function checkContent(content: string, what: string): string {
   if (content.trim() === "") throw invalid(`The ${what} is empty`);
   if (content.length > MAX_GATE_FILE_CHARS) {
@@ -53,20 +37,11 @@ function checkContent(content: string, what: string): string {
   return content;
 }
 
-/** The gate text: the Markdown, its decisions, and a pointer to the file when it is long. */
-export function gateText(content: string, decisions: Decision[], file: string | null): string {
-  let text =
-    content.length <= MAX_GATE_TEXT_CHARS
-      ? content
-      : `${content.slice(0, MAX_GATE_TEXT_CHARS)}\n\n… (the full text is in ${file ?? "the task file"})`;
-  if (decisions.length > 0) {
-    const lines = decisions.map(
-      (d, i) =>
-        `${i + 1}. ${d.question}\n   Options: ${d.options.join(" · ")}\n   Recommended: ${d.recommended}`,
-    );
-    text += `${DECISIONS_HEADING}${lines.join("\n")}\n\n"Confirm" accepts the recommended options. To choose another option, request changes with a comment.`;
-  }
-  return text;
+/** The gate text: the Markdown, and a pointer to the file when it is long. */
+export function gateText(content: string, file: string | null): string {
+  return content.length <= MAX_GATE_TEXT_CHARS
+    ? content
+    : `${content.slice(0, MAX_GATE_TEXT_CHARS)}\n\n… (the full text is in ${file ?? "the task file"})`;
 }
 
 /** An answer option of `ask`: a label, or a label with a description (openspec gate-context). */
@@ -107,7 +82,7 @@ export function askGate(
     if (shown.length > MAX_GATE_TEXT_CHARS) {
       file = { path: `artifacts/${device}/text-${gate}.md`, text: details };
     }
-    text = gateText(shown, [], file?.path ?? null);
+    text = gateText(shown, file?.path ?? null);
   }
   const questions = described
     ? [
@@ -133,7 +108,6 @@ export function askGate(
       options,
       request_id: null,
       file: file?.path ?? null,
-      decisions: [],
       questions,
     },
     file,
@@ -149,14 +123,42 @@ function titleOf(content: string, fallback: string): string {
   return (line ?? fallback).slice(0, 500);
 }
 
-/** Resolves the open gates of a kind that a new version replaces (answer with no answer event). */
-async function replaceOpen(
-  ctx: AgentContext,
-  kind: "confirm_approach" | "approve_result",
+/**
+ * True for the answer of a gate that a newer proposal, result or question replaced ("Replaced by
+ * proposal v2", "Replaced by a newer question"): AW wrote it, no person answered, so no "[AW
+ * answer]" goes to the agent, also when a person answered the gate later.
+ */
+export function isReplacedAnswer(answer: string): boolean {
+  return answer.startsWith("Replaced by ");
+}
+
+/** The open gates that a new proposal, result or question replaces. */
+type Replaced = "approve_proposal" | "approve_result" | "questions";
+
+/**
+ * True for an open question or reply of the discussion: not a ready-check gate ("Missing: <item>"
+ * of `aw ready`), which stays open until the person answers it.
+ */
+function isDiscussionQuestion(gate: TaskView["gates"][number]): boolean {
+  if (gate.kind === "reply") return true;
+  return gate.kind === "question" && !gate.title.startsWith(MISSING_PREFIX);
+}
+
+/** The title prefix of a ready-check gate. */
+const MISSING_PREFIX = "Missing: ";
+
+/**
+ * Resolves the open gates that a new version replaces, with no answer event (openspec
+ * proposal-and-discussion, "Questions replace older questions"): a later answer becomes a comment.
+ */
+export async function replaceOpen(
+  ctx: Pick<AgentContext, "task" | "host">,
+  kind: Replaced,
   text: string,
 ): Promise<void> {
   for (const gate of ctx.task.gates) {
-    if (gate.kind !== kind || gate.state !== "open") continue;
+    if (gate.state !== "open") continue;
+    if (kind === "questions" ? !isDiscussionQuestion(gate) : gate.kind !== kind) continue;
     await ctx.host.write(
       ctx.task.id,
       "gate.resolved",
@@ -166,42 +168,43 @@ async function replaceOpen(
   }
 }
 
-/** `aw approach`: `approach/v<n>.md` (written once), `approach.proposed` and "Confirm approach". */
-export async function proposeApproach(
-  ctx: AgentContext,
-  input: { content: string; decisions?: Decision[] | undefined },
-) {
-  const content = checkContent(input.content, "approach");
-  const decisions = checkDecisions(input.decisions ?? []);
+/**
+ * `aw proposal`: `proposal/v<n>.md` (written once), `proposal.proposed` and "Approve proposal" with
+ * the one option "Approve". The new version replaces the open proposal and the open questions:
+ * the agent writes a proposal only when no question is open (openspec proposal-and-discussion).
+ */
+export async function proposeProposal(ctx: AgentContext, input: { content: string }) {
+  const content = checkContent(input.content, "proposal");
   const service = ctx.host.service;
   const task = ctx.task;
   if (task.stage === "done") throw new ServiceError("refused", `${task.key ?? task.id} is done`);
-  const read = (n: number) =>
-    service.files.readText(`tasks/${task.id}/approach/v${n}.md`).catch(() => null);
-  // Each version is written once: a version file that exists is never written again.
-  let version = task.approach.latest + 1;
-  for (let existing = await read(version); existing !== null; existing = await read(version)) {
-    version++;
-  }
-  const file = `approach/v${version}.md`;
+  const exists = async (n: number) =>
+    (await service.files.readText(`tasks/${task.id}/proposal/v${n}.md`).catch(() => null)) !==
+      null ||
+    (await service.files.readText(`tasks/${task.id}/approach/v${n}.md`).catch(() => null)) !== null;
+  // Each version is written once: a version file that exists is never written again. The numbers
+  // continue after the approach versions from before the rename.
+  let version = task.proposal.latest + 1;
+  while (await exists(version)) version++;
+  const file = `proposal/v${version}.md`;
   await service.writeTaskFile(`tasks/${task.id}/${file}`, content);
   // The gate title and text are cuts of the content: redact first (fix list 0-41).
   const shown = service.files.redactText(content);
-  await replaceOpen(ctx, "confirm_approach", `Replaced by approach v${version}`);
-  const proposed = await ctx.host.write(task.id, "approach.proposed", { version, file }, ctx.actor);
+  await replaceOpen(ctx, "approve_proposal", `Replaced by proposal v${version}`);
+  await replaceOpen(ctx, "questions", `Replaced by proposal v${version}`);
+  const proposed = await ctx.host.write(task.id, "proposal.proposed", { version, file }, ctx.actor);
   const gate = newId(ctx.host.clock);
   const opened = await ctx.host.write(
     task.id,
     "gate.opened",
     {
       gate,
-      kind: "confirm_approach",
+      kind: "approve_proposal",
       version: 1,
-      title: titleOf(shown, `Approach v${version}`),
-      text: gateText(shown, decisions, file),
-      options: ["Confirm", "Request changes"],
+      title: titleOf(shown, `Proposal v${version}`),
+      text: gateText(shown, file),
+      options: [APPROVE],
       file,
-      decisions,
     },
     ctx.actor,
   );
@@ -212,9 +215,12 @@ export async function proposeApproach(
     event: opened.event,
     applied: proposed.applied && opened.applied,
     reason: opened.reason ?? proposed.reason,
-    next: `Approach v${version} sent to the human as gate ${gate}. ${END_TURN}`,
+    next: `Proposal v${version} sent to the human as gate ${gate}. ${END_TURN}`,
   };
 }
+
+/** The one option of "Approve proposal". */
+export const APPROVE = "Approve";
 
 /** `aw ready`: `task.ready`, and a question gate for each missing item. */
 export async function reportReady(ctx: AgentContext, input: { missing?: string[] | undefined }) {
@@ -232,7 +238,7 @@ export async function reportReady(ctx: AgentContext, input: { missing?: string[]
         gate,
         kind: "question",
         version: 1,
-        title: `Missing: ${ctx.host.service.files.redactText(item)}`.slice(0, 500),
+        title: `${MISSING_PREFIX}${ctx.host.service.files.redactText(item)}`.slice(0, 500),
         text: `The agent needs this before it implements: ${item}`,
       },
       ctx.actor,
@@ -347,20 +353,13 @@ export async function createSubtask(ctx: AgentContext, input: SubtaskInput) {
   };
 }
 
-/** `gate`: a custom gate with Markdown and optional decisions (task-model decision §3.1). */
+/** `gate`: a custom gate with Markdown and its options (task-model decision §3.1). */
 export async function openCustomGate(
   ctx: AgentContext,
-  input: { content: string; decisions?: Decision[] | undefined; options?: string[] | undefined },
+  input: { content: string; options?: string[] | undefined },
 ) {
   const content = checkContent(input.content, "gate text");
-  const decisions = checkDecisions(input.decisions ?? []);
   const shown = ctx.host.service.files.redactText(content);
-  const options =
-    input.options && input.options.length > 0
-      ? input.options
-      : decisions.length > 0
-        ? ["Accept the recommendations"]
-        : [];
   const gate = newId(ctx.host.clock);
   const result = await ctx.host.write(
     ctx.task.id,
@@ -370,9 +369,8 @@ export async function openCustomGate(
       kind: "custom",
       version: 1,
       title: titleOf(shown, "Decision"),
-      text: gateText(shown, decisions, null),
-      options,
-      decisions,
+      text: gateText(shown, null),
+      options: input.options ?? [],
     },
     ctx.actor,
   );
@@ -416,7 +414,7 @@ export async function postResult(
       kind: "approve_result",
       version: 1,
       title: titleOf(shown, "Result"),
-      text: gateText(shown, [], result.path),
+      text: gateText(shown, result.path),
       options: ["Approve", "Request changes"],
       file: result.path,
     },

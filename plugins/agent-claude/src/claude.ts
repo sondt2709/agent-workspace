@@ -36,7 +36,8 @@ export const AGENT_COMMANDS = [
   "artifact add",
   "handoff",
   "thread",
-  // The work loop (add-task-loop).
+  // The work loop (add-task-loop). `approach` is the old name of `proposal` (proposal-and-discussion).
+  "proposal",
   "approach",
   "ready",
   "result",
@@ -143,7 +144,8 @@ export function toolGate(tool: string, input: Record<string, unknown>): ToolGate
     return { kind: "question", title, text: body || title, options, questions };
   }
   if (tool === "ExitPlanMode") {
-    return { kind: "confirm_approach", title: "Confirm approach", plan: text(input.plan) };
+    // A plan of plan mode is a proposal (openspec proposal-and-discussion).
+    return { kind: "approve_proposal", title: "Proposal", plan: text(input.plan) };
   }
   return null;
 }

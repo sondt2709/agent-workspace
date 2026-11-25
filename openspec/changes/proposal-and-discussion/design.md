@@ -76,7 +76,7 @@ The proposal card has a full screen button. The full screen view has the title, 
 
 ### 8. Phone Inbox
 
-The phone Inbox has the tabs, rows and groups of the desktop. The rows come from the same rule: the desktop `inboxItems` moves to `shared/client`, the phone gets a port in `android/control`, and both test it against a new fixture `contracts/fixtures/inbox/items.json`. A tap opens the item screen: the row of Activity that needs the person (the question message or the proposal card, or the gate card), and "Open task".
+The phone Inbox has the tabs, rows and groups of the desktop. The rows come from the same rule: the desktop keeps `inboxItems` and `listGroups` (they use the desktop task type), the phone gets a port in `android/control`, and both test it against a new fixture `contracts/fixtures/inbox/items.json`. A tap opens the item screen: the row of Activity that needs the person (the question message or the proposal card, or the gate card), and "Open task".
 
 ### 9. Teach the agent
 

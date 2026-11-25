@@ -136,37 +136,28 @@ export function addAgentCommands(program: Command, context: AgentCommandContext)
     });
 
   // ---- The work loop (add-task-loop) ----
-  const decisionsOf = async (file: string | undefined) => {
-    if (file === undefined) return [];
-    const raw = await context.readText(file);
-    let value: unknown;
-    try {
-      value = JSON.parse(raw);
-    } catch (error) {
-      throw context.inputError(`--decisions ${file} is not JSON: ${(error as Error).message}`);
-    }
-    if (!Array.isArray(value)) {
+  // Decisions are removed (openspec proposal-and-discussion): an old skill text still passes
+  // --decisions, so the command says why it fails (exit code 2).
+  const noDecisions = (file: string | undefined) => {
+    if (file !== undefined) {
       throw context.inputError(
-        '--decisions must be a JSON array of {"question", "options", "recommended"}',
+        "--decisions is removed: ask each question with `aw ask` before you write the proposal",
       );
     }
-    return value as { question: string; options: string[]; recommended: string }[];
   };
 
   program
-    .command("approach")
-    .description("Propose the approach: a new version and the gate Confirm approach")
+    .command("proposal")
+    .alias("approach")
+    .description("Send the proposal: a new version and the gate Approve proposal")
     .argument("<task>", "the task key or id of this session")
-    .requiredOption("--file <path>", "the approach as Markdown; - reads stdin")
-    .option(
-      "--decisions <path>",
-      'a JSON array of decisions: [{"question", "options": [...], "recommended"}]',
-    )
+    .requiredOption("--file <path>", "the proposal as Markdown; - reads stdin")
+    .option("--decisions <path>", "removed: ask the questions before the proposal")
     .action(async (task, options) => {
-      const reply = await client.approach(session(), {
+      noDecisions(options.decisions);
+      const reply = await client.proposal(session(), {
         task,
         content: await context.readText(options.file),
-        decisions: await decisionsOf(options.decisions),
       });
       print(reply, () => reply.next);
     });
@@ -207,16 +198,16 @@ export function addAgentCommands(program: Command, context: AgentCommandContext)
 
   context.gate
     .command("open")
-    .description("Open a custom gate with Markdown and optional decisions (an agent command)")
+    .description("Open a custom gate with Markdown and options (an agent command)")
     .argument("<task>", "the task key or id of this session")
     .requiredOption("--file <path>", "the gate text as Markdown; - reads stdin")
-    .option("--decisions <path>", "a JSON array of decisions")
+    .option("--decisions <path>", "removed: ask the questions with aw ask")
     .option("--options <list>", 'the answer options, separated by "|"')
     .action(async (task, options) => {
+      noDecisions(options.decisions);
       const reply = await client.openGate(session(), {
         task,
         content: await context.readText(options.file),
-        decisions: await decisionsOf(options.decisions),
         options: (options.options ?? "")
           .split("|")
           .map((o) => o.trim())

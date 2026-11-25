@@ -52,20 +52,21 @@ describe.skipIf(!TEST_TMUX)("gates, moves and agent commands", () => {
       (r) => r.type === "message.human" && data(r).delivery_id === gate,
     );
     expect(text(multi)).toBe(`[AW answer ${gate}] plan 1. Paint it red.\n2. Test it.`);
-    const approach = await awd.waitRow(
+    const proposal = await awd.waitRow(
       task.id,
-      (r) => r.type === "gate.opened" && data(r).kind === "confirm_approach",
+      (r) => r.type === "gate.opened" && data(r).kind === "approve_proposal",
     );
-    expect(data(approach).file).toBe("approach/v1.md");
-    expect(await readFile(join(awd.folder, "tasks", task.id, "approach", "v1.md"), "utf8")).toBe(
+    expect(data(proposal).file).toBe("proposal/v1.md");
+    expect(data(proposal).options).toEqual(["Approve"]);
+    expect(await readFile(join(awd.folder, "tasks", task.id, "proposal", "v1.md"), "utf8")).toBe(
       "1. Paint it red.",
     );
-    expect((await awd.rows(task.id)).some((r) => r.type === "approach.proposed")).toBe(true);
+    expect((await awd.rows(task.id)).some((r) => r.type === "proposal.proposed")).toBe(true);
 
     await awd.answerFrom(
       "pixel-9",
       task.id,
-      String(data(approach).gate),
+      String(data(proposal).gate),
       "reply Do you want the 1000/min limit?",
     );
     const reply = await awd.waitRow(
@@ -440,16 +441,16 @@ describe.skipIf(!TEST_TMUX)("gates, moves and agent commands", () => {
         at * 1000,
       );
     // A retry after a crash: the version file of the first try is there, with the same plan.
-    await service.writeTaskFile(`tasks/${task.id}/approach/v1.md`, "Plan A");
+    await service.writeTaskFile(`tasks/${task.id}/proposal/v1.md`, "Plan A");
     const retried = newId({ now: () => Date.now() });
     await plan("Plan A", retried, Date.now());
     const gate = await awd.waitRow(
       task.id,
       (r) => r.type === "gate.opened" && data(r).gate === retried,
     );
-    expect(data(gate).file).toBe("approach/v1.md");
-    // A file that fails each time: approach/v2.md has another text.
-    await service.writeTaskFile(`tasks/${task.id}/approach/v2.md`, "Another plan");
+    expect(data(gate).file).toBe("proposal/v1.md");
+    // A file that fails each time: proposal/v2.md has another text.
+    await service.writeTaskFile(`tasks/${task.id}/proposal/v2.md`, "Another plan");
     const now = Date.now();
     await plan("Plan B", newId({ now: () => now }), now);
     await writeSpool(
@@ -466,7 +467,7 @@ describe.skipIf(!TEST_TMUX)("gates, moves and agent commands", () => {
       task.id,
       (r) => r.type === "comment.added" && text(r).includes("could not handle the PreToolUse"),
     );
-    expect(text(comment)).toContain("approach/v2.md exists with another text");
+    expect(text(comment)).toContain("proposal/v2.md exists with another text");
     await awd.waitRow(
       task.id,
       (r) => r.type === "message.agent" && text(r) === "after the bad file",

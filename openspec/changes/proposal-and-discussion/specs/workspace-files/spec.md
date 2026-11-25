@@ -5,7 +5,7 @@ The `files` layer SHALL refuse a write to a file that this device does not own, 
 
 #### Scenario: Proposal file
 - **WHEN** the owner device writes `tasks/<task-id>/proposal/v6.md`, then writes it again, then writes `tasks/<task-id>/approach/v7.md`
-- **THEN** the first write passes, the second is refused as a second write of a version, and the third is refused as a path outside the layout
+- **THEN** the first write passes, the second is refused as a second write of a version, and the third is refused because `approach/` is read-only
 
 #### Scenario: Log of another device
 - **WHEN** `macbook-pro` writes `tasks/<task-id>/log/ubuntu-01.jsonl`

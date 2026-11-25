@@ -78,16 +78,18 @@ import {
 } from "../continuity/watchdog.ts";
 import type { Logger } from "../log.ts";
 import {
+  APPROVE,
   askGate,
   createSubtask,
+  isReplacedAnswer,
   markDone as markTaskDone,
   openCustomGate,
   postResult,
-  proposeApproach,
+  proposeProposal,
+  replaceOpen,
   reportReady,
   type AgentContext,
   type AskGateInput,
-  type Decision,
   type SubtaskInput,
 } from "../loop/agent.ts";
 import {
@@ -176,12 +178,12 @@ export const ORCA_DETECT_MS = 60_000;
  */
 export const HOST_NOTICE_MS = 120_000;
 /** The gates that wait for an answer to the turn of the agent: one of them stops a Reply gate. */
-const TURN_GATES = new Set(["question", "confirm_approach", "reply"]);
+const TURN_GATES = new Set(["question", "approve_proposal", "reply"]);
 /** The events of an agent that count as an update of its turn (openspec agent-pushes-updates). */
 const UPDATE_TYPES = new Set([
   "message.agent",
   "gate.opened",
-  "approach.proposed",
+  "proposal.proposed",
   "task.ready",
   "result.posted",
   "task.done",
@@ -189,7 +191,7 @@ const UPDATE_TYPES = new Set([
 ]);
 /** The text of the notice after a turn with no AW update. */
 export const NUDGE_TEXT =
-  "Your turn ended with no AW update, and the human reads only AW. Send the update now: `message` (short), or `ask`, `approach`, `result` or `gate`. Then end your turn.";
+  "Your turn ended with no AW update, and the human reads only AW. Send the update now: `message` (short), or `ask`, `proposal`, `result` or `gate`. Then end your turn.";
 const DONE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 export interface SessionTools {
@@ -1289,11 +1291,18 @@ export class SessionManager {
     return { cwd: path, branch, base };
   }
 
-  async #approachText(task: TaskView): Promise<string | null> {
+  /** The text of a proposal version: `proposal/v<n>.md`, or `approach/v<n>.md` from before the rename. */
+  async #proposalVersion(task: string, version: number): Promise<string | null> {
+    const read = (folder: string) =>
+      this.service.files.readText(`tasks/${task}/${folder}/v${version}.md`).catch(() => null);
+    return (await read("proposal")) ?? (await read("approach"));
+  }
+
+  async #proposalText(task: TaskView): Promise<string | null> {
     const read = async (t: TaskView): Promise<string | null> => {
-      const version = t.approach.confirmed;
+      const version = t.proposal.approved;
       if (version === null) return null;
-      return this.service.files.readText(`tasks/${t.id}/approach/v${version}.md`).catch(() => null);
+      return this.#proposalVersion(t.id, version);
     };
     const own = await read(task);
     if (own !== null) return own;
@@ -1304,13 +1313,13 @@ export class SessionManager {
   /**
    * The knowledge part of the SessionStart context: the context builder of the knowledge store
    * (a short header and the file list, at most 9,000 characters), else the cause. The task paths
-   * are the paths named in the confirmed approach and the changed files of the worktree
+   * are the paths named in the approved proposal and the changed files of the worktree
    * (agent-learning), so a `files` knowledge file that matches one is in "Read now".
    */
   async #knowledge(task: TaskView, cwd: string | null): Promise<string> {
     try {
       const paths = await taskPaths({
-        approach: await this.#approachText(task),
+        proposal: await this.#proposalText(task),
         cwd,
         checkout: (await this.#binding(task.project)).checkout,
       });
@@ -1420,7 +1429,7 @@ export class SessionManager {
     const fresh = this.#task(task.id) ?? task;
     await writePrivate(
       paths.firstInput,
-      notice?.text ?? firstInput(fresh, await this.#approachText(fresh)),
+      notice?.text ?? firstInput(fresh, await this.#proposalText(fresh)),
     );
     await writePrivate(
       paths.settings,
@@ -2516,6 +2525,8 @@ export class SessionManager {
         record.busy_deliveries = [];
         if (ended) return;
         if (!this.#turnGateOpen(record) && endsWithQuestion(parsed.text)) {
+          // A new question replaces the older open questions (openspec proposal-and-discussion).
+          await this.#replaceQuestions(record.task, "Replaced by a newer question");
           await write(
             "reply",
             "gate.opened",
@@ -2738,7 +2749,7 @@ export class SessionManager {
   }
 
   /**
-   * True when a gate that waits for the answer to this turn is open: a question, an approach or a
+   * True when a gate that waits for the answer to this turn is open: a question, a proposal or a
    * reply of this session, opened after its last `message.human` (the start of the turn). An
    * "Approve command" gate after its timeout, or a gate that the human answered in the terminal,
    * does not stop the Reply gate of a later turn.
@@ -2846,6 +2857,7 @@ export class SessionManager {
     if (!task || task.gates.some((g) => g.gate === id)) return;
     const agent = this.#agentActor(record);
     if (gate.kind === "question") {
+      await this.#replaceQuestions(record.task, "Replaced by a newer question");
       await write(
         "gate",
         "gate.opened",
@@ -2874,10 +2886,9 @@ export class SessionManager {
       return;
     }
     // Idempotent: a retry of this spool file finds the version file of the first try (the
-    // approach files are write-once) and does not write it again.
-    const read = (version: number) =>
-      this.service.files.readText(`tasks/${record.task}/approach/v${version}.md`).catch(() => null);
-    const latest = task.approach.latest;
+    // proposal files are write-once) and does not write it again.
+    const read = (version: number) => this.#proposalVersion(record.task, version);
+    const latest = task.proposal.latest;
     let version = latest + 1;
     // The version file is redacted (docs/phase-1.md 3.3.5): compare it with the redacted plan.
     const plan = this.service.files.redactText(gate.plan);
@@ -2886,32 +2897,45 @@ export class SessionManager {
     } else {
       const existing = await read(version);
       if (existing === null) {
-        await this.service.writeTaskFile(`tasks/${record.task}/approach/v${version}.md`, gate.plan);
+        await this.service.writeTaskFile(`tasks/${record.task}/proposal/v${version}.md`, gate.plan);
       } else if (existing !== plan) {
-        throw new Error(`approach/v${version}.md exists with another text`);
+        throw new Error(`proposal/v${version}.md exists with another text`);
       }
+      // The plan is a new proposal: it replaces the open proposal and the open questions.
+      await replaceOpen(
+        { task, host: this.#loopHost() },
+        "approve_proposal",
+        `Replaced by proposal v${version}`,
+      );
+      await this.#replaceQuestions(record.task, `Replaced by proposal v${version}`);
       await write(
-        "approach",
-        "approach.proposed",
-        { version, file: `approach/v${version}.md` },
+        "proposal",
+        "proposal.proposed",
+        { version, file: `proposal/v${version}.md` },
         agent,
       );
     }
-    const file = `approach/v${version}.md`;
+    const file = `proposal/v${version}.md`;
     await write(
       "gate",
       "gate.opened",
       {
         gate: id,
-        kind: "confirm_approach",
+        kind: "approve_proposal",
         version: 1,
         title: gate.title,
         text: gate.plan,
-        options: ["Confirm", "Request changes"],
+        options: [APPROVE],
         file,
       },
       agent,
     );
+  }
+
+  /** Resolves the open questions of a task: a new question or a proposal replaces them. */
+  async #replaceQuestions(task: string, answer: string): Promise<void> {
+    const view = this.#task(task);
+    if (view) await replaceOpen({ task: view, host: this.#loopHost() }, "questions", answer);
   }
 
   // ---- Gates and delivery (design decisions 7 to 9) ----------------------------------------
@@ -3103,13 +3127,14 @@ export class SessionManager {
         (r) => r.type === "gate.resolved" && r.applied && data(r).gate === gate.gate,
       );
       if (!resolved) continue;
-      // AW closed the gate with no answer of a person (a new approach or result replaced it):
+      // AW closed the gate with no answer of a person (a new proposal or result replaced it):
       // the agent made that change itself, so no "[AW answer]" goes to it (gate-full-context
       // open issue 2).
       // The same for a gate that AW closed because no session can use it (openspec stale-gates).
+      const closeAnswer = String(data(resolved).answer);
       if (
         data(resolved).answer_event === null &&
-        (gate.answers.length === 0 || isCloseAnswer(String(data(resolved).answer)))
+        (gate.answers.length === 0 || isCloseAnswer(closeAnswer) || isReplacedAnswer(closeAnswer))
       ) {
         continue;
       }
@@ -3682,6 +3707,8 @@ export class SessionManager {
     const { record, task } = this.agentSession(id, input.task);
     // The hook events of the turn first: the prompt that started the turn sorts before the gate.
     await this.#queue.add(() => this.#drainSpool(record));
+    // A new question replaces the older open questions (openspec proposal-and-discussion).
+    await this.#replaceQuestions(task.id, "Replaced by a newer question");
     const gate = newId(this.#clock);
     const { data, file } = askGate(input, gate, this.service.device.slug, this.#redact);
     // The full details first: the gate names the file (the files layer redacts it).
@@ -3955,12 +3982,9 @@ export class SessionManager {
     return result;
   }
 
-  async approach(
-    id: string,
-    input: { task: string; content: string; decisions?: Decision[] | undefined },
-  ) {
+  async proposal(id: string, input: { task: string; content: string }) {
     return this.#afterAgentCommand(
-      await proposeApproach(await this.#agentContext(id, input.task), input),
+      await proposeProposal(await this.#agentContext(id, input.task), input),
     );
   }
 
@@ -3980,7 +4004,6 @@ export class SessionManager {
     input: {
       task: string;
       content: string;
-      decisions?: Decision[] | undefined;
       options?: string[] | undefined;
     },
   ) {

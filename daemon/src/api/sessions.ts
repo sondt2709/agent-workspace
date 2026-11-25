@@ -2,7 +2,6 @@
 // the PermissionRequest hook, and the session list. Each route calls the session service.
 import {
   agentWriteReply,
-  approachBody,
   askBody,
   askReply,
   customGateBody,
@@ -13,6 +12,7 @@ import {
   messageBody,
   permissionBody,
   permissionReply,
+  proposalBody,
   readyBody,
   resultBody,
   sessionInfo,
@@ -236,12 +236,21 @@ export function registerSessionRoutes(
     );
 
   loopRoute(
-    "approach",
-    "proposeApproach",
-    "aw approach: approach/v<n>.md, approach.proposed and the gate Confirm approach",
-    approachBody,
+    "proposal",
+    "proposeProposal",
+    "aw proposal: proposal/v<n>.md, proposal.proposed and the gate Approve proposal",
+    proposalBody,
     loopReply,
-    (session, body) => sessions(daemon).manager(session).approach(session, body),
+    (session, body) => sessions(daemon).manager(session).proposal(session, body),
+  );
+  // The route of an older aw CLI (before openspec proposal-and-discussion).
+  loopRoute(
+    "approach",
+    "proposeProposalOldRoute",
+    "The old route of aw proposal, for an older aw CLI",
+    proposalBody,
+    loopReply,
+    (session, body) => sessions(daemon).manager(session).proposal(session, body),
   );
   loopRoute(
     "ready",
@@ -262,7 +271,7 @@ export function registerSessionRoutes(
   loopRoute(
     "gate",
     "openGate",
-    "aw gate open: a custom gate with Markdown and decisions",
+    "aw gate open: a custom gate with Markdown and options",
     customGateBody,
     loopReply,
     (session, body) => sessions(daemon).manager(session).gate(session, body),

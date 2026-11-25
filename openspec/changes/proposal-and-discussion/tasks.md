@@ -17,7 +17,7 @@
 ## 3. Shared UI rules
 
 - [ ] 3.1 `contracts/fixtures/activity/cases.json`: the row style and text of each case (message, proposal card, task line, Session only), with old and new names
-- [ ] 3.2 `shared/client`: `proposalTextSize` with `contracts/fixtures/gates/proposal-text-size.json`; `inboxItems` moved from the desktop with `contracts/fixtures/inbox/items.json`; remove `decisionsAnswer` and `canPickDecisions` and their fixture
+- [ ] 3.2 `shared/client`: `proposalTextSize` with `contracts/fixtures/gates/proposal-text-size.json`; `contracts/fixtures/inbox/items.json` for `inboxItems` of the desktop and the phone; remove `decisionsAnswer` and `canPickDecisions` and their fixture
 
 ## 4. Desktop
 

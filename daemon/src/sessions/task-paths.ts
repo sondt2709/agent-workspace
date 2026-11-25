@@ -1,4 +1,4 @@
-// The task paths of a session (openspec agent-learning): the paths that the confirmed approach
+// The task paths of a session (openspec agent-learning): the paths that the approved proposal
 // names, and the files that the work branch changed in the session worktree. The knowledge context
 // puts a `files` knowledge file whose glob matches one of them under "Read now"
 // (docs/phase-1.md 5.9). The paths that the title and the first message name come from the context
@@ -56,13 +56,13 @@ export async function changedPaths(cwd: string, checkout: string | null): Promis
   return [...out].slice(0, CHANGED_PATHS_LIMIT);
 }
 
-/** The task paths of a session: the paths named in the confirmed approach and the changed files. */
+/** The task paths of a session: the paths named in the approved proposal and the changed files. */
 export async function taskPaths(input: {
-  approach: string | null;
+  proposal: string | null;
   cwd: string | null;
   checkout: string | null;
 }): Promise<string[]> {
-  const named = input.approach ? namedPaths(input.approach) : [];
+  const named = input.proposal ? namedPaths(input.proposal) : [];
   const changed = input.cwd ? await changedPaths(input.cwd, input.checkout) : [];
   return [...new Set([...named, ...changed])];
 }

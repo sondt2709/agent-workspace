@@ -42,7 +42,7 @@ The Kotlin tests (`android/shared/src/jvmTest`) read the folders directly: Gradl
 | `device-offline` | ubuntu-01 stops its heartbeats: offline after 90 s, its running task shows `device_offline` and waits (no gate, no move). |
 | `far-future-hlc` | A line 1 year ahead is held back and reported (`future_hlc`). |
 | `truncated-log-line` | A cut line in the middle is a bad line; a last line with no newline is the partial tail. |
-| `task-rules` | The task rules that the other cases do not use: newest edit per field, first message locked, rekey of another device or from a stale key, assignment with the project switch on and off, Confirm of an approach file (also a number too large for a safe integer), end of an unknown session. |
+| `task-rules` | The task rules that the other cases do not use: newest edit per field, first message locked, rekey of another device or from a stale key, assignment with the project switch on and off, Confirm of an approach file from before the rename (also a number too large for a safe integer), end of an unknown session. |
 | `workspace-rules` | The workspace log rules: lease from another device, stale fencing token, no such slot, no such lease, newest queue order, credential names added, imported and removed. |
 
 Rules:

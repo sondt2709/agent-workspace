@@ -26,7 +26,7 @@ export function isCloseAnswer(answer: string): boolean {
 const CONVERSATION_KINDS = new Set([
   "question",
   "reply",
-  "confirm_approach",
+  "approve_proposal",
   "custom",
   "continue_after_limit",
 ]);

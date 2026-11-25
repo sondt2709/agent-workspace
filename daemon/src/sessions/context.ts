@@ -26,22 +26,22 @@ export function readThreadLine(key: string): string {
 }
 
 /**
- * The first input. A Discuss session gets the first message as is. A session with a confirmed
- * approach, or of a subtask, gets the first message first (so a command such as /opsx:apply stays at
- * the start), then the approach word for word, then the thread line.
+ * The first input. A Discuss session gets the first message as is. A session with an approved
+ * proposal, or of a subtask, gets the first message first (so a command such as /opsx:apply stays at
+ * the start), then the proposal word for word, then the thread line.
  */
-export function firstInput(task: TaskView, approach: string | null): string {
+export function firstInput(task: TaskView, proposal: string | null): string {
   const message = task.first_message ?? "";
-  if (approach === null && task.parent === null) return message;
+  if (proposal === null && task.parent === null) return message;
   const key = task.key ?? task.id;
   const parts = [message];
-  if (approach !== null) parts.push(`Confirmed approach:\n\n${approach}`);
+  if (proposal !== null) parts.push(`Approved proposal:\n\n${proposal}`);
   parts.push(readThreadLine(key));
-  // A session that starts at Ready (a subtask with the approach of its parent) never gets "Approach
-  // v<n> confirmed", so it gets the ready step here (review task-loop, workflow problem 2).
+  // A session that starts at Ready (a subtask with the proposal of its parent) never gets "Proposal
+  // v<n> approved", so it gets the ready step here (review task-loop, workflow problem 2).
   const subtaskAtReady =
-    task.stage === "backlog" && task.parent !== null && task.approach.confirmed === null;
-  if (approach !== null && (task.stage === "ready" || subtaskAtReady)) {
+    task.stage === "backlog" && task.parent !== null && task.proposal.approved === null;
+  if (proposal !== null && (task.stage === "ready" || subtaskAtReady)) {
     parts.push(readyLine(key));
   }
   return parts.join("\n\n");
@@ -49,7 +49,7 @@ export function firstInput(task: TaskView, approach: string | null): string {
 
 /** The ready step of a session that starts at Ready. */
 export function readyLine(key: string): string {
-  return `${key} is at Ready: the approach is confirmed. Run \`aw ready ${key}\` (add --missing "<item>" for each thing that you still need) and end your turn. "Start implementing" arrives as your next input.`;
+  return `${key} is at Ready: the proposal is approved. Run \`aw ready ${key}\` (add --missing "<item>" for each thing that you still need) and end your turn. "Start implementing" arrives as your next input.`;
 }
 
 /**
@@ -79,8 +79,9 @@ export function sessionContext(task: TaskView, knowledge: string): string {
     readThreadLine(key),
     "",
     "## Rules",
-    `- End EACH turn with one AW call: a question, the approach, ready, the result, a gate, \`aw message ${key} "<short update>"\`, learn or done. "[AW notice <id>] Your turn ended with no AW update" means: send that update now.`,
-    `- Ask each question with \`aw ask ${key} "<question>" --options "a|b"\`, then END YOUR TURN. The answer arrives as your next input, after "[AW answer <gate-id>]".`,
+    `- End EACH turn with one AW call: a question, the proposal, ready, the result, a gate, \`aw message ${key} "<short update>"\`, learn or done. "[AW notice <id>] Your turn ended with no AW update" means: send that update now.`,
+    `- Discuss: ask each question only with \`aw ask ${key} "<question>" --options "a|b"\` (never also as a message), all your questions in one ask, then END YOUR TURN. The answer arrives as your next input, after "[AW answer <gate-id>]".`,
+    `- Write the proposal with \`aw proposal ${key} --file <path>\` only when no question is open. A proposal has no open question and no choice. Never ask for permission to write a proposal. After a message about the proposal, answer it or send a new version.`,
     `- Put the full context of a decision (the options, trade-offs, risks, your recommendation) in the question: \`aw ask ${key} "<question>" --details-file <file.md> --option "<label>::<description>"\`. The human sees only the gate: never write "see the message above".`,
     `- Keep a message short, for a phone screen. Do not copy a gate or a result into it. Write messages, progress, artifacts and a handoff with \`aw message ${key}\`, \`aw stage ${key}\`, \`aw artifact add ${key} <file>\`, \`aw handoff ${key} --file <path>\`.`,
     "- An input that starts with [AW resume] means AW restarted this session: check the interrupted step first.",
@@ -98,7 +99,7 @@ export function sessionContext(task: TaskView, knowledge: string): string {
     `- Test server: ${task.test_server ?? "-"}`,
     `- Credentials: ${task.credentials.length > 0 ? task.credentials.join(", ") : "-"}`,
     `- Links: ${task.links.length > 0 ? task.links.join(", ") : "-"}`,
-    `- Approach: latest v${task.approach.latest}, confirmed ${task.approach.confirmed === null ? "none" : `v${task.approach.confirmed}`}`,
+    `- Proposal: latest v${task.proposal.latest}, approved ${task.proposal.approved === null ? "none" : `v${task.proposal.approved}`}`,
     "",
     "## Open gates",
     ...(open.length === 0

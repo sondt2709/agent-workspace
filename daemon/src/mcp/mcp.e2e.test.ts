@@ -114,6 +114,7 @@ describe.skipIf(!TEST_TMUX)("the MCP server of awd", () => {
         "handoff",
         "learn",
         "message",
+        "proposal",
         "ready",
         "result",
         "slot_acquire",

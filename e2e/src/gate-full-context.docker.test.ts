@@ -1,7 +1,7 @@
 // The journey of openspec gate-full-context on 2 awd containers (e2e/compose.yaml with
 // e2e/compose.redaction.yaml; gaps M19, M23, M24; fix list 0-7). ubuntu-01 runs the fake agent. It
-// proposes approach v1 with 2 decisions; macbook-pro confirms; the agent proposes v2 (Waits for
-// you); macbook-pro confirms; the agent posts a result with a screenshot and a test report, which
+// sends proposal v1 (openspec proposal-and-discussion: no decisions, the one option Approve);
+// macbook-pro approves; the agent sends v2 (Waits for you); macbook-pro approves; the agent posts a result with a screenshot and a test report, which
 // sync to macbook-pro. ubuntu-01 approves while macbook-pro syncs nothing; the later answer of
 // macbook-pro becomes a comment, and a new answer gives gate_not_open. The task is Done. A thread
 // of 1,100 edits gives its newest events first. Each step writes one "EVIDENCE {json}" line.
@@ -36,23 +36,10 @@ const PNG = Buffer.from(
   "89504e470d0a1a0a0000000d4948445200000001000000010802000000907753de0000000c4944415408d763f8cfc0000003010100c9fe92ef0000000049454e44ae426082",
   "hex",
 );
-const DECISIONS = [
-  {
-    question: "Which limit per API key?",
-    options: ["100/min", "1000/min"],
-    recommended: "100/min",
-  },
-  {
-    question: "Where do we keep the counters?",
-    options: ["In memory", "Redis"],
-    recommended: "Redis",
-  },
-];
 const FILES: Record<string, string | Buffer> = {
-  "approach-v1.md": "# Add rate limits\n\n## Steps\n1. Add a token bucket per API key.\n",
-  "approach-v2.md":
+  "proposal-v1.md": "# Add rate limits\n\n## Steps\n1. Add a token bucket per API key.\n",
+  "proposal-v2.md":
     "# Add rate limits (v2: per route)\n\n## Steps\n1. Add a bucket per key and route.\n\nFULL-TEXT-END-MARKER\n",
-  "decisions.json": JSON.stringify(DECISIONS),
   "results/result.md": "# Result\n\nAll 42 unit tests pass.\n",
   "results/report.xml":
     '<?xml version="1.0"?>\n<testsuite name="limits" tests="42" failures="0"/>\n',
@@ -169,11 +156,11 @@ describe("gate full context across 2 devices", () => {
       expect(wrote.code, wrote.stderr).toBe(0);
     }
     // An agent command reads a file only in the working folder of its session (fix list 0-3): the
-    // approach files are in the repository, so the worktree of the task has them in plan/.
+    // proposal files are in the repository, so the worktree of the task has them in plan/.
     const plan = await exec(B, [
       "sh",
       "-c",
-      'mkdir -p "$1/plan" && cp "$2/approach-v1.md" "$2/approach-v2.md" "$2/decisions.json" "$1/plan/" && git -C "$1" add plan && git -C "$1" -c user.name=Agent -c user.email=agent@example.com commit -q -m "Add the plan files"',
+      'mkdir -p "$1/plan" && cp "$2/proposal-v1.md" "$2/proposal-v2.md" "$1/plan/" && git -C "$1" add plan && git -C "$1" -c user.name=Agent -c user.email=agent@example.com commit -q -m "Add the plan files"',
       "sh",
       CHECKOUT,
       FX,
@@ -181,7 +168,7 @@ describe("gate full context across 2 devices", () => {
     expect(plan.code, plan.stderr).toBe(0);
   }, 400_000);
 
-  it("2. approach v1 with 2 decisions reaches macbook-pro with each recommended option", async () => {
+  it("2. proposal v1 reaches macbook-pro with the one option Approve", async () => {
     const reply = await awJson<{ task: Task }>(A, [
       "task",
       "create",
@@ -190,15 +177,15 @@ describe("gate full context across 2 devices", () => {
       "--title",
       "Add rate limits",
       "--first-message",
-      `bash aw approach $AW_TASK --file plan/approach-v1.md --decisions plan/decisions.json`,
+      `bash aw proposal $AW_TASK --file plan/proposal-v1.md`,
       "--assignee",
       `claude@${B}`,
     ]);
     task = reply.task;
     const gate = await waitFor(
-      () => openGate(A, task.id, "confirm_approach"),
+      () => openGate(A, task.id, "approve_proposal"),
       120_000,
-      "Confirm approach v1 on macbook-pro",
+      "Approve proposal v1 on macbook-pro",
       1000,
     );
     const work = await call<ThreadReply>(A, "thread", [
@@ -208,8 +195,9 @@ describe("gate full context across 2 devices", () => {
     ]);
     const opened = work.events.find((e) => e.event.data.gate === gate.gate)!;
     expect(work.events.every((e) => e.type === "gate.opened")).toBe(true);
-    expect(opened.event.data.decisions).toEqual(DECISIONS);
-    evidence("approach-v1", { gate: gate.gate, decisions: opened.event.data.decisions });
+    expect(opened.event.data.options).toEqual(["Approve"]);
+    expect(opened.event.data.file).toBe("proposal/v1.md");
+    evidence("proposal-v1", { gate: gate.gate, options: opened.event.data.options });
     // The session device wrote the turn text as Session only, and the link to its Claude session
     // and terminal; both reach macbook-pro (openspec agent-pushes-updates).
     const synced = await awJson<ThreadReply>(A, ["thread", task.id, "--limit", "1000"]);
@@ -225,38 +213,35 @@ describe("gate full context across 2 devices", () => {
       name: started.event.data.name,
       terminal: started.event.data.terminal,
     });
-    const answered = await aw(A, ["gate", "answer", gate.gate, "Confirm"]);
+    const answered = await aw(A, ["gate", "answer", gate.gate, "Approve"]);
     expect(answered.code, answered.stderr).toBe(0);
   }, 200_000);
 
-  it("3. after a confirmed v1 the agent proposes v2: latest 2, confirmed 1, both files on macbook-pro", async () => {
+  it("3. after an approved v1 the agent sends v2: latest 2, approved 1, both files on macbook-pro", async () => {
     await waitFor(
       async () => (await gates(A, task.id)).every((g) => g.state === "resolved"),
       60_000,
       "v1 resolved",
       1000,
     );
-    await message(
-      task.id,
-      `bash aw approach $AW_TASK --file plan/approach-v2.md --decisions plan/decisions.json`,
-    );
-    await waitFor(() => openGate(A, task.id, "confirm_approach"), 120_000, "v2 gate", 1000);
-    const shown = await awJson<Task & { approach: { latest: number; confirmed: number | null } }>(
+    await message(task.id, `bash aw proposal $AW_TASK --file plan/proposal-v2.md`);
+    await waitFor(() => openGate(A, task.id, "approve_proposal"), 120_000, "v2 gate", 1000);
+    const shown = await awJson<Task & { proposal: { latest: number; approved: number | null } }>(
       A,
       ["task", "show", task.id],
     );
-    expect(shown.approach).toMatchObject({ latest: 2, confirmed: 1 });
+    expect(shown.proposal).toMatchObject({ latest: 2, approved: 1 });
     const proposed = await call<ThreadReply>(A, "thread", [
       "-",
       task.id,
-      { types: "approach.proposed" },
+      { types: "proposal.proposed" },
     ]);
     expect(proposed.events.map((e) => e.event.data.version)).toEqual([1, 2]);
-    const text = (await exec(A, ["cat", `${WORKSPACE}/tasks/${task.id}/approach/v2.md`])).stdout;
+    const text = (await exec(A, ["cat", `${WORKSPACE}/tasks/${task.id}/proposal/v2.md`])).stdout;
     expect(text).toContain("FULL-TEXT-END-MARKER");
-    evidence("approach-v2", { approach: shown.approach, v2_full_text_marker: true });
-    const gate = (await openGate(A, task.id, "confirm_approach"))!;
-    expect((await aw(A, ["gate", "answer", gate.gate, "Confirm"])).code).toBe(0);
+    evidence("proposal-v2", { proposal: shown.proposal, v2_full_text_marker: true });
+    const gate = (await openGate(A, task.id, "approve_proposal"))!;
+    expect((await aw(A, ["gate", "answer", gate.gate, "Approve"])).code).toBe(0);
   }, 200_000);
 
   it("4. the result with 2 artifacts syncs to macbook-pro with the sizes of artifact.added", async () => {
