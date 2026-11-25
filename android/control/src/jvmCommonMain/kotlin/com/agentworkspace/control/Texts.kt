@@ -33,8 +33,9 @@ object Texts {
 
     private val GATE_LABEL =
         mapOf(
-            "question" to "Answer question",
-            "reply" to "Reply",
+            // One reason for both kinds, as on the desktop (openspec proposal-and-discussion).
+            "question" to "Reply to a question",
+            "reply" to "Reply to a question",
             "approve_proposal" to "Approve proposal",
             "assign" to "Assign task",
             "approve_command" to "Approve command",

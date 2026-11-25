@@ -49,7 +49,7 @@ class TaskPageTest {
                     TaskPage.listGroups(asked).map { g -> g.label to g.rows.map { it.label } },
                 )
                 assertEquals(ScreenStates.inbox(asked).map { it.id }, TaskPage.listGroups(asked)[0].rows.map { it.id })
-                assertEquals("Answer question", TaskPage.stateChip(asked.task(AW7)!!))
+                assertEquals("Reply to a question", TaskPage.stateChip(asked.task(AW7)!!))
             }
         }
 }

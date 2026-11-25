@@ -95,7 +95,7 @@ class PushAndCredentialsTest {
                 """{"event":"e1","task":"$task","key":"AW-7","gate_kind":"question","text":"Which limit?"}"""
                     .encodeToByteArray(),
             )
-        assertEquals("AW-7 · Answer question", preview.title)
+        assertEquals("AW-7 · Reply to a question", preview.title)
         assertEquals("Which limit?", preview.text)
         assertEquals(task, preview.task)
         assertEquals("e1", preview.tag)
