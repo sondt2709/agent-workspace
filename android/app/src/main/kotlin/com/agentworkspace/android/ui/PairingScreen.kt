@@ -24,7 +24,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.agentworkspace.android.QrScanner
@@ -139,7 +138,7 @@ private fun PairingProgress(
     onCancel: () -> Unit,
 ) {
     Text("Check code", style = MaterialTheme.typography.titleMedium)
-    Text(status.checkCode, style = MaterialTheme.typography.displayMedium.copy(fontFamily = FontFamily.Monospace))
+    Text(status.checkCode, style = MaterialTheme.typography.displayMedium.copy(fontFamily = MonoFont))
     when (status.state) {
         PairingState.WAITING -> {
             Text("Check that ${status.showing} shows the same code, then approve this phone there.")

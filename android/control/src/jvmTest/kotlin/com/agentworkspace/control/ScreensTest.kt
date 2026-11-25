@@ -135,7 +135,7 @@ class ScreensTest {
                 assertEquals("AW-7", fields["Key"])
                 assertEquals("Implement", fields["Stage"])
                 assertEquals("claude@ubuntu-01", fields["Assignee"])
-                assertEquals("v1 confirmed (latest v1)", fields["Approach"])
+                assertEquals("v1 approved (latest v1)", fields["Proposal"])
                 // The session rows are in the session summary of the Session view, not in the properties.
                 assertTrue("Session" !in fields && "Branch" !in fields && "Owner device" !in fields)
                 val task = snapshot.task(AW7)!!
@@ -213,7 +213,7 @@ class ScreensTest {
         val t = IsoTime.parseMillis("2026-11-22T14:00:00.000Z")!!
         assertEquals("8 s ago", Texts.ago(t, t + 8_000))
         assertEquals("5 min ago", Texts.ago(t, t + 300_000))
-        assertEquals("Confirm approach", Texts.gateLabel("confirm_approach"))
+        assertEquals("Approve proposal", Texts.gateLabel("approve_proposal"))
         assertEquals("new kind", Texts.gateLabel("new_kind"))
         assertNotNull(Texts.pauseText("usage_limit"))
         // The pause causes of the continuity rules (add-continuity) have their own chip text.

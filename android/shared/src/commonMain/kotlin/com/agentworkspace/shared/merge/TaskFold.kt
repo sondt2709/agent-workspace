@@ -1,6 +1,5 @@
 package com.agentworkspace.shared.merge
 
-import com.agentworkspace.schema.ApproachProposedV1
 import com.agentworkspace.schema.ArtifactAddedV1
 import com.agentworkspace.schema.CommentAddedV1
 import com.agentworkspace.schema.GateAnsweredV1
@@ -11,6 +10,7 @@ import com.agentworkspace.schema.MessageAgentV1
 import com.agentworkspace.schema.MessageHumanV1
 import com.agentworkspace.schema.MessageSentV1
 import com.agentworkspace.schema.ProjectV1
+import com.agentworkspace.schema.ProposalProposedV1
 import com.agentworkspace.schema.ResultPostedV1
 import com.agentworkspace.schema.SessionEndedV1
 import com.agentworkspace.schema.SessionResumedV1
@@ -75,7 +75,7 @@ private val STATE_EVENTS =
         "task.released",
         "gate.opened",
         "gate.resolved",
-        "approach.proposed",
+        "proposal.proposed",
         "result.posted",
         "handoff.written",
         "session.started",
@@ -85,9 +85,12 @@ private val STATE_EVENTS =
         "message.agent",
     )
 
-/** The answer of the "Confirm" option confirms the approach (spec workspace-merge "Gate answers"). */
-private val CONFIRM = Regex("^confirm", RegexOption.IGNORE_CASE)
-private val APPROACH_FILE = Regex("^approach/v([1-9][0-9]*)\\.md\\z")
+/**
+ * The answer "Approve" (or "Confirm" of a gate from before openspec proposal-and-discussion) approves
+ * the proposal of the gate file (spec workspace-merge "Gate answers").
+ */
+private val APPROVE = Regex("^(approve|confirm)", RegexOption.IGNORE_CASE)
+private val PROPOSAL_FILE = Regex("^(?:proposal|approach)/v([1-9][0-9]*)\\.md\\z")
 
 /** True for an actor `human@…`: a person. */
 fun isHuman(by: String?): Boolean = by != null && by.startsWith("human@")
@@ -177,7 +180,7 @@ class TaskFold(
     private val movingTo: String?
         get() = assigneeDevice(assignee).takeIf { claim != null && it != claim?.device }
     private var releasedEpoch: Long? = null
-    private var approach = ApproachView(0, null)
+    private var proposal = ProposalView(0, null)
     private var ready: ReadyView? = null
     private var testServer: String? = null
     private var credentials: List<String> = emptyList()
@@ -349,8 +352,8 @@ class TaskFold(
                 Decision.OK.also { releasedEpoch = data.epoch }
             }
 
-            is ApproachProposedV1 -> {
-                Decision.OK.also { approach = approach.copy(latest = maxOf(approach.latest, data.version)) }
+            is ProposalProposedV1 -> {
+                Decision.OK.also { proposal = proposal.copy(latest = maxOf(proposal.latest, data.version)) }
             }
 
             is ResultPostedV1 -> {
@@ -551,16 +554,16 @@ class TaskFold(
         if (gate.state != "open") return Decision.reject("already_resolved")
         if (data.version != gate.version) return Decision.reject("stale_version")
         resolve(gate, data.answer, data.answerEvent, e.dev)
-        if (gate.kind == "confirm_approach" && CONFIRM.containsMatchIn(data.answer)) {
+        if (gate.kind == "approve_proposal" && APPROVE.containsMatchIn(data.answer)) {
             // A version number above the safe integers of JavaScript counts as no version (as in TypeScript).
             val version =
-                APPROACH_FILE
+                PROPOSAL_FILE
                     .find(gate.file.orEmpty())
                     ?.groupValues
                     ?.get(1)
                     ?.toLongOrNull()
                     ?.takeIf { it <= MAX_SAFE_INTEGER }
-            approach = approach.copy(confirmed = version ?: approach.latest)
+            proposal = proposal.copy(approved = version ?: proposal.latest)
         }
         return Decision.OK
     }
@@ -637,7 +640,7 @@ class TaskFold(
             claim = claim,
             movingTo = movingTo,
             releasedEpoch = releasedEpoch,
-            approach = approach,
+            proposal = proposal,
             ready = ready,
             testServer = testServer,
             credentials = credentials,

@@ -15,6 +15,11 @@ sealed interface Route {
         val id: String,
     ) : Route
 
+    /** The item screen of an Inbox row: the rows of Activity that need the person (proposal-and-discussion). */
+    data class InboxItem(
+        val task: String,
+    ) : Route
+
     data object NewTask : Route
 
     data object AddCredential : Route
@@ -54,12 +59,12 @@ class Navigator(
     fun select(tab: Tab) = replace(listOf(tab.root))
 
     /**
-     * Opens a route. A task replaces the open task (one task page at a time) and keeps the root, so
-     * Back returns to the list; a form goes on top of the stack once.
+     * Opens a route. A task or an Inbox item replaces the open task or item (one at a time) and keeps
+     * the root, so Back returns to the list; a form goes on top of the stack once.
      */
     fun open(route: Route) {
         when (route) {
-            is Route.Task -> {
+            is Route.Task, is Route.InboxItem -> {
                 replace(listOf(stack.first(), route))
             }
 
@@ -91,6 +96,9 @@ class Navigator(
 
     /** The open task, or null. */
     val openTask: String? get() = stack.filterIsInstance<Route.Task>().lastOrNull()?.id
+
+    /** The task of the open Inbox item, or null. */
+    val openInboxItem: String? get() = stack.filterIsInstance<Route.InboxItem>().lastOrNull()?.task
 
     private fun replace(entries: List<Route>) {
         if (entries == stack) return

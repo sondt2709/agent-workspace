@@ -35,7 +35,7 @@ object Texts {
         mapOf(
             "question" to "Answer question",
             "reply" to "Reply",
-            "confirm_approach" to "Confirm approach",
+            "approve_proposal" to "Approve proposal",
             "assign" to "Assign task",
             "approve_command" to "Approve command",
             "approve_result" to "Approve result",

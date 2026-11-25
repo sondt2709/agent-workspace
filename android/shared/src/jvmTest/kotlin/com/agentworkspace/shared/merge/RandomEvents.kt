@@ -18,7 +18,7 @@ import java.nio.file.StandardOpenOption
 import kotlin.math.floor
 
 private val DEVICES = listOf("macbook-pro", "ubuntu-01", "pixel-9")
-private val KINDS = listOf("question", "confirm_approach", "approve_result")
+private val KINDS = listOf("question", "approve_proposal", "approve_result")
 private const val DAY_MS = 24 * 3600_000L
 
 /** A UUIDv7 from a time in ms and random bits. */
@@ -218,7 +218,7 @@ class RandomEvents(
                         "text" to "",
                         "options" to emptyList<String>(),
                         "request_id" to null,
-                        "file" to (if (random.next() < 0.5) "approach/v1.md" else null),
+                        "file" to (if (random.next() < 0.5) "proposal/v1.md" else null),
                     ),
                 )
             }

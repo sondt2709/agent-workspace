@@ -5,10 +5,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.LocalContentColor
@@ -33,11 +36,17 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.agentworkspace.android.R
 import com.agentworkspace.control.ActivityRule
+import com.agentworkspace.control.CardStatus
+import com.agentworkspace.control.CommentRule
+import com.agentworkspace.control.GateCard
 import com.agentworkspace.control.GateQuestion
+import com.agentworkspace.control.GateRules
 import com.agentworkspace.control.GateTexts
+import com.agentworkspace.control.QuestionMode
 
 // The parts of a gate card for question details, context and questions (openspec gate-context).
 
@@ -58,20 +67,23 @@ internal fun ClampedText(
 /**
  * The text of a gate card as Markdown (openspec task-review-layout, design decision 6): its first
  * 260 dp with a fade, then "Show more" shows the full text in the list, with no scroll box of its own.
+ * The proposal card shows its first 240 dp with the text size of the phone (proposal-and-discussion).
  */
 @Composable
 internal fun GateText(
     text: String,
     key: String,
+    height: Dp = GateTextHeight,
+    textSize: Dp? = null,
 ) {
     var all by rememberSaveable(key) { mutableStateOf(false) }
-    var full by remember(text) { mutableIntStateOf(0) }
-    val limit = with(LocalDensity.current) { GateTextHeight.roundToPx() }
+    var full by remember(text, textSize) { mutableIntStateOf(0) }
+    val limit = with(LocalDensity.current) { height.roundToPx() }
     val over = full > limit
     val fade = MaterialTheme.colorScheme.surfaceContainer
-    Box(if (all) Modifier.fillMaxWidth() else Modifier.fillMaxWidth().heightIn(max = GateTextHeight).clipToBounds()) {
+    Box(if (all) Modifier.fillMaxWidth() else Modifier.fillMaxWidth().heightIn(max = height).clipToBounds()) {
         Box(Modifier.wrapContentHeight(Alignment.Top, unbounded = true).onSizeChanged { full = it.height }) {
-            MarkdownText(text)
+            MarkdownText(text, textSize = textSize)
         }
         if (over && !all) {
             Box(
@@ -198,6 +210,128 @@ internal fun QuestionListView(
         enabled = picks.any { it.isNotEmpty() },
         onClick = { onSend(GateTexts.answer(questions, picks)) },
     ) { Text("Send answers") }
+}
+
+/**
+ * The details of a gate as Markdown, or the agent messages before a gate with no details (openspec
+ * gate-context, polish-prototype-style).
+ */
+@Composable
+internal fun GateBody(card: GateCard) {
+    if (card.text.isNotBlank()) GateText(card.text, "${card.gate.gate}:text")
+    if (card.context.isNotEmpty()) {
+        Text("Context", style = MaterialTheme.typography.labelMedium)
+        for (message in card.context) {
+            Text(message.by.orEmpty(), style = MaterialTheme.typography.labelSmall)
+            ClampedText(message.text.orEmpty(), message.id)
+        }
+    }
+}
+
+/**
+ * The state and the answer controls of a gate: "Answer sent", the answer of another device, or the
+ * option buttons of 48 dp, the comment of an option that needs one, and the free-text field.
+ */
+@Composable
+internal fun GateAnswerControls(
+    card: GateCard,
+    onAnswer: (answer: String, comment: String?, sent: () -> Unit) -> Unit,
+    freeTextLabel: String = card.freeTextLabel,
+    /** The free-text field of a question or a reply: off where the message box answers. */
+    freeText: Boolean = card.freeText,
+) {
+    var text by rememberSaveable(card.gate.gate) { mutableStateOf("") }
+    var comment by rememberSaveable(card.gate.gate) { mutableStateOf("") }
+    var chosen by rememberSaveable(card.gate.gate) { mutableStateOf<String?>(null) }
+    when (val status = card.status) {
+        is CardStatus.Sent -> {
+            Text(status.text, color = MaterialTheme.colorScheme.primary)
+        }
+
+        is CardStatus.AnsweredElsewhere -> {
+            Text("${status.device} answered: ${status.answer}")
+        }
+
+        is CardStatus.Resolved -> {
+            Text("Resolved: ${status.answer.orEmpty()}")
+        }
+
+        CardStatus.Open -> {
+            val mode = GateTexts.mode(card.questions)
+            if (mode == QuestionMode.LIST) {
+                QuestionListView(card.gate.gate, card.questions) { answer -> onAnswer(answer, null) {} }
+            }
+            val options = card.options.takeIf { mode != QuestionMode.LIST }.orEmpty()
+            val recommended = GateTexts.recommended(options)
+            if (card.freeText) {
+                // A question or a reply: one full-width button of 48 dp per option, stacked; the
+                // recommended option is filled (openspec polish-prototype-style).
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    options.forEachIndexed { i, option ->
+                        val description =
+                            card.questions
+                                .takeIf { mode == QuestionMode.BUTTONS }
+                                ?.first()
+                                ?.options
+                                ?.firstOrNull { it.label == option }
+                                ?.description
+                                .orEmpty()
+                        val rule = GateRules.commentRule(option)
+                        OptionButton(
+                            label = option,
+                            description = description,
+                            filled = i == recommended && rule == CommentRule.NONE,
+                            onClick = {
+                                if (rule == CommentRule.NONE) onAnswer(option, null) {} else chosen = option
+                            },
+                        )
+                    }
+                }
+            } else {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    options.forEachIndexed { i, option ->
+                        val rule = GateRules.commentRule(option)
+                        if (rule == CommentRule.NONE && i == recommended) {
+                            Button(onClick = { onAnswer(option, null) {} }) { Text(option) }
+                        } else if (rule == CommentRule.NONE) {
+                            OutlinedButton(onClick = { onAnswer(option, null) {} }) { Text(option) }
+                        } else {
+                            OutlinedButton(onClick = { chosen = option }) { Text(option) }
+                        }
+                    }
+                }
+            }
+            chosen?.let { option ->
+                val required = GateRules.commentRule(option) == CommentRule.REQUIRED
+                OutlinedTextField(
+                    value = comment,
+                    onValueChange = { comment = it },
+                    label = { Text(if (required) "Comment (required)" else "Comment (optional)") },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(
+                        enabled = !required || comment.isNotBlank(),
+                        onClick = { onAnswer(option, comment.ifBlank { null }) {} },
+                    ) { Text("Send \"$option\"") }
+                    TextButton(onClick = { chosen = null }) { Text("Cancel") }
+                }
+            }
+            if (freeText) {
+                MessageField(
+                    value = text,
+                    onValueChange = { text = it },
+                    label = freeTextLabel,
+                    onSend = {
+                        onAnswer(text, null) { text = "" }
+                    },
+                )
+            }
+        }
+    }
 }
 
 /** The start of a long gate text that a card shows before "Show more" (the desktop shows 240 px). */

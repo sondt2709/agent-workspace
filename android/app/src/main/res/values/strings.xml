@@ -13,5 +13,5 @@
     <string name="sync_not_installed">AW · sync is off: the engine is not installed</string>
     <string name="battery_restricted">Battery mode \"Restricted\": sync stops in Doze. Tap to open the app settings and select \"Unrestricted\" or \"Optimized\".</string>
     <string name="channel_gates">Gates</string>
-    <string name="channel_gates_description">A question, an approach, a command or a result that needs your answer.</string>
+    <string name="channel_gates_description">A question, a proposal, a command or a result that needs your answer.</string>
 </resources>

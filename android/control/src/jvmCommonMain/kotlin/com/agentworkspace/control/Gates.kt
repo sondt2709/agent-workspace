@@ -80,12 +80,10 @@ data class GateCard(
     val label: String,
     val title: String,
     /**
-     * The body of `gate.opened` (the details, the plan, the command), with no decision block; "" when
-     * the text says no more than the title (gate-context).
+     * The body of `gate.opened` (the details, the plan, the command) as written; "" when the text says
+     * no more than the title (gate-context).
      */
     val text: String,
-    /** The decisions of `gate.opened`, each with its recommended option (gate-full-context). */
-    val decisions: List<GateDecision> = emptyList(),
     /** The questions of `gate.opened` with headers, multi-select and descriptions (gate-context). */
     val questions: List<GateQuestion> = emptyList(),
     /** The agent messages before a question or reply gate with no body (gate-context). */

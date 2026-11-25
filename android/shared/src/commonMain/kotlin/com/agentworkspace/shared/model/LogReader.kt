@@ -128,7 +128,9 @@ object LogReader {
     }
 
     /** Validates one event value against its envelope, then against the schema of its type and version. */
-    fun validate(value: JsonElement): LineResult {
+    fun validate(line: JsonElement): LineResult {
+        // A line from before openspec proposal-and-discussion gets the new names (Legacy).
+        val value = Legacy.upgradeEvent(line)
         var raw = value
         val envelope =
             when (

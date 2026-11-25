@@ -7,15 +7,10 @@ import com.agentworkspace.shared.files.NioWorkspaceFiles
 import com.agentworkspace.shared.merge.AnswerView
 import com.agentworkspace.shared.merge.EventRow
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import java.nio.file.Files
-import java.nio.file.Path
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -24,56 +19,29 @@ import kotlin.test.assertTrue
 
 /** The full context of a gate on the phone (openspec gate-full-context; M19, M24, fix list 0-20). */
 class GateFullContextTest {
-    private val fixture: JsonObject by lazy {
-        val dir = Path.of(requireNotNull(System.getProperty("aw.schema.dir")))
-        Json.parseToJsonElement(Files.readString(dir.resolve("fixtures/gates/cases.json"))).jsonObject
-    }
-
+    /**
+     * An old gate with decisions (from before openspec proposal-and-discussion): the card shows its
+     * text as written and its options, and no decisions.
+     */
     @Test
-    fun gateTextsOfTheSharedCases() {
-        for (case in fixture.getValue("cases").jsonArray.map { it.jsonObject }) {
-            val name = case.getValue("name").jsonPrimitive.content
-            val decisions = GateTexts.decisions(buildJsonObject { put("decisions", case.getValue("decisions")) })
-            assertEquals(case.getValue("decisions").jsonArray.size, decisions.size, name)
-            assertEquals(
-                case.getValue("body").jsonPrimitive.content,
-                GateTexts.body(case.getValue("text").jsonPrimitive.content, decisions),
-                name,
-            )
-        }
-    }
-
-    @Test
-    fun decisionsOfOtherFormsAreLeftOut() {
-        val data =
-            Json
-                .parseToJsonElement(
-                    """{"decisions":[{"question":"Q","options":["a","b"],"recommended":"a"},""" +
-                        """{"question":"Bad","options":[1],"recommended":"a"},"x"]}""",
-                ).jsonObject
-        assertEquals(listOf(GateDecision("Q", listOf("a", "b"), "a")), GateTexts.decisions(data))
-        assertEquals(emptyList(), GateTexts.decisions(null))
-    }
-
-    @Test
-    fun theCardShowsTheDecisionsAndCutsTheBlock() =
+    fun anOldGateWithDecisionsShowsItsTextAndNoDecisions() =
         runTest {
             TestWorkspace().use { ws ->
-                val text = fixture.getValue("cases").jsonArray[0].jsonObject
+                val text = "Pick the limits.\n\n## Decisions\n1. Limit? 100/min (recommended) or 1000/min"
+                val decisions = """[{"question":"Limit?","options":["100/min","1000/min"],"recommended":"100/min"}]"""
                 val line =
                     TestWorkspace
                         .questionLine()
-                        .replace("\"text\":\"The API has no limit now.\"", "\"text\":${text.getValue("text")}")
-                        .replace("}}", ",\"decisions\":${text.getValue("decisions")}}}")
+                        .replace("\"kind\":\"question\"", "\"kind\":\"custom\"")
+                        .replace("\"text\":\"The API has no limit now.\"", "\"text\":${JsonPrimitive(text)}")
+                        .replace("}}", ",\"decisions\":$decisions}}")
                 ws.appendRaw("tasks/$AW7/log/ubuntu-01.jsonl", line)
                 ws.refresh()
                 val model = ws.model(backgroundScope)
                 val snapshot = model.reload()
                 val card = ScreenStates.gateCards(snapshot.task(AW7)!!, snapshot).single { it.gate.gate == GATE }
-                assertEquals(2, card.decisions.size)
-                assertEquals("100/min", card.decisions[0].recommended)
-                assertEquals(text.getValue("body").jsonPrimitive.content, card.text)
-                assertFalse(card.text.contains("## Decisions"))
+                assertEquals(text, card.text)
+                assertEquals(listOf("100/min", "1000/min"), card.options)
             }
         }
 
@@ -156,27 +124,34 @@ class GateFullContextTest {
         }
 
     @Test
-    fun theApproachVersionsShowWaitsForYouAfterAConfirmedOne() =
+    fun theProposalVersionsShowWaitsForYouAfterAnApprovedOne() =
         runTest {
             TestWorkspace().use { ws ->
                 ws.refresh()
                 val task = ws.model(backgroundScope).reload().task(AW7)!!
-                val v2 = task.copy(approach = task.approach.copy(latest = 2, confirmed = 1))
+                val v2 = task.copy(proposal = task.proposal.copy(latest = 2, approved = 1))
                 assertEquals(
-                    listOf(ApproachVersion(1, "Confirmed"), ApproachVersion(2, "Waits for you")),
-                    ApproachVersions.of(v2),
+                    listOf(ProposalVersion(1, "Approved"), ProposalVersion(2, "Waits for you")),
+                    ProposalVersions.of(v2),
                 )
                 assertEquals(
-                    listOf(ApproachVersion(1, "Replaced"), ApproachVersion(2, "Waits for you")),
-                    ApproachVersions.of(task.copy(approach = task.approach.copy(latest = 2, confirmed = null))),
+                    listOf(ProposalVersion(1, "Replaced"), ProposalVersion(2, "Waits for you")),
+                    ProposalVersions.of(task.copy(proposal = task.proposal.copy(latest = 2, approved = null))),
                 )
+                val files = NioWorkspaceFiles(ws.root)
+                // A version from before the rename is in approach/; a new one is in proposal/.
                 Files.createDirectories(ws.root.resolve("tasks/$AW7/approach"))
                 Files.writeString(ws.root.resolve("tasks/$AW7/approach/v2.md"), "# v2\n\nFULL-TEXT-END-MARKER\n")
-                assertEquals(
-                    "# v2\n\nFULL-TEXT-END-MARKER\n",
-                    ApproachVersions.text(NioWorkspaceFiles(ws.root), AW7, 2),
-                )
-                assertNull(ApproachVersions.text(NioWorkspaceFiles(ws.root), AW7, 3))
+                assertEquals("# v2\n\nFULL-TEXT-END-MARKER\n", ProposalVersions.text(files, AW7, 2))
+                assertEquals("# v2\n\nFULL-TEXT-END-MARKER\n", ProposalVersions.text(files, AW7, 2, "approach/v2.md"))
+                Files.createDirectories(ws.root.resolve("tasks/$AW7/proposal"))
+                Files.writeString(ws.root.resolve("tasks/$AW7/proposal/v6.md"), "# v6\n")
+                assertEquals("# v6\n", ProposalVersions.text(files, AW7, 6, "proposal/v6.md"))
+                assertEquals("# v6\n", ProposalVersions.text(files, AW7, 6))
+                // A file of the event outside the proposal layout is not read.
+                Files.writeString(ws.root.resolve("tasks/$AW7/notes.md"), "secret\n")
+                assertEquals("# v6\n", ProposalVersions.text(files, AW7, 6, "notes.md"))
+                assertNull(ProposalVersions.text(files, AW7, 3))
             }
         }
 

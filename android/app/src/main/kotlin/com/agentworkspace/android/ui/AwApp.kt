@@ -39,6 +39,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.agentworkspace.android.R
+import com.agentworkspace.control.InboxItems
 import com.agentworkspace.control.NavKind
 import com.agentworkspace.control.Route
 import com.agentworkspace.control.ScreenStates
@@ -189,6 +190,15 @@ private fun Panes(
     val answer = { task: String, gate: String, text: String, comment: String?, sent: () -> Unit ->
         vm.answer(task, gate, text, comment, sent)
     }
+    val parts =
+        TaskDetailParts(
+            loadProposal = vm::proposalText,
+            loadArtifacts = vm::artifacts,
+            onDownload = vm::download,
+            onOpenArtifact = vm::openArtifact,
+            textSize = vm.proposalTextSize,
+            onTextSize = vm::changeProposalTextSize,
+        )
     NavDisplay(
         backStack = vm.backStack,
         onBack = { vm.back() },
@@ -211,7 +221,30 @@ private fun Panes(
                     )
                 }
                 entry<Route.Inbox>(metadata = ListDetailSceneStrategy.listPane(detailPlaceholder = { placeholder() })) {
-                    InboxScreen(snapshot, openTask, vm::openTask, vm::syncNow, answer, vm::assign)
+                    InboxScreen(
+                        snapshot = snapshot,
+                        updates = InboxItems.updates(peers, now),
+                        openItem = vm.navigator.openInboxItem,
+                        onOpenItem = { vm.navigator.open(Route.InboxItem(it)) },
+                        onOpenTask = vm::openTask,
+                    )
+                }
+                // The item screen of an Inbox row, next to the list from medium width.
+                entry<Route.InboxItem>(metadata = ListDetailSceneStrategy.detailPane()) { route ->
+                    val task = snapshot.task(route.task)
+                    if (task == null) {
+                        EmptyText(NOT_HERE)
+                    } else {
+                        InboxItemScreen(
+                            task = task,
+                            snapshot = snapshot,
+                            loadThread = vm::thread,
+                            parts = parts,
+                            onAnswer = { gate, text, comment, sent -> vm.answer(task.id, gate, text, comment, sent) },
+                            onAssign = { vm.assign(task.id, it) },
+                            onOpenTask = { vm.openTask(task.id) },
+                        )
+                    }
                 }
                 entry<Route.Tasks>(metadata = ListDetailSceneStrategy.listPane(detailPlaceholder = { placeholder() })) {
                     TasksScreen(snapshot, openTask, vm::openTask, vm::syncNow) { vm.navigator.open(Route.NewTask) }
@@ -260,13 +293,7 @@ private fun Panes(
                                 ),
                             loadThread = vm::thread,
                             loadTerminal = vm::terminal,
-                            parts =
-                                TaskDetailParts(
-                                    loadApproach = vm::approachText,
-                                    loadArtifacts = vm::artifacts,
-                                    onDownload = vm::download,
-                                    onOpenArtifact = vm::openArtifact,
-                                ),
+                            parts = parts,
                             actions =
                                 TaskPageActions(
                                     onAnswer = { gate, text, comment, sent ->

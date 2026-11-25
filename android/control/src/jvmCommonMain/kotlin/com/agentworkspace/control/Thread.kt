@@ -32,7 +32,7 @@ data class ThreadItem(
 data class ThreadWindow(
     val items: List<ThreadItem>,
     val hasOlder: Boolean,
-    val activity: List<ThreadItem> = emptyList(),
+    val activity: List<ActivityRow> = emptyList(),
 ) {
     companion object {
         val EMPTY = ThreadWindow(emptyList(), false)
@@ -58,48 +58,11 @@ object ThreadItems {
     }
 
     /**
-     * The rows of the Activity rule ([ActivityRule]): the created line without the first message (the
-     * description shows it), the text typed in the terminal, and a session stop with its cause. A row
-     * that the merge ignored keeps its note "Ignored: <reason>" (principle 9).
-     */
-    fun activity(rows: List<EventRow>): List<ThreadItem> {
-        val delivered = deliveredOf(rows)
-        return rows
-            .filter { ActivityRule.inActivity(it.type, dataOf(it)) }
-            .map { row ->
-                val item = item(row, delivered)
-                val data = dataOf(row)
-                val line = ActivityRule.line(row.type, row.dev, data)
-                when {
-                    line != null -> {
-                        item.copy(text = line)
-                    }
-
-                    row.type == "task.created" -> {
-                        item.copy(
-                            kind = ThreadKind.SYSTEM,
-                            text = "Created by ${item.who}",
-                            note = if (row.applied) null else item.note,
-                        )
-                    }
-
-                    row.type == "message.human" -> {
-                        typed(item, row.applied)
-                    }
-
-                    else -> {
-                        item
-                    }
-                }
-            }
-    }
-
-    /**
      * The Activity row of a text typed in the terminal. A message of another agent shows in the agent
      * style with the text of the agent (openspec task-review-layout, design decision 5); the Session
      * view keeps the raw text.
      */
-    private fun typed(
+    internal fun typed(
         item: ThreadItem,
         applied: Boolean,
     ): ThreadItem {
@@ -222,7 +185,7 @@ object ThreadItems {
 
             "task.unarchived" -> "Unarchived"
 
-            "approach.proposed" -> "Approach v${data.text("version")}: ${data.text("file")}"
+            "proposal.proposed" -> "Proposal v${data.text("version")}: ${data.text("file")}"
 
             "artifact.added" -> "Artifact: ${data.text("path")}"
 

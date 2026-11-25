@@ -80,7 +80,9 @@ class AgentMessageTest {
                 .first()
                 .getValue("text")
                 .jsonPrimitive.content
-        val row = ThreadItems.activity(listOf(typed(text))).single()
+        val activity = ActivityRows.of(listOf(typed(text))).single()
+        assertEquals(Author.AGENT, activity.author)
+        val row = activity.item
         assertEquals(ThreadKind.AGENT, row.kind)
         assertEquals("Subagent report", row.who)
         assertEquals("arrived in the terminal", row.note)
@@ -93,10 +95,12 @@ class AgentMessageTest {
     @Test
     fun aTeammateMessageAndAPersonMessage() {
         val teammate = cases.first { it.getValue("name").jsonPrimitive.content == "teammate message as awd stores it" }
-        val row = ThreadItems.activity(listOf(typed(teammate.getValue("text").jsonPrimitive.content))).single()
+        val row = ActivityRows.of(listOf(typed(teammate.getValue("text").jsonPrimitive.content))).single().item
         assertEquals("Agent message", row.who)
         assertEquals(ThreadKind.AGENT, row.kind)
-        val person = ThreadItems.activity(listOf(typed("Use **cents**.\n\n- one\n- two"))).single()
+        val message = ActivityRows.of(listOf(typed("Use **cents**.\n\n- one\n- two"))).single()
+        assertEquals(Author.PERSON, message.author)
+        val person = message.item
         assertEquals(ThreadKind.HUMAN, person.kind)
         assertEquals("human@ubuntu-01", person.who)
         assertEquals("typed in the terminal", person.note)

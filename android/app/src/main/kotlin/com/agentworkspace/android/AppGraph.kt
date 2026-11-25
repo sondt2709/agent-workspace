@@ -18,6 +18,7 @@ import com.agentworkspace.control.PairingState
 import com.agentworkspace.control.PhoneActions
 import com.agentworkspace.control.PhoneIdentityStore
 import com.agentworkspace.control.PhonePairing
+import com.agentworkspace.control.ProposalTextSetting
 import com.agentworkspace.control.RecordPeers
 import com.agentworkspace.control.SealedOutboxCleanup
 import com.agentworkspace.control.WorkspaceModel
@@ -128,6 +129,9 @@ class AppGraph(
 
     /** The switch "Use mobile data for artifacts" (off by default). */
     val mobileData = MobileDataSetting(app.filesDir.toPath().resolve("artifacts-mobile-data"))
+
+    /** The text size of the proposals on this phone (openspec proposal-and-discussion). */
+    val proposalText = ProposalTextSetting(app.filesDir.toPath().resolve("proposal-text-px"))
 
     val network = NetworkCheck(app)
 

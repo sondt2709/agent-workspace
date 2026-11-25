@@ -96,17 +96,15 @@ class WorkspaceModel(
             queueOrders = queueOrders(),
             health = health,
             loadedAtMs = clock.now(),
-            gateDecisions = gates.decisions,
             gateQuestions = gates.questions,
             gateContexts = gates.contexts,
             knownKeys = index.knownKeys(),
         )
     }
 
-    /** The texts, decisions, questions and context of each shown gate, by gate id. */
+    /** The texts, questions and context of each shown gate, by gate id. */
     private class GateParts(
         val texts: Map<String, String>,
-        val decisions: Map<String, List<GateDecision>>,
         val questions: Map<String, List<GateQuestion>>,
         val contexts: Map<String, List<ContextEvent>>,
     )
@@ -116,7 +114,6 @@ class WorkspaceModel(
         me: String,
     ): GateParts {
         val texts = HashMap<String, String>()
-        val decisions = HashMap<String, List<GateDecision>>()
         val questions = HashMap<String, List<GateQuestion>>()
         val contexts = HashMap<String, List<ContextEvent>>()
         val shown =
@@ -126,7 +123,6 @@ class WorkspaceModel(
         for (gate in shown) {
             val data = index.event(gate.opened.event)?.event?.get("data") as? JsonObject
             (data?.get("text") as? JsonPrimitive)?.contentOrNull?.let { texts[gate.gate] = it }
-            GateTexts.decisions(data).takeIf { it.isNotEmpty() }?.let { decisions[gate.gate] = it }
             val asked = GateTexts.questions(data)
             if (asked.isNotEmpty()) questions[gate.gate] = asked
             val text = (data?.get("text") as? JsonPrimitive)?.contentOrNull.orEmpty()
@@ -137,7 +133,7 @@ class WorkspaceModel(
                     ?.let { contexts[gate.gate] = it }
             }
         }
-        return GateParts(texts, decisions, questions, contexts)
+        return GateParts(texts, questions, contexts)
     }
 
     /** The task of a gate id. */
@@ -193,7 +189,7 @@ class WorkspaceModel(
         val rows = index.threadNewest(task, limit + 1)
         val older = rows.size > limit
         val shown = if (older) rows.drop(1) else rows
-        return ThreadWindow(ThreadItems.of(shown), older, ThreadItems.activity(shown))
+        return ThreadWindow(ThreadItems.of(shown), older, ActivityRows.of(shown))
     }
 
     /** The `artifact.added` events of a task in merge order (gate-full-context). */

@@ -38,7 +38,7 @@ object ActivityRule {
             "message.human" to A, // only some sources: see inActivity()
             "gate.opened" to A,
             "gate.answered" to A,
-            "approach.proposed" to A,
+            "proposal.proposed" to A,
             "result.posted" to A,
             "artifact.added" to A,
             // A stop shows its cause (principle 2, decision 37): only some reasons, see inActivity().
@@ -83,15 +83,22 @@ object ActivityRule {
      * the terminal (source `typed` or `phone` with no delivery id); each other input repeats a text that
      * Activity has. A `session.ended` shows only when the session stopped or crashed. The text of an
      * agent turn (`message.agent` source `turn`) and a nudge notice show only in Session (openspec
-     * agent-pushes-updates).
+     * agent-pushes-updates). A note or a notice of AW (`comment.added` or `message.sent` by `aw@…`, for
+     * example "Context compacted" or "Start implementing AW-7.") shows only in Session (openspec
+     * proposal-and-discussion): the task line of the stage says it.
      */
     fun inActivity(
         type: String,
         data: JsonObject,
+        by: String? = null,
     ): Boolean =
         when {
             PLACES[type] != ActivityPlace.ACTIVITY -> {
                 false
+            }
+
+            type == "comment.added" -> {
+                by?.startsWith("aw@") != true
             }
 
             type == "session.ended" -> {
@@ -103,7 +110,7 @@ object ActivityRule {
             }
 
             type == "message.sent" -> {
-                data.text("kind") != "nudge"
+                data.text("kind") != "nudge" && by?.startsWith("aw@") != true
             }
 
             type == "message.human" -> {

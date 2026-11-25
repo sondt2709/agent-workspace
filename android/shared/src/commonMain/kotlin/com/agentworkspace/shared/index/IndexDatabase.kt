@@ -15,8 +15,11 @@ import androidx.room3.Upsert
 // The local index of the phone (docs/phase-1.md 3.5): a Room 3 database, never synced, rebuilt from
 // the files at any time. Each table keeps the JSON of the merged view row and the query columns.
 
-/** The version of the table layout. A new version rebuilds the index. */
-const val INDEX_VERSION = 1
+/**
+ * The version of the table layout. A new version rebuilds the index. Version 2: the rows of the
+ * new names of openspec proposal-and-discussion (`proposal.proposed`, the task field `proposal`).
+ */
+const val INDEX_VERSION = 2
 
 @Entity(
     tableName = "tasks",

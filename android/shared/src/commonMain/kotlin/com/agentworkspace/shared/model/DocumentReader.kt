@@ -83,9 +83,11 @@ object DocumentReader {
 
     /** Validates a document value. `expected` is the kind that the path requires. */
     fun validate(
-        value: JsonElement,
+        document: JsonElement,
         expected: String?,
     ): ParsedDocument {
+        // A task snapshot from before openspec proposal-and-discussion gets the field `proposal`.
+        val value = Legacy.upgradeTaskDocument(document)
         if (value !is JsonObject) schemaError("document: (root): A document is a YAML map with kind and schema")
         val kind = (value["kind"] as? JsonPrimitive)?.takeIf { it.isString }?.content
         if (!isKind(kind, expected)) {
