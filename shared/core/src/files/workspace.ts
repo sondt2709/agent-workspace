@@ -68,7 +68,12 @@ export interface WorkspaceOptions {
  * The layout rules of the text files of a task: AW redacts them before they sync (docs/phase-1.md
  * 3.3.5). An artifact is redacted only when its content is text.
  */
-const REDACTED_RULES = new Set(["task-terminal", "task-proposal", "task-approach", "task-artifact"]);
+const REDACTED_RULES = new Set([
+  "task-terminal",
+  "task-proposal",
+  "task-approach",
+  "task-artifact",
+]);
 
 export type WriteHook = (path: string, content: string | Uint8Array | null) => void;
 
