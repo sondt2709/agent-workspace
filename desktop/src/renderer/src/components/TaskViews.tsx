@@ -1,6 +1,5 @@
-// The task screens of a project and of All tasks: the Board, the List, and the list/detail split.
-// The selection is the search param `task`. Below 840 px a selection opens the task route; from
-// 840 px the detail shows next to the list with a divider that the person drags.
+// The task screens of a project and of All tasks: the Board and the List. A task opens as the task
+// page (the task route) at each window width (openspec task-review-layout, design decision 10).
 import { mainVar, tint } from "@aw/ui";
 import Autorenew from "@mui/icons-material/AutorenewOutlined";
 import CheckCircleOutline from "@mui/icons-material/CheckCircleOutlineOutlined";
@@ -24,12 +23,9 @@ import {
   ListSubheader,
   Stack,
   Typography,
-  useMediaQuery,
-  type Theme,
 } from "@mui/material";
 import { useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
-import { Group, Panel, Separator } from "react-resizable-panels";
-import { useLocation, useNavigate, useParams, useSearchParams } from "react-router";
+import { Navigate, useLocation, useNavigate, useParams, useSearchParams } from "react-router";
 import type { Task } from "../../../shared/channels.ts";
 import { errorText } from "../bridge.ts";
 import { useNow } from "../clock.ts";
@@ -510,32 +506,18 @@ export function TaskList({
 }
 
 /**
- * Board or List with the list/detail split: the tasks of one project, or all tasks of the
- * workspace (All tasks). The selection is the search param `task`; other params stay.
+ * Board or List: the tasks of one project, or all tasks of the workspace (All tasks). A task opens as
+ * the task page; Back returns here with the search params. An old link with `?task=` opens the page.
  */
 function TaskScreen({ view, project }: { view: "board" | "list"; project?: string }) {
   const { ws = "" } = useParams();
-  const [params, setParams] = useSearchParams();
+  const [params] = useSearchParams();
   const navigate = useNavigate();
-  const split = useMediaQuery((theme: Theme) => theme.breakpoints.up("md"));
   const tasks = useTasks(ws, project ? { project } : {});
   const queues = useQueues(ws).data ?? NO_QUEUES;
   const selected = params.get("task");
-  const open = (task: Task) => {
-    if (split) {
-      setParams((prev) => {
-        const next = new URLSearchParams(prev);
-        next.set("task", task.id);
-        return next;
-      });
-    } else void navigate(`/w/${ws}/tasks/${task.id}`);
-  };
-  const close = () =>
-    setParams((prev) => {
-      const next = new URLSearchParams(prev);
-      next.delete("task");
-      return next;
-    });
+  if (selected) return <Navigate replace to={`/w/${ws}/tasks/${selected}`} />;
+  const open = (task: Task) => void navigate(`/w/${ws}/tasks/${task.id}`);
   let body;
   if (tasks.isPending) body = <LoadingRows rows={8} label="Loading the tasks" />;
   else if (tasks.isError)
@@ -548,42 +530,9 @@ function TaskScreen({ view, project }: { view: "board" | "list"; project?: strin
   else if (tasks.data.filter((t) => view === "list" || !t.archived).length === 0)
     body = <NoTasks />;
   else if (view === "board")
-    body = <Board tasks={tasks.data} selected={selected} onOpen={open} queues={queues} />;
-  else
-    body = (
-      <TaskList ws={ws} tasks={tasks.data} selected={selected} onOpen={open} queues={queues} />
-    );
-  if (!split || !selected) return <Box sx={{ height: "100%", minHeight: 0 }}>{body}</Box>;
-  // Esc closes the detail, except in a text field (docs/design.md 8.4.4). A dialog stops its Esc.
-  const onKeyDown = (event: ReactKeyboardEvent<HTMLElement>) => {
-    if (event.key !== "Escape" || event.defaultPrevented) return;
-    const target = event.target as HTMLElement;
-    if (target.closest("input, textarea, [contenteditable='true']")) return;
-    close();
-  };
-  return (
-    <Box sx={{ height: "100%" }} onKeyDown={onKeyDown}>
-      <Group orientation="horizontal" style={{ height: "100%" }}>
-        <Panel minSize={240} defaultSize="45">
-          <Box sx={{ height: "100%", minHeight: 0 }}>{body}</Box>
-        </Panel>
-        <Separator aria-label="Resize the task panel" style={{ width: 4, cursor: "col-resize" }} />
-        <Panel minSize={360}>
-          <Box
-            sx={{
-              height: "100%",
-              borderLeft: 1,
-              borderColor: "divider",
-              bgcolor: "background.paper",
-            }}
-          >
-            {/* A new task opens on its Activity tab: the key resets the tab. */}
-            <TaskDetail key={selected} ws={ws} taskId={selected} onClose={close} />
-          </Box>
-        </Panel>
-      </Group>
-    </Box>
-  );
+    body = <Board tasks={tasks.data} selected={null} onOpen={open} queues={queues} />;
+  else body = <TaskList ws={ws} tasks={tasks.data} selected={null} onOpen={open} queues={queues} />;
+  return <Box sx={{ height: "100%", minHeight: 0 }}>{body}</Box>;
 }
 
 /** Board or List of one project (the project frame has the header and the tabs). */
@@ -621,8 +570,16 @@ export function TaskPage() {
   // The first page of the app has the key "default": it has no page to go back to.
   const first = useLocation().key === "default";
   const back = () => void (first ? navigate(`/w/${ws}/inbox`) : navigate(-1));
+  // Esc goes back, except in a text field (docs/design.md 8.4.4). A dialog stops its Esc.
+  const onKeyDown = (event: ReactKeyboardEvent<HTMLElement>) => {
+    if (event.key !== "Escape" || event.defaultPrevented) return;
+    const target = event.target as HTMLElement;
+    if (target.closest("input, textarea, [contenteditable='true']")) return;
+    back();
+  };
   return (
-    <Box sx={{ height: "100%", minHeight: 0, bgcolor: "background.paper" }}>
+    <Box sx={{ height: "100%", minHeight: 0, bgcolor: "background.paper" }} onKeyDown={onKeyDown}>
+      {/* A new task opens on its Activity tab: the key resets the tab. */}
       <TaskDetail key={task} ws={ws} taskId={task} onBack={back} />
     </Box>
   );

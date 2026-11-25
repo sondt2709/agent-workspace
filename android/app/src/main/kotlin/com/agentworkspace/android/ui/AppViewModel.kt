@@ -68,6 +68,9 @@ class AppViewModel(
     /** The width class of the window; the root sets it at each size change. */
     var widthClass by mutableStateOf(WidthClass.COMPACT)
 
+    /** "Show list" of the task page: it stays on when the person opens another task from the list. */
+    var taskListOn by mutableStateOf(false)
+
     /** The workspace that the screens show: the selection of the switcher (it survives a restart). */
     private val workspaceId = graph.switcher.selected
 
@@ -220,11 +223,8 @@ class AppViewModel(
 
     fun select(tab: Tab) = navigator.select(tab)
 
-    /** Opens a task; on a large window also its thread in the third pane. */
-    fun openTask(id: String) {
-        navigator.open(Route.Task(id))
-        if (widthClass.threadPane) navigator.open(Route.Thread(id))
-    }
+    /** Opens a task as the task page (openspec task-review-layout: one pane at each width). */
+    fun openTask(id: String) = navigator.open(Route.Task(id))
 
     /** A notification tap: the workspace of the push, then `[Inbox, Task(id)]`, or `[Inbox]` with no task. */
     fun openFromPush(

@@ -1,7 +1,12 @@
 package com.agentworkspace.android.ui
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -37,7 +42,6 @@ import com.agentworkspace.android.R
 import com.agentworkspace.control.NavKind
 import com.agentworkspace.control.Route
 import com.agentworkspace.control.ScreenStates
-import com.agentworkspace.control.SessionOptionRows
 import com.agentworkspace.control.Tab
 import com.agentworkspace.control.WidthClass
 import com.agentworkspace.control.WorkspaceSnapshot
@@ -55,9 +59,11 @@ private val TAB_ICONS =
 
 /**
  * The root of the app: the navigation suite (a bar, a rail or a drawer by the width class) and the
- * one back stack in a list-detail scene (1, 2 or 3 panes). The shortcuts work on each screen.
+ * one back stack in a list-detail scene (Inbox and Tasks with a detail placeholder from medium
+ * width). A task opens as the task page in one pane at each width (openspec task-review-layout).
+ * The shortcuts work on each screen.
  */
-@OptIn(ExperimentalMaterial3AdaptiveApi::class)
+@OptIn(ExperimentalMaterial3AdaptiveApi::class, ExperimentalLayoutApi::class)
 @Composable
 fun AwApp(vm: AppViewModel) {
     val info = currentWindowAdaptiveInfoV2()
@@ -68,11 +74,14 @@ fun AwApp(vm: AppViewModel) {
     LaunchedEffect(vm) { vm.messages.collect { snackbar.showSnackbar(it) } }
     val tab = vm.navigator.tab
     val inboxCount = snapshot?.let { ScreenStates.inbox(it).size } ?: 0
+    // While the keyboard shows on a compact window, the bottom bar hides: it would sit between the
+    // message box and the keyboard (openspec task-review-layout, design decision 7).
+    val imeShown = WindowInsets.isImeVisible
     NavigationSuiteScaffold(
         modifier = Modifier.onPreviewKeyEvent { event -> event.shortcut()?.let(vm::shortcut) ?: false },
         layoutType =
             when (width.navigation) {
-                NavKind.BAR -> NavigationSuiteType.NavigationBar
+                NavKind.BAR -> if (imeShown) NavigationSuiteType.None else NavigationSuiteType.NavigationBar
                 NavKind.RAIL -> NavigationSuiteType.NavigationRail
                 NavKind.DRAWER -> NavigationSuiteType.NavigationDrawer
             },
@@ -96,10 +105,19 @@ fun AwApp(vm: AppViewModel) {
         },
     ) {
         Scaffold(
-            topBar = { TopBar(vm, tab) },
+            // The task page has its own header with Back (as on the desktop).
+            topBar = { if (vm.backStack.lastOrNull() !is Route.Task) TopBar(vm, tab) },
             snackbarHost = { SnackbarHost(snackbar) },
         ) { padding ->
-            Box(Modifier.fillMaxSize().padding(padding)) {
+            // The app draws edge to edge, so the window does not resize for the keyboard: the content
+            // takes the keyboard height as padding, and the message box and a focused field stay above it.
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .consumeWindowInsets(padding)
+                    .imePadding(),
+            ) {
                 val current = snapshot
                 if (current == null) {
                     // No workspace yet: the first screen is the pairing (docs/phase-1.md 7).
@@ -114,7 +132,7 @@ fun AwApp(vm: AppViewModel) {
                         onClose = null,
                     )
                 } else {
-                    Panes(vm, current, width)
+                    Panes(vm, current)
                 }
             }
         }
@@ -152,7 +170,6 @@ private fun TopBar(
 private fun Panes(
     vm: AppViewModel,
     snapshot: WorkspaceSnapshot,
-    width: WidthClass,
 ) {
     val context = LocalContext.current
     val now by vm.now.collectAsStateWithLifecycle()
@@ -225,7 +242,8 @@ private fun Panes(
                         onKeyReplacedRead = vm::dismissKeyReplaced,
                     )
                 }
-                entry<Route.Task>(metadata = ListDetailSceneStrategy.detailPane()) { route ->
+                // The task page in one pane at each width: no list next to it and no Session pane.
+                entry<Route.Task> { route ->
                     val task = snapshot.task(route.id)
                     if (task == null) {
                         EmptyText(NOT_HERE)
@@ -233,7 +251,13 @@ private fun Panes(
                         TaskScreen(
                             task = task,
                             snapshot = snapshot,
-                            sessionInPane = width.threadPane && vm.backStack.lastOrNull() == Route.Thread(task.id),
+                            nav =
+                                TaskPageNavigation(
+                                    onBack = { vm.back() },
+                                    onOpen = vm::openTask,
+                                    listOn = vm.taskListOn,
+                                    onList = { vm.taskListOn = it },
+                                ),
                             loadThread = vm::thread,
                             loadTerminal = vm::terminal,
                             parts =
@@ -243,24 +267,19 @@ private fun Panes(
                                     onDownload = vm::download,
                                     onOpenArtifact = vm::openArtifact,
                                 ),
-                            onAnswer = { gate, text, comment, sent -> vm.answer(task.id, gate, text, comment, sent) },
-                            onAssign = { vm.assign(task.id, it) },
-                            onSend = { text, sent -> vm.sendMessage(task.id, text, sent) },
-                            onStopSession = { vm.stopSession(task.id) },
-                            onNewSession = { assignee, options -> vm.newSession(task.id, assignee, options) },
-                            onArchive = { vm.archiveTask(task.id) },
-                            onUnarchive = { vm.unarchiveTask(task.id) },
+                            actions =
+                                TaskPageActions(
+                                    onAnswer = { gate, text, comment, sent ->
+                                        vm.answer(task.id, gate, text, comment, sent)
+                                    },
+                                    onAssign = { vm.assign(task.id, it) },
+                                    onSend = { text, sent -> vm.sendMessage(task.id, text, sent) },
+                                    onStopSession = { vm.stopSession(task.id) },
+                                    onNewSession = { assignee, options -> vm.newSession(task.id, assignee, options) },
+                                    onArchive = { vm.archiveTask(task.id) },
+                                    onUnarchive = { vm.unarchiveTask(task.id) },
+                                ),
                         )
-                    }
-                }
-                entry<Route.Thread>(metadata = ListDetailSceneStrategy.extraPane()) { route ->
-                    val task = snapshot.task(route.id)
-                    if (task ==
-                        null
-                    ) {
-                        EmptyText(NOT_HERE)
-                    } else {
-                        SessionPane(task, vm::thread, SessionOptionRows.projectMode(task, snapshot.projects))
                     }
                 }
                 entry<Route.NewTask>(metadata = ListDetailSceneStrategy.detailPane()) {

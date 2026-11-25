@@ -30,8 +30,6 @@ class NavigationTest {
         assertEquals(NavKind.DRAWER, WidthClass.LARGE.navigation)
         assertFalse(WidthClass.COMPACT.twoPanes)
         assertTrue(WidthClass.MEDIUM.twoPanes)
-        assertFalse(WidthClass.EXPANDED.threadPane)
-        assertTrue(WidthClass.LARGE.threadPane)
     }
 
     @Test
@@ -54,14 +52,11 @@ class NavigationTest {
         nav.select(Tab.TASKS)
         nav.open(Route.Task("a"))
         assertEquals(listOf<Route>(Route.Tasks, Route.Task("a")), stack)
-        // One detail at a time.
+        // One task page at a time (openspec task-review-layout: no Session pane on top of it).
         nav.open(Route.Task("b"))
         assertEquals(listOf<Route>(Route.Tasks, Route.Task("b")), stack)
-        nav.open(Route.Thread("b"))
-        assertEquals(listOf<Route>(Route.Tasks, Route.Task("b"), Route.Thread("b")), stack)
         assertEquals("b", nav.openTask)
         // Esc closes the top entry; at the root, back is false.
-        assertTrue(nav.back())
         assertTrue(nav.back())
         assertEquals(listOf<Route>(Route.Tasks), stack)
         assertFalse(nav.back())
@@ -82,9 +77,9 @@ class NavigationTest {
         nav.open(Route.Pairing)
         assertEquals(listOf<Route>(Route.Devices, Route.Pairing), stack)
         assertEquals(true, nav.back())
-        // A thread with no open task opens the task first.
-        nav.open(Route.Thread("d"))
-        assertEquals(listOf<Route>(Route.Devices, Route.Task("d"), Route.Thread("d")), stack)
+        // A task opens on top of the root of the tab, at each width.
+        nav.open(Route.Task("d"))
+        assertEquals(listOf<Route>(Route.Devices, Route.Task("d")), stack)
     }
 
     @Test

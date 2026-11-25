@@ -2,6 +2,7 @@
 // versions and the system lines, in merge order (docs/workflow.md 2 and 4.3). Never a summary.
 // The Session tab shows each event; the Activity tab shows the rows of the Activity rule
 // (activity-model.ts, openspec task-view-focus) in a compact form.
+import { agentMessage } from "@aw/client/gates";
 import { Alert, Box, Button, Divider, Stack, TextField, Typography } from "@mui/material";
 import { useState } from "react";
 import type { EventRow, Task, ThreadPage } from "../../../shared/channels.ts";
@@ -89,7 +90,7 @@ function MessageRow(props: {
   text: string;
   tone?: "agent" | "human";
   clamp?: boolean;
-  /** Activity shows the text of the agent as Markdown; the Session tab shows the raw text. */
+  /** Activity shows the text of a message as Markdown; the Session tab shows the raw text. */
   markdown?: boolean;
 }) {
   const [all, setAll] = useState(false);
@@ -149,7 +150,30 @@ function Row({
   }
   if (row.type === "message.human") {
     if (mode === "activity") {
-      return <MessageRow who={by} meta={`typed in the terminal · ${when}`} text={str(d.text)} />;
+      // A message of another agent of the session reads as that agent, as Markdown; a person
+      // message as Markdown too (openspec task-review-layout, design decision 5).
+      const other = agentMessage(str(d.text));
+      if (other) {
+        return (
+          <MessageRow
+            who={other.kind === "subagent_report" ? "Subagent report" : "Agent message"}
+            tone="agent"
+            meta={`arrived in the terminal · ${when}`}
+            text={other.body}
+            clamp
+            markdown
+          />
+        );
+      }
+      return (
+        <MessageRow
+          who={by}
+          meta={`typed in the terminal · ${when}`}
+          text={str(d.text)}
+          clamp
+          markdown
+        />
+      );
     }
     const delivery = str(d.delivery_id);
     return (
@@ -181,11 +205,33 @@ function Row({
         who={by}
         meta={`${d.kind === "nudge" ? "nudge · " : ""}${done ? "sent" : "not delivered yet"} · ${when}`}
         text={str(d.text)}
+        clamp={mode === "activity"}
+        markdown={mode === "activity"}
       />
     );
   }
   if (row.type === "comment.added") {
-    return <MessageRow who={by} meta={`comment · ${when}`} text={str(d.text)} />;
+    return (
+      <MessageRow
+        who={by}
+        meta={`comment · ${when}`}
+        text={str(d.text)}
+        clamp={mode === "activity"}
+        markdown={mode === "activity"}
+      />
+    );
+  }
+  if (row.type === "gate.answered" && mode === "activity" && str(d.comment)) {
+    // The comment of an answer is person text: Markdown, as a message (task-review-layout).
+    return (
+      <MessageRow
+        who={by}
+        meta={`answered: ${str(d.answer)} · ${when}${notApplied}`}
+        text={str(d.comment)}
+        clamp
+        markdown
+      />
+    );
   }
   if (row.type === "task.learned") {
     return <LearnedLine ws={ws} row={row} meta={`${when}${notApplied}`} />;

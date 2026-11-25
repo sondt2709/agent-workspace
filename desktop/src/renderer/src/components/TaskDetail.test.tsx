@@ -385,6 +385,39 @@ describe("Layout", () => {
     ]);
   });
 
+  it("shows the task list on request from 700 px, and the Properties tab next to it", async () => {
+    stubWidth(1208);
+    const other = makeTask({
+      id: "0193a000-0000-7000-8000-0000000000cc",
+      key: "AW-4",
+      title: "Fix the date picker",
+      needs_you_lane: true,
+    });
+    installBridge({ task: () => AW8_TASK, tasks: () => [AW8_TASK, other], thread: () => AW8 });
+    renderApp(
+      <DialogsProvider ws="ws-1">
+        <TaskDetail ws="ws-1" taskId={AW8_TASK.id} />
+      </DialogsProvider>,
+    );
+    expect(await screen.findByRole("region", { name: "Properties" })).toBeTruthy();
+    await userEvent.click(screen.getByRole("button", { name: "Show list" }));
+    const list = screen.getByRole("navigation", { name: "Task list" });
+    expect(within(list).getByText("Needs you · 1")).toBeTruthy();
+    expect(within(list).getByText("Fix the date picker")).toBeTruthy();
+    // 1208 - 300 = 908 px: Properties is a tab again.
+    expect(screen.getByRole("tab", { name: "Properties" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Hide list" }).getAttribute("aria-pressed")).toBe(
+      "true",
+    );
+  });
+
+  it("has no Show list below 700 px", async () => {
+    stubWidth(699);
+    show(AW8_TASK, AW8);
+    expect(await screen.findByRole("tab", { name: "Properties" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Show list" })).toBeNull();
+  });
+
   it("has one tab panel, labelled by the selected tab", async () => {
     show(AW8_TASK, AW8);
     const panel = await screen.findByRole("tabpanel", { name: "Activity" });
@@ -441,6 +474,51 @@ describe("Task route Back", () => {
 });
 
 describe("Task route", () => {
+  it("goes to the next task that needs the person, in the Inbox order", async () => {
+    const a = { ...AW8_TASK, needs_you_lane: true };
+    const b = makeTask({
+      id: "0193a000-0000-7000-8000-0000000000dd",
+      key: "AW-4",
+      needs_you_lane: true,
+    });
+    installBridge({
+      task: (args: { task: string }) => (args.task === b.id ? b : a),
+      tasks: () => [a, makeTask({ id: "0193a000-0000-7000-8000-0000000000ee" }), b],
+      thread: () => AW8,
+    });
+    const { router } = renderApp(
+      <DialogsProvider ws="ws-1">
+        <TaskPage />
+      </DialogsProvider>,
+      { route: "/w/:ws/tasks/:task", url: `/w/ws-1/tasks/${a.id}` },
+    );
+    expect(await screen.findByText("1 of 2 need you")).toBeTruthy();
+    expect(
+      screen.getByRole<HTMLButtonElement>("button", { name: "Previous task that needs you" })
+        .disabled,
+    ).toBe(true);
+    await userEvent.click(screen.getByRole("button", { name: "Next task that needs you" }));
+    expect(router.state.location.pathname).toBe(`/w/ws-1/tasks/${b.id}`);
+    expect(await screen.findByText("2 of 2 need you")).toBeTruthy();
+  });
+
+  it("goes back with Esc, except in a text field", async () => {
+    installBridge({ task: () => AW8_TASK, tasks: () => [AW8_TASK], thread: () => AW8 });
+    const { router } = renderApp(
+      <DialogsProvider ws="ws-1">
+        <TaskPage />
+      </DialogsProvider>,
+      { route: "/w/:ws/tasks/:task", url: `/w/ws-1/tasks/${AW8_TASK.id}` },
+    );
+    const box = await screen.findByRole("textbox", { name: "Message to the agent" });
+    box.focus();
+    await userEvent.keyboard("{Escape}");
+    expect(router.state.location.pathname).toBe(`/w/ws-1/tasks/${AW8_TASK.id}`);
+    screen.getByRole("button", { name: "Back" }).focus();
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(router.state.location.pathname).toBe("/w/ws-1/inbox"));
+  });
+
   it("opens another task on its Activity tab, with Back", async () => {
     const other = makeTask({ id: "0193a000-0000-7000-8000-0000000000bb", key: "AW-9" });
     installBridge({

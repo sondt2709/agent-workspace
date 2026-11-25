@@ -182,6 +182,32 @@ class ActivityRuleTest {
     }
 
     @Test
+    fun eachMessageRowOfActivityIsMarkdownAndATaskLineIsNot() {
+        val rows =
+            listOf(
+                row(1, "task.created", "macbook-pro", "human@macbook-pro", obj("""{"first_message":"x"}""")),
+                row(2, "message.agent", "ubuntu-01", "claude@ubuntu-01", obj("""{"text":"Use **cents**"}""")),
+                row(3, "message.sent", "macbook-pro", "human@macbook-pro", obj("""{"id":"d1","text":"**Yes**"}""")),
+                row(4, "comment.added", "macbook-pro", "human@macbook-pro", obj("""{"text":"See `a.ts`"}""")),
+                row(
+                    5,
+                    "gate.opened",
+                    "ubuntu-01",
+                    "claude@ubuntu-01",
+                    obj("""{"gate":"g1","kind":"question","title":"Store?","text":"- **A**","options":["A"]}"""),
+                ),
+                row(6, "gate.answered", "macbook-pro", "human@macbook-pro", obj("""{"gate":"g1","answer":"A"}""")),
+                row(7, "task.done", "macbook-pro", "human@macbook-pro", obj("{}")),
+            )
+        val activity = ThreadItems.activity(rows)
+        assertEquals(listOf("e1", "e2", "e3", "e4", "e5", "e6", "e7"), activity.map { it.id })
+        assertEquals(
+            listOf(false, true, true, true, true, true, false),
+            activity.map { ActivityRule.markdown(it.kind) },
+        )
+    }
+
+    @Test
     fun anActivityRowThatTheMergeIgnoredKeepsItsNote() {
         val session = """{"session":"01a2038e-8100-7000-8000-000000000001""""
         val rows =

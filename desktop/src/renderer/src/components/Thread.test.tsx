@@ -1,6 +1,7 @@
 // The thread line of a rekeyed task (docs/architecture.md 4.3.3 item 3, openspec offline-task-keys).
 import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
+import agentMessageJson from "../../../../../contracts/fixtures/activity/agent-message.json?raw";
 import type { EventRow } from "../../../shared/channels.ts";
 import { fixedClock, installBridge, makeTask, renderApp } from "../testing.tsx";
 import { Thread } from "./Thread.tsx";
@@ -176,6 +177,96 @@ describe("Thread", () => {
     expect(screen.getByText(/· turn text · /)).toBeTruthy();
     expect(screen.getByText(/· message · /)).toBeTruthy();
     expect(screen.getByText(/· nudge · not delivered yet · /)).toBeTruthy();
+  });
+});
+
+describe("Thread: person messages and agent messages (task-review-layout)", () => {
+  const FIXTURE = JSON.parse(agentMessageJson) as {
+    cases: { name: string; text: string; expected: { kind: string; body: string } | null }[];
+  };
+  function personRow(task: string, type: string, data: Record<string, unknown>): EventRow {
+    return {
+      ...rekeyRow(task),
+      id: "row-human",
+      type,
+      event: {
+        v: 1,
+        id: "row-human",
+        hlc: HLC,
+        dev: "macbook-pro",
+        type,
+        by: "human@macbook-pro",
+        data,
+      },
+    };
+  }
+  function humanRow(task: string, text: string): EventRow {
+    return personRow(task, "message.human", {
+      text,
+      source: "typed",
+      session: "s1",
+      delivery_id: null,
+    });
+  }
+  function show(text: string, mode: "activity" | "session", row = humanRow) {
+    const task = makeTask({ key: "AW-1" });
+    installBridge({
+      thread: () => ({
+        task: { id: task.id, key: task.key, title: task.title },
+        events: [row(task.id, text)],
+        next: null,
+        ancestors: [],
+      }),
+    });
+    const clock = fixedClock(Date.parse("2026-11-23T10:01:00.000Z"));
+    return renderApp(<Thread ws="ws-1" task={task} mode={mode} />, { clock });
+  }
+
+  it("shows a typed person message as Markdown in Activity", async () => {
+    const { container } = show("Use **cents**.\n\n- one\n- two", "activity");
+    expect(await screen.findByText(/typed in the terminal/)).toBeTruthy();
+    expect(container.querySelector("strong")?.textContent).toBe("cents");
+    expect(screen.getAllByRole("listitem").length).toBe(2);
+  });
+
+  it("shows a sent message and a comment as Markdown in Activity, and raw in Session", async () => {
+    const sent = (task: string, text: string) =>
+      personRow(task, "message.sent", { id: "d1", text });
+    const comment = (task: string, text: string) => personRow(task, "comment.added", { text });
+    for (const row of [sent, comment]) {
+      const first = show("Use **cents**.", "activity", row);
+      expect((await screen.findByText("cents")).tagName).toBe("STRONG");
+      first.unmount();
+      const raw = show("Use **cents**.", "session", row);
+      expect(await screen.findByText("Use **cents**.")).toBeTruthy();
+      raw.unmount();
+    }
+  });
+
+  it("shows the comment of an answer as Markdown in Activity", async () => {
+    const answered = (task: string, text: string) =>
+      personRow(task, "gate.answered", { gate: "g1", answer: "Request changes", comment: text });
+    show("My choices:\n- **D2**: In memory", "activity", answered);
+    expect(await screen.findByText(/answered: Request changes/)).toBeTruthy();
+    expect(screen.getByText("D2").tagName).toBe("STRONG");
+    expect(screen.getAllByRole("listitem").length).toBe(1);
+  });
+
+  it("shows a subagent report with its label and the report as Markdown", async () => {
+    const report = FIXTURE.cases.find((c) => c.expected?.kind === "subagent_report")!;
+    const { container } = show(report.text, "activity");
+    expect(await screen.findByText("Subagent report")).toBeTruthy();
+    expect(screen.getByText(/arrived in the terminal/)).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Gateway: what runs today" })).toBeTruthy();
+    expect(container.textContent).not.toContain("<agent-message");
+    expect(container.textContent).not.toContain("[Subagent hand-back]");
+  });
+
+  it("keeps the raw text of a subagent report in the Session tab", async () => {
+    const report = FIXTURE.cases.find((c) => c.expected?.kind === "subagent_report")!;
+    show(report.text, "session");
+    expect(await screen.findByText(/<agent-message from=/)).toBeTruthy();
+    expect(screen.queryByRole("heading")).toBeNull();
   });
 });
 

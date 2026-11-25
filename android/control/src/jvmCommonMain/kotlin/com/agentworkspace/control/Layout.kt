@@ -21,11 +21,11 @@ enum class WidthClass {
                 LARGE, EXTRA_LARGE -> NavKind.DRAWER
             }
 
-    /** Inbox and Tasks show the list and the detail side by side from medium width (spike S14). */
+    /**
+     * Inbox and Tasks show the list and a detail placeholder side by side from medium width (spike
+     * S14). A task opens as the task page in one pane at each width (openspec task-review-layout).
+     */
     val twoPanes: Boolean get() = this != COMPACT
-
-    /** A task shows a third pane with the thread from large width. */
-    val threadPane: Boolean get() = this == LARGE || this == EXTRA_LARGE
 
     companion object {
         const val MEDIUM_DP = 600

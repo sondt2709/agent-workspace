@@ -90,6 +90,10 @@ export function MarkdownText({ text }: { text: string }) {
         "& pre": { p: 2, borderRadius: 1, bgcolor: "aw.raised", overflowX: "auto" },
         "& code": { fontFamily: "var(--aw-font-mono)", fontSize: "0.92em" },
         "& ul, & ol": { pl: 5, my: 1 },
+        // A table of Claude output (openspec task-review-layout): lines and a header row.
+        "& table": { borderCollapse: "collapse", my: 1, display: "block", overflowX: "auto" },
+        "& th, & td": { border: 1, borderColor: "divider", px: 1.5, py: 0.75, textAlign: "left" },
+        "& th": { bgcolor: "aw.raised", fontWeight: "fontWeightMedium" },
       }}
     >
       <Markdown

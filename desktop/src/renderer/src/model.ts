@@ -369,3 +369,55 @@ export function refusedNotice(error: unknown): string | null {
     ? `AW closed this gate first: “${answer}”. AW did not send your answer.`
     : `Another answer resolved this gate first: “${answer}”. AW did not send your answer.`;
 }
+
+/** The need-you navigation of the task page (openspec task-review-layout, design decision 3). */
+export interface NeedYouNav {
+  /** "1 of 2 need you", "2 need you", or null when no task needs the person. */
+  text: string | null;
+  prev: string | null;
+  next: string | null;
+}
+
+/**
+ * The need-you navigation of a task: the tasks of the Inbox ("Needs you" lane, not archived) in the
+ * Inbox order. A task in the list gets its place with Previous and Next; another task gets the count
+ * and Next to the first of them.
+ */
+export function needYouNav(tasks: readonly Task[], current: string): NeedYouNav {
+  const ids = tasks.filter((t) => !t.archived && t.needs_you_lane).map((t) => t.id);
+  if (ids.length === 0) return { text: null, prev: null, next: null };
+  const verb = ids.length === 1 ? "needs you" : "need you";
+  const at = ids.indexOf(current);
+  if (at < 0) return { text: `${ids.length} ${verb}`, prev: null, next: ids[0]! };
+  return {
+    text: `${at + 1} of ${ids.length} ${verb}`,
+    prev: ids[at - 1] ?? null,
+    next: ids[at + 1] ?? null,
+  };
+}
+
+/** The groups of the task list of the task page: the tasks that need the person, then the working tasks. */
+export function switchGroups(
+  tasks: Task[],
+  queued: ReadonlySet<string> | ReadonlyMap<string, unknown> = new Set(),
+): { id: GroupId; tasks: Task[] }[] {
+  const shown: GroupId[] = ["needs_you", "running", "paused", "queued"];
+  return listGroups(tasks, queued).filter((g) => shown.includes(g.id));
+}
+
+/** The task page widths (openspec task-review-layout, design decisions 1 and 2). */
+export const TASK_LIST_PX = 300;
+export const LIST_FROM_PX = 700;
+export const PROPERTIES_PANEL_PX = 280;
+export const CONTENT_MAX_PX = 840;
+
+/** The layout of the task page for its own width: the task list and the Properties panel. */
+export function taskPageLayout(
+  width: number,
+  listOn: boolean,
+  wideFrom: number,
+): { canList: boolean; list: boolean; propertiesPanel: boolean } {
+  const canList = width >= LIST_FROM_PX;
+  const list = canList && listOn;
+  return { canList, list, propertiesPanel: width - (list ? TASK_LIST_PX : 0) >= wideFrom };
+}

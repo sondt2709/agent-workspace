@@ -84,7 +84,7 @@ object ThreadItems {
                     }
 
                     row.type == "message.human" -> {
-                        item.copy(note = if (row.applied) "typed in the terminal" else item.note)
+                        typed(item, row.applied)
                     }
 
                     else -> {
@@ -92,6 +92,26 @@ object ThreadItems {
                     }
                 }
             }
+    }
+
+    /**
+     * The Activity row of a text typed in the terminal. A message of another agent shows in the agent
+     * style with the text of the agent (openspec task-review-layout, design decision 5); the Session
+     * view keeps the raw text.
+     */
+    private fun typed(
+        item: ThreadItem,
+        applied: Boolean,
+    ): ThreadItem {
+        val agent = ActivityRule.agentMessage(item.text)
+        val note = if (agent == null) "typed in the terminal" else AgentMessage.ARRIVED
+        if (agent == null) return item.copy(note = if (applied) note else item.note)
+        return item.copy(
+            kind = ThreadKind.AGENT,
+            who = agent.kind.label,
+            text = agent.body,
+            note = if (applied) note else item.note,
+        )
     }
 
     private data class Content(

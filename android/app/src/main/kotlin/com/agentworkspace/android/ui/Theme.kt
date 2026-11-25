@@ -31,6 +31,8 @@ internal object DarkTokens {
     val onAccent = Color(0xFF1A1200)
     val err = Color(0xFFEB5757)
     val onErr = Color(0xFF1A0505)
+    val run = Color(0xFF4EA7FC)
+    val ok = Color(0xFF4CB782)
 }
 
 /** The colors of the light scheme (`tokens.light`). */
@@ -49,6 +51,8 @@ internal object LightTokens {
     val onAccent = Color(0xFFFFFFFF)
     val err = Color(0xFFC93434)
     val onErr = Color(0xFFFFFFFF)
+    val run = Color(0xFF1D6FD6)
+    val ok = Color(0xFF14804F)
 }
 
 /** A tint of a color on a surface for containers (12 % to 14 %, as the chips of the desktop). */
@@ -170,6 +174,17 @@ internal val CompactTypography: Typography =
             labelSmall = labelSmall.size(11, 14),
         )
     }
+
+/**
+ * The info color (`run` of `@aw/ui/tokens`, the MUI `info` of the desktop): the edge of an agent
+ * message in Activity and the done segments of the stage bar (openspec task-review-layout).
+ */
+@Composable
+fun infoColor(): Color = if (isSystemInDarkTheme()) DarkTokens.run else LightTokens.run
+
+/** The success color (`ok` of `@aw/ui/tokens`): the "Recommended" mark of a decision option. */
+@Composable
+fun successColor(): Color = if (isSystemInDarkTheme()) DarkTokens.ok else LightTokens.ok
 
 /** Material 3 with the prototype palette, light and dark, and the compact type scale. */
 @Composable

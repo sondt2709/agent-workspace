@@ -181,3 +181,91 @@ export function gateContext(events: readonly ContextEvent[], gateEvent: string):
   }
   return found.reverse();
 }
+
+// ---- Decision picks (openspec task-review-layout, design decision 4). Kotlin: GateTexts.kt. ----
+
+/** True when the person can pick the decisions of a gate: the gate has the option "Request changes". */
+export function canPickDecisions(options: readonly string[]): boolean {
+  return options.some((o) => o.trim().toLowerCase() === "request changes");
+}
+
+/**
+ * The answer for the decision picks of a gate, or null when each pick is the recommended option (the
+ * gate then gets its recommended option, for example "Confirm"). `picks[i]` is the option label
+ * picked for decision i; a missing pick or a label that is not an option counts as the recommended
+ * option. The answer "Request changes" makes the agent write a new approach with the picks.
+ * `contracts/fixtures/gates/decisions-answer.json`.
+ */
+export function decisionsAnswer(
+  decisions: readonly GateDecision[],
+  picks: readonly string[],
+): { answer: "Request changes"; comment: string } | null {
+  const changed = decisions.flatMap((d, i) => {
+    const pick = picks[i];
+    return pick !== undefined && pick !== d.recommended && d.options.includes(pick)
+      ? [`- ${d.question}: ${pick}`]
+      : [];
+  });
+  if (changed.length === 0) return null;
+  const lines = ["My choices for the decisions:", ...changed];
+  if (changed.length < decisions.length) {
+    lines.push("Keep the recommended option of the other decisions.");
+  }
+  return { answer: "Request changes", comment: lines.join("\n") };
+}
+
+// ---- Messages of other agents (openspec task-review-layout, design decision 5). Kotlin: Activity.kt. ----
+
+/** A typed `message.human` that is a message of another agent of the session. */
+export interface AgentMessage {
+  /** `subagent_report`: the final report of a subagent; `agent_message`: a teammate message. */
+  kind: "subagent_report" | "agent_message";
+  from: string;
+  /** The text of the agent, with the frame of Claude Code and the common indent removed. */
+  body: string;
+}
+
+const OPEN_TAG = /^<agent-message from="([^"]*)">\s*$/;
+const CLOSE_TAG = "</agent-message>";
+const HAND_BACK = "[Subagent hand-back]";
+const REPORT_FOLLOWS = "The report follows:";
+
+/**
+ * The message of another agent in the text of a typed `message.human`, or null for a person
+ * message. Claude Code sends a subagent report or a teammate message to the UserPromptSubmit hook
+ * as `<agent-message from="<id>">` … `</agent-message>`; the transcript form has one prefix line
+ * ending in ":" and a note after the tag. `contracts/fixtures/activity/agent-message.json`.
+ */
+export function agentMessage(text: string): AgentMessage | null {
+  const lines = text.split("\n");
+  const open = lines.findIndex((l) => OPEN_TAG.test(l.trim()));
+  if (open < 0 || open > 1) return null;
+  if (open === 1 && !lines[0]!.trim().endsWith(":")) return null;
+  let close = -1;
+  for (let i = lines.length - 1; i > open; i--) {
+    if (lines[i]!.trim() === CLOSE_TAG) {
+      close = i;
+      break;
+    }
+  }
+  if (close < 0) return null;
+  const from = OPEN_TAG.exec(lines[open]!.trim())![1]!;
+  let inner = lines.slice(open + 1, close);
+  let kind: AgentMessage["kind"] = "agent_message";
+  if (inner[0]?.startsWith(HAND_BACK)) {
+    kind = "subagent_report";
+    const follows = inner.findIndex((l) => l.trimEnd().endsWith(REPORT_FOLLOWS));
+    inner = inner.slice(follows < 0 ? 1 : follows + 1);
+  }
+  return { kind, from, body: dedent(inner) };
+}
+
+/** The lines with the common indent of the non-empty lines removed, and no empty first or last line. */
+function dedent(lines: readonly string[]): string {
+  const filled = lines.filter((l) => l.trim() !== "");
+  const indent = Math.min(...filled.map((l) => l.length - l.trimStart().length));
+  const cut = filled.length === 0 ? [] : lines.map((l) => (l.trim() === "" ? "" : l.slice(indent)));
+  while (cut.length > 0 && cut[0] === "") cut.shift();
+  while (cut.length > 0 && cut.at(-1) === "") cut.pop();
+  return cut.join("\n");
+}

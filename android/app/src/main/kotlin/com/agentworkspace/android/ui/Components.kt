@@ -36,10 +36,11 @@ import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.agentworkspace.android.R
 import com.agentworkspace.control.CardStatus
 import com.agentworkspace.control.CommentRule
 import com.agentworkspace.control.GateCard
@@ -47,11 +48,15 @@ import com.agentworkspace.control.GateRules
 import com.agentworkspace.control.GateTexts
 import com.agentworkspace.control.PauseChip
 import com.agentworkspace.control.QuestionMode
+import com.agentworkspace.control.TaskPageLayout
 import com.agentworkspace.control.TaskRowState
 import kotlinx.coroutines.launch
 
-/** The widest a form, a card or a sheet grows on a wide window (docs/phase-1.md 10.8). */
-val MaxContentWidth = 720.dp
+/**
+ * The widest a form, a card, the content of a task tab or the message box grows on a wide window
+ * (docs/phase-1.md 10.8): 840 dp keeps about 90 characters a line (openspec task-review-layout).
+ */
+val MaxContentWidth = TaskPageLayout.CONTENT_MAX_DP.dp
 
 /** The color of the secondary texts. */
 @Composable
@@ -73,7 +78,11 @@ fun SectionHeader(text: String) =
         text,
         style = MaterialTheme.typography.titleSmall,
         color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .widthIn(max = MaxContentWidth)
+                .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp),
     )
 
 @Composable
@@ -82,7 +91,7 @@ fun EmptyText(text: String) =
         text,
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(16.dp),
+        modifier = Modifier.fillMaxWidth().widthIn(max = MaxContentWidth).padding(16.dp),
     )
 
 @Composable
@@ -186,6 +195,11 @@ fun GateCardView(
     var text by rememberSaveable(card.gate.gate) { mutableStateOf("") }
     var comment by rememberSaveable(card.gate.gate) { mutableStateOf("") }
     var chosen by rememberSaveable(card.gate.gate) { mutableStateOf<String?>(null) }
+    // The decision picks start at the recommended options (openspec task-review-layout, decision 4).
+    var picks by rememberSaveable(card.gate.gate) { mutableStateOf(card.decisions.map { it.recommended }) }
+    val canPick =
+        card.status == CardStatus.Open && card.decisions.isNotEmpty() && GateTexts.canPickDecisions(card.options)
+    val choices = if (canPick) GateTexts.decisionsAnswer(card.decisions, picks) else null
     // The gate card of the prototype: the raised surface with a line in the accent (docs/design.md 8).
     Card(
         modifier = Modifier.listCard(),
@@ -201,7 +215,7 @@ fun GateCardView(
             if (card.title.isNotBlank()) Text(card.title, style = MaterialTheme.typography.titleMedium)
             // The details as Markdown, or the agent messages before a gate with no details
             // (openspec gate-context, polish-prototype-style).
-            if (card.text.isNotBlank()) ClampedText(card.text, "${card.gate.gate}:text")
+            if (card.text.isNotBlank()) GateText(card.text, "${card.gate.gate}:text")
             if (card.context.isNotEmpty()) {
                 Text("Context", style = MaterialTheme.typography.labelMedium)
                 for (message in card.context) {
@@ -209,7 +223,13 @@ fun GateCardView(
                     ClampedText(message.text.orEmpty(), message.id)
                 }
             }
-            DecisionsView(card.decisions)
+            if (canPick) {
+                DecisionPicks(card.decisions, picks) { i, option ->
+                    picks = card.decisions.indices.map { j -> if (j == i) option else picks.getOrNull(j).orEmpty() }
+                }
+            } else {
+                DecisionsView(card.decisions)
+            }
             when (val status = card.status) {
                 is CardStatus.Sent -> {
                     Text(status.text, color = MaterialTheme.colorScheme.primary)
@@ -261,7 +281,12 @@ fun GateCardView(
                         ) {
                             options.forEachIndexed { i, option ->
                                 val rule = GateRules.commentRule(option)
-                                if (rule == CommentRule.NONE && i == recommended) {
+                                if (rule == CommentRule.NONE && i == recommended && choices != null) {
+                                    // A pick differs: the main button sends "Request changes" with the picks.
+                                    Button(onClick = { onAnswer(choices.answer, choices.comment) {} }) {
+                                        Text("Send my choices")
+                                    }
+                                } else if (rule == CommentRule.NONE && i == recommended) {
                                     Button(onClick = { onAnswer(option, null) {} }) { Text(option) }
                                 } else if (rule == CommentRule.NONE) {
                                     OutlinedButton(onClick = { onAnswer(option, null) {} }) { Text(option) }
@@ -321,7 +346,10 @@ fun AssignCard(
     }
 }
 
-/** A text field that sends on Enter (Shift+Enter is a new line) and with its send button. */
+/**
+ * The message box (openspec task-review-layout): the [label] above a field of 48 dp and a Send button
+ * of 48 dp. Enter sends; Shift+Enter is a new line.
+ */
 @Composable
 fun MessageField(
     value: String,
@@ -330,17 +358,24 @@ fun MessageField(
     onSend: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    placeholder: String? = null,
 ) {
-    Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            label = { Text(label) },
-            enabled = enabled,
-            modifier = Modifier.weight(1f).sendOnEnter { if (value.isNotBlank()) onSend() },
-        )
-        androidx.compose.material3.IconButton(enabled = enabled && value.isNotBlank(), onClick = onSend) {
-            AwIcon(R.drawable.ic_send, "Send")
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(label, style = MaterialTheme.typography.labelMedium, color = muted())
+        Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            ControlField(
+                value = value,
+                onValueChange = onValueChange,
+                placeholder = placeholder?.let { { Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis) } },
+                enabled = enabled,
+                maxLines = MESSAGE_LINES,
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .semantics { contentDescription = label }
+                        .sendOnEnter { if (value.isNotBlank()) onSend() },
+            )
+            OutlinedButton(enabled = enabled && value.isNotBlank(), onClick = onSend) { Text("Send") }
         }
     }
 }
@@ -362,6 +397,9 @@ fun WarningCard(
         }
     }
 }
+
+/** The most lines that the message box grows to before it scrolls. */
+private const val MESSAGE_LINES = 5
 
 /** The alpha of the accent line of a gate card (40 %, as on the desktop). */
 private const val GATE_LINE_ALPHA = 0.4f
