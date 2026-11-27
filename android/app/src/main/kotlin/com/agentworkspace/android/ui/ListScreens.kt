@@ -342,6 +342,8 @@ fun TasksScreen(
     onOpen: (String) -> Unit,
     onSyncNow: () -> Unit,
     nowMs: Long,
+    /** The bar of the list pane while a task shows next to the list, else null. */
+    header: (@Composable () -> Unit)? = null,
     onNewTask: () -> Unit,
 ) {
     var project by rememberSaveable { mutableStateOf<String?>(null) }
@@ -349,6 +351,7 @@ fun TasksScreen(
     var closed by rememberSaveable { mutableStateOf(setOf(ScreenStates.ARCHIVED_GROUP)) }
     val groups = ScreenStates.tasksByStage(snapshot, project)
     Column(Modifier.fillMaxSize()) {
+        header?.invoke()
         // "All tasks" and "New task" on one line, above the project tabs, so the button is never cut.
         Row(
             Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp),

@@ -2,9 +2,12 @@ package com.agentworkspace.android.ui
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
@@ -125,9 +128,10 @@ fun AwApp(vm: AppViewModel) {
             // The task page at the full width has its own header with Back (as on the desktop); next to
             // the Tasks list the top bar stays above the list (openspec phone-desktop-parity).
             topBar = {
+                // Next to the Tasks list (from medium width) the list pane has its own bar, and the task
+                // pane uses the full height, as in the approved prototype.
                 val top = vm.backStack.lastOrNull()
-                val fullPage = top is Route.TaskPage || (top is Route.Task && width == WidthClass.COMPACT)
-                if (!fullPage) TopBar(vm, tab)
+                if (top !is Route.TaskPage && top !is Route.Task) TopBar(vm, tab)
             },
             snackbarHost = { SnackbarHost(snackbar) },
         ) { padding ->
@@ -186,6 +190,24 @@ private fun TopBar(
         },
     )
 }
+
+/** The bar of the Tasks list pane next to a task: the workspace switcher and "Sync now", no Back. */
+@Composable
+private fun ListPaneBar(vm: AppViewModel) {
+    val workspaces by vm.workspaces.collectAsStateWithLifecycle()
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = LIST_PANE_BAR_DP.dp).padding(start = 16.dp, end = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.weight(1f)) {
+            WorkspaceMenu(workspaces, vm::switchWorkspace) { vm.navigator.open(Route.Pairing) }
+        }
+        IconButton(onClick = { vm.syncNow() }, enabled = !vm.syncing) { AwIcon(R.drawable.ic_sync, "Sync now") }
+    }
+}
+
+/** The height of the bar of the list pane (the height of the app bar). */
+private const val LIST_PANE_BAR_DP = 56
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
@@ -275,9 +297,16 @@ private fun Panes(
                         }
                     }
                     entry<Route.Tasks>(metadata = Route.Tasks.metadata(placeholder)) {
-                        TasksScreen(snapshot, openTask, vm::openTask, vm::syncNow, now) {
-                            vm.navigator.open(Route.NewTask)
-                        }
+                        // The bar of the list pane while a task shows next to it (the app bar is hidden).
+                        val split = vm.backStack.lastOrNull() is Route.Task && vm.widthClass != WidthClass.COMPACT
+                        TasksScreen(
+                            snapshot,
+                            openTask,
+                            vm::openTask,
+                            vm::syncNow,
+                            now,
+                            header = if (split) ({ ListPaneBar(vm) }) else null,
+                        ) { vm.navigator.open(Route.NewTask) }
                     }
                     entry<Route.Devices> {
                         DevicesScreen(

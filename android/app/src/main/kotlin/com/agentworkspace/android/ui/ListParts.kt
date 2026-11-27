@@ -3,21 +3,26 @@ package com.agentworkspace.android.ui
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryScrollableTabRow
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -75,9 +80,11 @@ private const val CHIP_TINT = 0.14f
 private const val CHIP_WEIGHT = 510
 
 /**
- * A tab row of the desktop (docs/design.md 8.6): the selected tab in `text` with the accent line, the
- * other tabs in `text3` (openspec phone-desktop-parity). The Material 3 default draws each label in the
- * accent.
+ * A tab row of the desktop (docs/design.md 8.6, openspec phone-desktop-parity): each tab is as wide as
+ * its label with 12 dp at each side, the selected tab in `text` with a 2 dp accent line, the other
+ * tabs in `text3`, and a line under the row. The row scrolls when the tabs do not fit and starts at
+ * the first tab. Material 3 gives each scrollable tab 90 dp and centres the selected tab, so 4 tabs
+ * do not fit next to the Tasks list and the first project tab can scroll out of view.
  */
 @Composable
 fun AwTabRow(
@@ -85,22 +92,48 @@ fun AwTabRow(
     selected: Int,
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
-) = PrimaryScrollableTabRow(
-    selectedTabIndex = selected,
-    modifier = modifier,
-    edgePadding = 8.dp,
-    divider = { HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant) },
 ) {
-    labels.forEachIndexed { index, label ->
-        Tab(
-            selected = index == selected,
-            onClick = { onSelect(index) },
-            selectedContentColor = MaterialTheme.colorScheme.onSurface,
-            unselectedContentColor = muted(),
-            text = { Text(label, style = AwType.bodyStrong, maxLines = 1) },
-        )
+    val line = MaterialTheme.colorScheme.outlineVariant
+    val accent = MaterialTheme.colorScheme.primary
+    Row(
+        modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface)
+            .drawBehind { drawRect(line, Offset(0f, size.height - 1.dp.toPx()), Size(size.width, 1.dp.toPx())) }
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 4.dp),
+    ) {
+        labels.forEachIndexed { index, label ->
+            val on = index == selected
+            // The accent line is drawn under the label: a filling child has no width in a scrolling row.
+            Box(
+                Modifier
+                    .heightIn(min = TouchHeight)
+                    .selectable(selected = on, role = Role.Tab, onClick = { onSelect(index) })
+                    .drawBehind {
+                        if (on) {
+                            val side = TAB_PADDING.toPx()
+                            val mark = TAB_MARK.toPx()
+                            drawRect(accent, Offset(side, size.height - mark), Size(size.width - 2 * side, mark))
+                        }
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    label,
+                    style = AwType.bodyStrong,
+                    color = if (on) MaterialTheme.colorScheme.onSurface else muted(),
+                    maxLines = 1,
+                    modifier = Modifier.padding(horizontal = TAB_PADDING, vertical = 12.dp),
+                )
+            }
+        }
     }
 }
+
+/** The space at each side of a tab label, and the height of the accent line of the selected tab. */
+private val TAB_PADDING = 12.dp
+private val TAB_MARK = 2.dp
 
 /** The status color of a stage group: the icon of the group and of its rows (docs/design.md 8.4). */
 @Composable
