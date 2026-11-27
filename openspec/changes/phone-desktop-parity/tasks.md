@@ -46,7 +46,7 @@
 - [x] 6.8 The session option chips ("Skips permissions", "Agent teams") are state chips of 24 dp, not Material chips.
 - [x] 6.9 A row that scrolls back keeps its height: `KeptTexts` keeps the proposal texts and the gate text heights, so the list does not jump on a scroll up (`ScrollBackTest`).
 - [x] 6.10 "Running" shows only when the agent works: not on a task that waits for the person or is paused, as the desktop "working" rule.
-- [x] 6.11 Next to the Tasks list: the list pane has its own bar (workspace, Sync now) and no app bar spans both panes; the task header and tabs stay above the list next to the list and on a page of 600 x 600 dp (`TaskPageLayout.headerFixed`, `PanesTest`); the tab rows show each tab at the width of its label (`AwTabRow`).
+- [x] 6.11 Next to the Tasks list: the list pane has its own bar (workspace, Sync now) and no app bar spans both panes. Activity gets the height: the header scrolls away, the tab row (with "Open as page" and the actions menu) stays at the top, the message box is one row and one hint line, the description shows about 3 lines and "Show more"; the tab rows show each tab at the width of its label (`AwTabRow`).
 
 ## 7. Screenshot tests
 

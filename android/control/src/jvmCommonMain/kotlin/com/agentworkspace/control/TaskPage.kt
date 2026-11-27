@@ -51,20 +51,6 @@ data class TaskPageLayout(
         /** The widest the content of a tab and the message box grow; the content is centred. */
         const val CONTENT_MAX_DP = 840
 
-        /** The smallest page height and window width of a fixed header (openspec phone-desktop-parity). */
-        const val FIXED_HEADER_FROM_DP = 600
-
-        /**
-         * The header of the task page stays above the tabs next to the Tasks list ([inPane]) and on a
-         * page of 600 x 600 dp or more, as in the approved prototype; on a phone and on a short window
-         * (landscape, the keyboard open) it scrolls with the list, so the list keeps the height.
-         */
-        fun headerFixed(
-            widthDp: Int,
-            heightDp: Int,
-            inPane: Boolean,
-        ): Boolean = heightDp >= FIXED_HEADER_FROM_DP && (inPane || widthDp >= FIXED_HEADER_FROM_DP)
-
         fun of(
             widthDp: Int,
             listOn: Boolean,

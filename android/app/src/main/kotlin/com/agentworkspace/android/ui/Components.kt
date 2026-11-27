@@ -268,8 +268,9 @@ fun AssignCard(
 }
 
 /**
- * The message box of the desktop (openspec phone-desktop-parity): the [label], the field of 2 lines,
- * then one line with the [hint] and the Send button at the right. Enter sends; Shift+Enter is a new line.
+ * The message box (openspec phone-desktop-parity): one row with a field of one line that grows to 5
+ * lines and the Send button, then one line with the [label] (the recipient) and the [hint]. It is
+ * about 70 dp high, so Activity keeps the height. Enter sends; Shift+Enter is a new line.
  */
 @Composable
 fun MessageField(
@@ -285,24 +286,21 @@ fun MessageField(
     /** The line under the field, for example "Your message answers the question “…”". */
     hint: String? = null,
 ) {
-    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text(label, style = AwType.label, color = muted())
-        ControlField(
-            value = value,
-            onValueChange = onValueChange,
-            placeholder = placeholder?.let { { Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis) } },
-            enabled = enabled,
-            minLines = MESSAGE_MIN_LINES,
-            maxLines = MESSAGE_LINES,
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .then(if (focusRequester == null) Modifier else Modifier.focusRequester(focusRequester))
-                    .semantics { contentDescription = label }
-                    .sendOnEnter { if (value.isNotBlank()) onSend() },
-        )
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(hint.orEmpty(), style = AwType.meta, color = muted(), modifier = Modifier.weight(1f))
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            ControlField(
+                value = value,
+                onValueChange = onValueChange,
+                placeholder = placeholder?.let { { Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis) } },
+                enabled = enabled,
+                maxLines = MESSAGE_LINES,
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .then(if (focusRequester == null) Modifier else Modifier.focusRequester(focusRequester))
+                        .semantics { contentDescription = label }
+                        .sendOnEnter { if (value.isNotBlank()) onSend() },
+            )
             val canSend = enabled && value.isNotBlank()
             if (canSend) {
                 Button(onClick = onSend) { Text("Send") }
@@ -310,6 +308,13 @@ fun MessageField(
                 OutlinedButton(enabled = false, onClick = onSend) { Text("Send") }
             }
         }
+        Text(
+            listOfNotNull(label, hint).joinToString(" · "),
+            style = AwType.meta,
+            color = muted(),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 
@@ -333,9 +338,6 @@ fun WarningCard(
 
 /** The most lines that the message box grows to before it scrolls. */
 private const val MESSAGE_LINES = 5
-
-/** The height of the empty message box: 2 lines, as on the desktop. */
-private const val MESSAGE_MIN_LINES = 2
 
 /** The alpha of the accent line of a gate card (40 %, as on the desktop). */
 private const val GATE_LINE_ALPHA = 0.4f

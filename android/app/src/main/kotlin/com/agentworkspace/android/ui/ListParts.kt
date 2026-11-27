@@ -7,6 +7,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -81,7 +82,7 @@ private const val CHIP_WEIGHT = 510
 
 /**
  * A tab row of the desktop (docs/design.md 8.6, openspec phone-desktop-parity): each tab is as wide as
- * its label with 12 dp at each side, the selected tab in `text` with a 2 dp accent line, the other
+ * its label with 10 dp at each side, the selected tab in `text` with a 2 dp accent line, the other
  * tabs in `text3`, and a line under the row. The row scrolls when the tabs do not fit and starts at
  * the first tab. Material 3 gives each scrollable tab 90 dp and centres the selected tab, so 4 tabs
  * do not fit next to the Tasks list and the first project tab can scroll out of view.
@@ -92,6 +93,8 @@ fun AwTabRow(
     selected: Int,
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    /** The actions at the end of the row, outside the scrolling tabs (the task page: Open as page, ⋯). */
+    trailing: (@Composable RowScope.() -> Unit)? = null,
 ) {
     val line = MaterialTheme.colorScheme.outlineVariant
     val accent = MaterialTheme.colorScheme.primary
@@ -99,40 +102,53 @@ fun AwTabRow(
         modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
-            .drawBehind { drawRect(line, Offset(0f, size.height - 1.dp.toPx()), Size(size.width, 1.dp.toPx())) }
-            .horizontalScroll(rememberScrollState())
-            .padding(horizontal = 4.dp),
+            .drawBehind { drawRect(line, Offset(0f, size.height - 1.dp.toPx()), Size(size.width, 1.dp.toPx())) },
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        labels.forEachIndexed { index, label ->
-            val on = index == selected
-            // The accent line is drawn under the label: a filling child has no width in a scrolling row.
-            Box(
-                Modifier
-                    .heightIn(min = TouchHeight)
-                    .selectable(selected = on, role = Role.Tab, onClick = { onSelect(index) })
-                    .drawBehind {
-                        if (on) {
-                            val side = TAB_PADDING.toPx()
-                            val mark = TAB_MARK.toPx()
-                            drawRect(accent, Offset(side, size.height - mark), Size(size.width - 2 * side, mark))
-                        }
-                    },
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    label,
-                    style = AwType.bodyStrong,
-                    color = if (on) MaterialTheme.colorScheme.onSurface else muted(),
-                    maxLines = 1,
-                    modifier = Modifier.padding(horizontal = TAB_PADDING, vertical = 12.dp),
-                )
-            }
+        Row(Modifier.weight(1f).horizontalScroll(rememberScrollState()).padding(horizontal = 4.dp)) {
+            AwTabs(labels, selected, onSelect, accent)
+        }
+        trailing?.invoke(this)
+    }
+}
+
+/** The tabs of [AwTabRow]: each as wide as its label, the selected one with the accent line. */
+@Composable
+private fun AwTabs(
+    labels: List<String>,
+    selected: Int,
+    onSelect: (Int) -> Unit,
+    accent: Color,
+) {
+    labels.forEachIndexed { index, label ->
+        val on = index == selected
+        // The accent line is drawn under the label: a filling child has no width in a scrolling row.
+        Box(
+            Modifier
+                .heightIn(min = TouchHeight)
+                .selectable(selected = on, role = Role.Tab, onClick = { onSelect(index) })
+                .drawBehind {
+                    if (on) {
+                        val side = TAB_PADDING.toPx()
+                        val mark = TAB_MARK.toPx()
+                        drawRect(accent, Offset(side, size.height - mark), Size(size.width - 2 * side, mark))
+                    }
+                },
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                label,
+                style = AwType.bodyStrong,
+                color = if (on) MaterialTheme.colorScheme.onSurface else muted(),
+                maxLines = 1,
+                modifier = Modifier.padding(horizontal = TAB_PADDING, vertical = 12.dp),
+            )
         }
     }
 }
 
 /** The space at each side of a tab label, and the height of the accent line of the selected tab. */
-private val TAB_PADDING = 12.dp
+private val TAB_PADDING = 10.dp
 private val TAB_MARK = 2.dp
 
 /** The status color of a stage group: the icon of the group and of its rows (docs/design.md 8.4). */

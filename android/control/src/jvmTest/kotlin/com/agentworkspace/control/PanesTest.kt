@@ -20,15 +20,4 @@ class PanesTest {
         assertEquals(Pane.SINGLE, Route.Home.pane())
         assertEquals(Pane.SINGLE, Route.Devices.pane())
     }
-
-    @Test
-    fun theHeaderStaysNextToTheListAndOnATallPage() {
-        // Next to the Tasks list on a Fold inner screen (a 440 dp pane, 880 dp high).
-        assertEquals(true, TaskPageLayout.headerFixed(440, 880, inPane = true))
-        // The full page on a Fold or a tablet.
-        assertEquals(true, TaskPageLayout.headerFixed(760, 880, inPane = false))
-        // A phone in portrait, and a phone in landscape: the header scrolls.
-        assertEquals(false, TaskPageLayout.headerFixed(392, 800, inPane = false))
-        assertEquals(false, TaskPageLayout.headerFixed(800, 360, inPane = false))
-    }
 }

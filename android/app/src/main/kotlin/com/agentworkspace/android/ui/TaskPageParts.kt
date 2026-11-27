@@ -156,8 +156,7 @@ internal fun TaskHeader(
         Modifier.fillMaxWidth().padding(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 8.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        // Line 1 (as on the desktop): Back, the key, the project, then "Open as page" or "Show list" and
-        // the actions menu at the end, so the menu never wraps to a line of its own.
+        // Line 1 (as on the desktop): Back, the key, the project, then "Show list" at the end.
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             if (nav.onOpenAsPage == null) {
                 TextButton(
@@ -177,18 +176,12 @@ internal fun TaskHeader(
             )
             task.project?.let { HeaderChip(it, scheme.surfaceContainerHigh, scheme.onSurface) }
             Spacer(Modifier.weight(1f))
-            val openAsPage = nav.onOpenAsPage
-            if (openAsPage != null) {
-                OutlinedButton(onClick = openAsPage) {
-                    AwIcon(R.drawable.ic_open_page, null)
-                    Text("Open as page", modifier = Modifier.padding(start = 6.dp))
-                }
-            } else if (layout.canList) {
+            // "Open as page" and the actions menu are at the end of the tab row, which stays at the top.
+            if (nav.onOpenAsPage == null && layout.canList) {
                 OutlinedButton(onClick = { nav.onList(!layout.list) }) {
                     Text(if (layout.list) "Hide list" else "Show list")
                 }
             }
-            TaskActionsMenu(task, actions.onStopSession, actions.onArchive, actions.onUnarchive)
         }
         // Line 2: the state chips, then the need-you navigation at the end.
         FlowRow(
@@ -207,6 +200,8 @@ internal fun TaskHeader(
                 )
             }
             if (task.archived) StateChip("Archived", ChipTone.NEUTRAL)
+            // "Skips permissions" and "Agent teams" on the chip line: one line less above Activity.
+            SessionOptionChips(task, SessionOptionRows.projectMode(task, snapshot.projects))
             Spacer(Modifier.weight(1f))
             need.text?.let { text ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -237,7 +232,6 @@ internal fun TaskHeader(
             if (TaskActions.showRestart(task)) {
                 OutlinedButton(onClick = actions.onRestart) { Text("Restart agent") }
             }
-            SessionOptionChips(task, SessionOptionRows.projectMode(task, snapshot.projects))
             SessionActions(task, snapshot, actions.onNewSession)
         }
     }

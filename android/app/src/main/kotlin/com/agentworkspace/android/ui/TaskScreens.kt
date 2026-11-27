@@ -25,6 +25,7 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -49,6 +50,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import com.agentworkspace.android.R
 import com.agentworkspace.control.ActivityContent
 import com.agentworkspace.control.MessageBox
 import com.agentworkspace.control.RowStyle
@@ -66,12 +68,6 @@ import com.agentworkspace.control.ThreadWindow
 import com.agentworkspace.control.WorkspaceModel
 import com.agentworkspace.control.WorkspaceSnapshot
 import com.agentworkspace.shared.merge.TaskView
-
-/** The layout of the task page and whether its header stays above the list. */
-internal class TaskPageShape(
-    val layout: TaskPageLayout,
-    val headerFixed: Boolean,
-)
 
 /** The actions of the task page: the task actions of the header and the answers of its cards. */
 class TaskPageActions(
@@ -117,8 +113,6 @@ fun TaskScreen(
 ) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val layout = TaskPageLayout.of(maxWidth.value.toInt(), nav.listOn && nav.onOpenAsPage == null)
-        val headerFixed =
-            TaskPageLayout.headerFixed(maxWidth.value.toInt(), maxHeight.value.toInt(), nav.onOpenAsPage != null)
         Row(Modifier.fillMaxSize()) {
             if (layout.list) {
                 val width = TaskPageLayout.TASK_LIST_DP.dp
@@ -130,7 +124,7 @@ fun TaskScreen(
                 TaskMain(
                     task,
                     snapshot,
-                    TaskPageShape(layout, headerFixed),
+                    layout,
                     nav,
                     loadThread,
                     loadTerminal,
@@ -158,7 +152,7 @@ fun TaskScreen(
 private fun TaskMain(
     task: TaskView,
     snapshot: WorkspaceSnapshot,
-    shape: TaskPageShape,
+    layout: TaskPageLayout,
     nav: TaskPageNavigation,
     loadThread: suspend (String, Int) -> ThreadWindow,
     loadTerminal: suspend (TaskView) -> TerminalPaneState,
@@ -167,7 +161,6 @@ private fun TaskMain(
     modifier: Modifier,
 ) {
     var selected by rememberSaveable(task.id) { mutableStateOf(TaskTab.ACTIVITY) }
-    val layout = shape.layout
     val tabs = layout.tabs
     val tab = TaskTab.shown(selected, tabs)
     // The newest 500 events; "Show older" adds 500 (fix list 0-20, prd TSK-24).
@@ -196,11 +189,10 @@ private fun TaskMain(
         }
     }
     Column(modifier.fillMaxHeight()) {
-        // On a phone and a short window the header scrolls with the list and the tab row stays at the
-        // top, so the list keeps the height. Next to the Tasks list and on a page of 600 x 600 dp or
-        // more, the header and the tab row stay above the list, as in the approved prototype. Each tab
-        // opens at the top with its own scroll state, so the needs-you line shows. The content is
-        // 840 dp wide at most and centred.
+        // Activity gets the height (openspec phone-desktop-parity): the header scrolls with the list,
+        // and only one row stays at the top: the tabs with "Open as page" and the actions menu at its
+        // end. Each tab opens at the top with its own scroll state, so the needs-you line shows. The
+        // content is 840 dp wide at most and centred.
         val header: @Composable () -> Unit = {
             TaskHeader(
                 task,
@@ -211,7 +203,7 @@ private fun TaskMain(
                 actions,
                 onStateChip = {
                     selected = TaskTab.ACTIVITY
-                    scrollTo = activity.needsYouIndex(thread.hasOlder, if (shape.headerFixed) 0 else 2)
+                    scrollTo = activity.needsYouIndex(thread.hasOlder)
                 },
             ) {
                 assigning = true
@@ -219,11 +211,11 @@ private fun TaskMain(
             }
         }
         val tabRow: @Composable () -> Unit = {
-            AwTabRow(tabs.map { it.label }, tabs.indexOf(tab), { selected = tabs[it] })
-        }
-        if (shape.headerFixed) {
-            header()
-            tabRow()
+            AwTabRow(tabs.map { it.label }, tabs.indexOf(tab), { selected = tabs[it] }) {
+                val open = nav.onOpenAsPage
+                if (open != null) IconButton(onClick = open) { AwIcon(R.drawable.ic_open_page, "Open as page") }
+                TaskActionsMenu(task, actions.onStopSession, actions.onArchive, actions.onUnarchive)
+            }
         }
         key(tab) {
             val listState = rememberLazyListState()
@@ -239,10 +231,8 @@ private fun TaskMain(
                 state = listState,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                if (!shape.headerFixed) {
-                    item(key = "header") { header() }
-                    stickyHeader(key = "tabs") { tabRow() }
-                }
+                item(key = "header") { header() }
+                stickyHeader(key = "tabs") { tabRow() }
                 if (tab != TaskTab.ACTIVITY) {
                     TaskDetail.needsYouLine(task)?.let { line ->
                         item(key = "needs-you") { NeedsYouLine(line) { selected = TaskTab.ACTIVITY } }
@@ -282,7 +272,7 @@ private fun TaskMain(
                 MessageField(
                     value = draft,
                     onValueChange = { draft = it },
-                    label = "Message to ${task.assignee ?: "the agent"}",
+                    label = "To ${task.assignee ?: "the agent"}",
                     placeholder = box.placeholder,
                     enabled = box.enabled,
                     onSend = {
@@ -379,10 +369,15 @@ private fun Description(text: String?) {
         if (body == null) {
             Text("No description.", style = MaterialTheme.typography.bodyLarge, color = muted())
         } else {
-            SelectionContainer { MarkdownText(body) }
+            // About 3 lines and "Show more": Activity starts near the top (openspec phone-desktop-parity).
+            // One Column: SelectionContainer stacks its children, and "Show more" would cover the text.
+            SelectionContainer { Column { GateText(body, "description", DescriptionHeight) } }
         }
     }
 }
+
+/** The height of the description before "Show more": about 3 lines of body text. */
+private val DescriptionHeight = 68.dp
 
 /** The newest terminal snapshot: the caption, the screen in a monospace block, or the note. */
 @Composable
@@ -517,15 +512,12 @@ private fun ThreadLine(item: ThreadItem) {
 
 /**
  * The index in the Activity list of the row that needs the person (the header chip scrolls to it):
- * the header and the tab row (when they scroll with the list), the top cards, the late answers, the
+ * the header and the tab row, the top cards, the late answers, the
  * Assign card, the description, the "Activity" heading and "Show older", then the rows. With no such
  * row, the first top card.
  */
-private fun ActivityContent.needsYouIndex(
-    hasOlder: Boolean,
-    /** The items above the cards: the header and the tab row, or none when they stay above the list. */
-    top: Int,
-): Int {
+private fun ActivityContent.needsYouIndex(hasOlder: Boolean): Int {
+    val top = 2
     val row = needsYouRow ?: return top
     val before = topCards.size + late.size + (if (assign) 1 else 0) + 2 + (if (hasOlder) 1 else 0)
     return top + before + row
