@@ -257,8 +257,12 @@ internal fun rememberProposalView(
     onAnswer: GateAnswer,
 ): ProposalView {
     val version = row.version ?: 0L
-    val text by produceState<String?>(null, task.id, version, row.file, task.lastHlc) {
-        value = parts.loadProposal(task.id, version, row.file)
+    // The text of an earlier load first: a row that scrolls back keeps its height (no jump).
+    val kept = "${task.id}|$version|${row.file}"
+    val text by produceState(KeptTexts.proposal(kept), task.id, version, row.file, task.lastHlc) {
+        val loaded = parts.loadProposal(task.id, version, row.file)
+        KeptTexts.keepProposal(kept, loaded)
+        value = loaded ?: value
     }
     val approve =
         card?.takeIf { row.state == ProposalState.OPEN }?.let { open ->

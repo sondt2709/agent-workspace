@@ -29,6 +29,7 @@ class ScreensTest {
                 assertEquals(listOf("implement"), groups.map { it.stage })
                 val aw7 = groups.first { it.stage == "implement" }.tasks.single()
                 assertEquals("AW-7", aw7.label)
+                assertEquals(true, aw7.running)
                 assertNull(aw7.pause)
 
                 val peer = PeerStatus("ubuntu-01", true, null, 0, 0, true, null, ws.clock.time - 12_000, emptyList())
@@ -57,6 +58,8 @@ class ScreensTest {
                 val inbox = ScreenStates.inbox(snapshot)
                 assertEquals(listOf("AW-7"), inbox.map { it.label })
                 assertEquals("Needs you: Reply to a question", inbox.single().reason)
+                // The session waits for the answer: the row says "Reply to a question", not "Running".
+                assertEquals(false, inbox.single().running)
                 val card = ScreenStates.gateCards(snapshot.task(AW7)!!, snapshot).single()
                 assertEquals(GATE, card.gate.gate)
                 assertEquals("Reply to a question", card.label)

@@ -44,6 +44,8 @@
 - [x] 6.6 Inline code in `MarkdownText.kt`: monospace 12.5 sp, a 6 % fill and a 4 dp radius, as on the desktop.
 - [x] 6.7 The reason of a task with no assignee is "Assign task", as on the desktop (`ScreenStates.reasonOf`).
 - [x] 6.8 The session option chips ("Skips permissions", "Agent teams") are state chips of 24 dp, not Material chips.
+- [x] 6.9 A row that scrolls back keeps its height: `KeptTexts` keeps the proposal texts and the gate text heights, so the list does not jump on a scroll up (`ScrollBackTest`).
+- [x] 6.10 "Running" shows only when the agent works: not on a task that waits for the person or is paused, as the desktop "working" rule.
 
 ## 7. Screenshot tests
 

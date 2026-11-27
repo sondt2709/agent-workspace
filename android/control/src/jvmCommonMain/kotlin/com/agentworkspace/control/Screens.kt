@@ -128,7 +128,7 @@ data class TaskRowState(
     val queue: String? = null,
     /** The cause that blocks a queued task, for example "2 sessions working". */
     val queueCause: String? = null,
-    /** A session of the task runs: the row shows the chip "Running". */
+    /** The agent works: the session runs, and the task neither waits for the person nor is paused. */
     val running: Boolean = false,
 ) {
     /** The queue text of a row as one text that wraps at word boundaries: "Queued · 1st for … · starts soon". */
@@ -216,7 +216,9 @@ object ScreenStates {
         lastHlc = task.lastHlc,
         queue = snapshot.queueEntries[task.id]?.text,
         queueCause = snapshot.queueEntries[task.id]?.cause?.text,
-        running = task.session?.state == SESSION_RUNNING,
+        // As the desktop "working" rule: a task that waits for the person or is paused is not running,
+        // even while its session waits in the terminal.
+        running = task.session?.state == SESSION_RUNNING && !task.needsYouLane && pauseChip(task, snapshot) == null,
     )
 
     private fun active(snapshot: WorkspaceSnapshot) = snapshot.tasks.filter { !it.archived }
