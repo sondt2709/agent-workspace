@@ -12,6 +12,23 @@ object NewTaskChoices {
     ): String? = project?.let { ScreenStates.agentChoices(snapshot, it).firstOrNull() }
 
     /**
+     * The assignee of New task. "Start the agent now" is on at the start (openspec session-options):
+     * while the person did not change the assignee ([changed] false), it is [startAgent] of the
+     * project and follows a project change. Else it is [picked] when the project shows it, else none.
+     */
+    fun assignee(
+        snapshot: WorkspaceSnapshot,
+        project: String?,
+        changed: Boolean,
+        picked: String?,
+    ): String? =
+        if (changed) {
+            picked?.takeIf { project != null && it in ScreenStates.agentChoices(snapshot, project) }
+        } else {
+            startAgent(snapshot, project)
+        }
+
+    /**
      * The parent choices of New task: the tasks of the project that are not done or archived, as
      * (task id, "AW-3 · title"), as the desktop lists them.
      */

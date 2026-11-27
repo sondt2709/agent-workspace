@@ -307,12 +307,18 @@ export const sessionOptionsBody = z
       .describe(
         "default, accept_edits or skip (no gate for each command); null: the project default",
       ),
-    agent_teams: z.boolean().optional().describe("Turn on the agent team setting (experimental)"),
+    agent_teams: z.boolean().optional().describe("Turn on Claude Code agent teams"),
     work_in: workIn.optional().describe("worktree (default), checkout or folder"),
     folder: absolutePath
       .nullable()
       .optional()
       .describe("The absolute folder on the session device; only with work_in folder"),
+    switch_branch: z
+      .boolean()
+      .optional()
+      .describe(
+        "With work_in checkout: true (default) checks out aw/<key>; false keeps the branch",
+      ),
   })
   .meta({ id: "SessionOptionsInput" });
 

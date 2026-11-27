@@ -28,6 +28,7 @@ data class HealthV1(
     @SerialName("sessions") val sessions: List<SessionsItem> = emptyList(),
     @SerialName("usage") val usage: List<UsageItem> = emptyList(),
     @SerialName("disk") val disk: Disk,
+    @AwOptional @EncodeDefault(EncodeDefault.Mode.NEVER) @SerialName("checkouts") val checkouts: List<CheckoutsItem>? = null,
     @AwOptional @EncodeDefault(EncodeDefault.Mode.NEVER) @SerialName("queue") val queue: Queue? = null,
     @SerialName("sync") val sync: List<SyncItem> = emptyList(),
     @SerialName("repairs") val repairs: List<RepairsItem> = emptyList(),
@@ -109,6 +110,17 @@ data class HealthV1(
         init {
             AwChecks.atLeast(usedPercentage, 0.0, "used_percentage")
             AwChecks.atMost(usedPercentage, 100.0, "used_percentage")
+        }
+    }
+
+    @Serializable
+    data class CheckoutsItem(
+        @SerialName("project") val project: String,
+        @SerialName("has_commit") val hasCommit: Boolean,
+    ) {
+        init {
+            AwChecks.pattern(project, PATTERN_0, "project")
+            AwChecks.maxLength(project, 63, "project")
         }
     }
 

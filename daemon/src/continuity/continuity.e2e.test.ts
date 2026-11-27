@@ -303,6 +303,8 @@ describe.skipIf(!TEST_TMUX)("continuity with tmux and the fake agent", () => {
     expect(health.device).toBe("macbook-pro");
     expect(health.versions.claude).toBe("2.1.330");
     expect(health.boot_time).toBe("2026-11-22T08:00:00.000Z");
+    // The first write can come before the bindings of the test: the unit test covers the list.
+    expect(Array.isArray(health.checkouts)).toBe(true);
   }, 90_000);
 
   it("gives CLAUDE_CONFIG_DIR of awd to the session, and removes the credentials at the stop", async () => {

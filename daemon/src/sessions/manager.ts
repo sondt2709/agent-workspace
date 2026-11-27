@@ -7,6 +7,7 @@ import {
   compareOrder,
   effectiveSessionOptions,
   hlcMs,
+  isHuman,
   type Clock,
   type EffectiveSessionOptions,
   type EventRow,
@@ -38,8 +39,14 @@ import { basename, isAbsolute, join, relative, sep } from "node:path";
 import PQueue from "p-queue";
 import { HUMAN_COMMANDS } from "../cli/person-commands.ts";
 import { loginEndsSoon, type AuthState } from "../continuity/auth.ts";
-import { git, LOCAL_GIT_TIMEOUT_MS } from "../continuity/git-branch.ts";
-import { healthDocument, healthDue, healthKey, sessionState } from "../continuity/health.ts";
+import { commitOf, git, LOCAL_GIT_TIMEOUT_MS } from "../continuity/git-branch.ts";
+import {
+  checkoutCommits,
+  healthDocument,
+  healthDue,
+  healthKey,
+  sessionState,
+} from "../continuity/health.ts";
 import {
   ACTIVE_ENDS,
   pauseChanged,
@@ -367,7 +374,15 @@ export class SessionManager {
   /** The last detect of Orca, at most once per ORCA_DETECT_MS. */
   #orcaInfo: { at: number; info: HostInfo } | null = null;
   /** Tasks whose session did not start: the last error, so AW tries again only after a wait. */
-  readonly #startErrors = new Map<string, { at: number; message: string }>();
+  readonly #startErrors = new Map<
+    string,
+    {
+      at: number;
+      message: string;
+      /** The newest applied person `task.assigned` at the failure: a newer one is a restart. */
+      assigned: string | null;
+    }
+  >();
   /** Failed tries of each spool file. */
   readonly #spoolFailures = new Map<string, number>();
   /** The written steps of each spool file that failed in a later step (see HookWrite). */
@@ -655,7 +670,10 @@ export class SessionManager {
 
   /** Where a person opens the terminal of a session, for the comments. */
   #terminalHint(record: SessionRecord): string {
-    // Only the worktree: the program in an Orca terminal can change the terminal title.
+    // Only the folder: the program in an Orca terminal can change the terminal title.
+    if (record.host === "orca" && record.work_in === "checkout") {
+      return `Open the checkout ${record.cwd} in Orca`;
+    }
     if (record.host === "orca") return `Open the Orca worktree aw-${record.task}`;
     return `Open the terminal: tmux -L ${this.#settings.sessions.tmuxSocket} attach -t aw`;
   }
@@ -987,7 +1005,11 @@ export class SessionManager {
       }
       // One task that cannot start never blocks the other sessions of the workspace.
       const last = this.#startErrors.get(task.id);
-      if (last && this.#clock.now() - last.at < this.#startRetryMs) continue;
+      // "Restart agent": a newer person assignment drops the wait and the memory of the cause, so
+      // the start runs now and a new failure gets its comment again (openspec restart-agent).
+      if (last && last.assigned !== this.#personAssignment(task.id)) {
+        this.#startErrors.delete(task.id);
+      } else if (last && this.#clock.now() - last.at < this.#startRetryMs) continue;
       candidates.push(task);
     }
     if (candidates.length === 0) return;
@@ -1097,7 +1119,11 @@ export class SessionManager {
   async #startFailed(task: TaskView, error: unknown): Promise<void> {
     const message = (error as Error)?.message ?? String(error);
     const last = this.#startErrors.get(task.id);
-    this.#startErrors.set(task.id, { at: this.#clock.now(), message });
+    this.#startErrors.set(task.id, {
+      at: this.#clock.now(),
+      message,
+      assigned: this.#personAssignment(task.id),
+    });
     if (last?.message === message) return;
     this.#log.error({ err: error, task: task.id }, "The session did not start");
     try {
@@ -1106,12 +1132,22 @@ export class SessionManager {
         "comment.added",
         {
           text: `The session did not start on ${this.#me}: ${message.slice(0, 1000)}. AW tries again in ${Math.round(this.#startRetryMs / 1000)} s.`,
+          kind: "start_failed",
         },
         this.#aw,
       );
     } catch (second) {
       this.#log.error({ err: second, task: task.id }, "The start error was not written");
     }
+  }
+
+  /** The id of the newest applied `task.assigned` of a person for the task, or null. */
+  #personAssignment(task: string): string | null {
+    const row = this.#rows(task)
+      .filter((r) => r.type === "task.assigned" && r.applied)
+      .filter((r) => isHuman((r.event as { by?: string | null }).by ?? null))
+      .at(-1);
+    return row?.id ?? null;
   }
 
   #needsClaim(task: TaskView): boolean {
@@ -1230,6 +1266,14 @@ export class SessionManager {
     if ((await inCheckout(["rev-parse", "--is-inside-work-tree"])).exitCode !== 0) {
       throw new Error(
         `${checkout} is not a git repository. AW runs a session only in a git worktree that it creates: make the checkout a git repository, or bind another one with 'aw binding set <project> <path>' on ${this.#me}`,
+      );
+    }
+    // git and Orca make a worktree only from a commit: a repository with no commit gives
+    // "invalid reference: HEAD" or "Could not resolve a default base ref" (openspec
+    // project-checkout-no-worktree).
+    if ((await commitOf(checkout, "HEAD")) === null) {
+      throw new Error(
+        `${checkout} has no commit yet. AW makes the worktree of a session from a commit: make a first commit there, or start a session with "Project checkout"`,
       );
     }
     const base = await this.#prepare(checkout, task, branch);
@@ -1481,14 +1525,30 @@ export class SessionManager {
         cwd: folder,
         branch: null,
         base: null,
-        hostName: await this.#plainHost(task, binding),
+        hostName: await this.#plainHost(task, binding, "folder"),
       };
     }
     if (checkout === null) throw new Error(`No checkout of ${task.project ?? "the project"}`);
+    if (options.work_in === "checkout" && !options.switch_branch) {
+      // The checkout as it is: no branch, no switch, no checkpoint push and no wake commit, as
+      // `work_in: folder` (openspec project-checkout-no-worktree).
+      await this.#checkoutFree(checkout, task);
+      return {
+        cwd: checkout,
+        branch: null,
+        base: null,
+        hostName: await this.#plainHost(task, binding, "checkout"),
+      };
+    }
     if (options.work_in === "checkout") {
       const local = await this.#localBranch(task);
       const { branch, base } = await this.#inCheckout(checkout, task, local);
-      return { cwd: checkout, branch, base, hostName: await this.#plainHost(task, binding) };
+      return {
+        cwd: checkout,
+        branch,
+        base,
+        hostName: await this.#plainHost(task, binding, "checkout"),
+      };
     }
     let hostName = await this.#chooseHost(task, binding);
     // A task keeps its branch and its folder when it changes host. Orca opens a terminal only in
@@ -1556,10 +1616,17 @@ export class SessionManager {
   }
 
   /**
-   * The host of a session in the checkout or another folder: tmux. Orca opens a terminal only in
-   * an Orca worktree, so a task that asks for Orca gets one comment.
+   * The host of a session in the checkout or another folder. The checkout gets the host choice of
+   * a worktree. Another folder runs in tmux, and a task that asks for Orca gets one comment.
    */
-  async #plainHost(task: TaskView, binding: Binding): Promise<string> {
+  async #plainHost(
+    task: TaskView,
+    binding: Binding,
+    workIn: "checkout" | "folder",
+  ): Promise<string> {
+    // Orca opens a terminal in the main folder of a repo that it knows: the host adds the checkout
+    // (openspec project-checkout-no-worktree). Another folder can be no repo, so it stays in tmux.
+    if (workIn === "checkout") return this.#chooseHost(task, binding);
     const wanted =
       this.#askedHost(task.id) ?? binding.sessionHost ?? (binding.useOrca ? "orca" : null);
     if (wanted === "orca") {
@@ -1620,6 +1687,20 @@ export class SessionManager {
     return folder;
   }
 
+  /** Throws when a session of another task runs in the checkout: one session at a time there. */
+  async #checkoutFree(checkout: string, task: TaskView): Promise<void> {
+    const real = (path: string) => realpath(path).catch(() => path);
+    const target = await real(checkout);
+    for (const other of this.#running()) {
+      if (other.task !== task.id && (await real(other.cwd)) === target) {
+        const key = this.#task(other.task)?.key ?? other.task;
+        throw new Error(
+          `The checkout ${checkout} has the session of ${key}. AW runs one session at a time in a project checkout: stop that session, or use "Separate worktree"`,
+        );
+      }
+    }
+  }
+
   /**
    * The project checkout on the task branch (`work_in: checkout`): one session at a time in a
    * checkout. AW prepares the branch from `origin` as for a worktree, then runs `git switch` in
@@ -1638,14 +1719,7 @@ export class SessionManager {
         `${checkout} is not a git repository. A session in the project checkout works on the branch ${local}: make the checkout a git repository, or use "Separate worktree"`,
       );
     }
-    for (const other of this.#running()) {
-      if (other.task !== task.id && (await real(other.cwd)) === target) {
-        const key = this.#task(other.task)?.key ?? other.task;
-        throw new Error(
-          `The checkout ${checkout} has the session of ${key}. AW runs one session at a time in a project checkout: stop that session, or use "Separate worktree"`,
-        );
-      }
-    }
+    await this.#checkoutFree(checkout, task);
     let taken = await this.#branchFolder(checkout, local);
     if (taken !== null && (await real(taken)) !== target) {
       // The AW worktree of an earlier session of this task gives the branch free when it is clean.
@@ -1819,7 +1893,10 @@ export class SessionManager {
     // gate or a delivery of another session (fix list 0-0e). It catches its own errors.
     // A folder of the person ("Other folder") is not a folder of AW: AW commits and pushes nothing
     // there, also on a move (check soc-8).
-    if (reason === "moved" && record.work_in !== "folder") void this.#wakeBranch(record, task);
+    // A session with no branch (another folder, or the checkout as it is) commits nothing.
+    if (reason === "moved" && record.work_in !== "folder" && record.branch !== null) {
+      void this.#wakeBranch(record, task);
+    }
     if (task?.owner === this.#me) {
       await this.#buffer.now(
         record.task,
@@ -3584,6 +3661,23 @@ export class SessionManager {
     }
   }
 
+  /**
+   * The checkouts of this device and whether `HEAD` names a commit: the forms disable "Separate
+   * worktree" for a checkout with no commit (openspec project-checkout-no-worktree).
+   */
+  async #checkoutCommits(): Promise<{ project: string; has_commit: boolean }[]> {
+    let checkouts: { project: string; path: string }[];
+    try {
+      const doc = await this.service.files.readDocument<"bindings">(
+        `tasks/devices/${this.#me}/bindings.yaml`,
+      );
+      checkouts = doc.value.checkouts;
+    } catch {
+      return [];
+    }
+    return checkoutCommits(checkouts);
+  }
+
   /** `health.yaml` of this device, at most once per 60 s (docs/architecture.md 4.6.12). */
   async #writeHealth(): Promise<void> {
     const now = this.#clock.now();
@@ -3606,6 +3700,7 @@ export class SessionManager {
       usage,
       loginExpiresAt: auth?.expiresAt ?? null,
       disk: await this.#diskUse(),
+      checkouts: await this.#checkoutCommits(),
       queue: {
         maxWorking: this.#settings.sessions.maxWorking,
         diskFullPercent: this.#settings.sessions.diskFullPercent,

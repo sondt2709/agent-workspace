@@ -9,6 +9,7 @@ import { existsSync } from "node:fs";
 import { readFile, rm, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
+import { tempDir } from "../testing.ts";
 import { listRecords, sessionPaths } from "./records.ts";
 import { startSessionDaemon, TEST_TMUX, waitFor, type SessionTestDaemon } from "./testing.ts";
 
@@ -402,6 +403,72 @@ describe.skipIf(!TEST_TMUX || (REAL && !ORCA))("sessions in Orca with the fake a
     expect(comments).toHaveLength(1);
     expect(text(comments[0]!)).toContain("AW starts the session in tmux");
     expect((await record(awd, asked.id)).host).toBe("tmux");
+  }, 120_000);
+
+  it("makes no Orca worktree for a checkout with no commit, and says what to do", async () => {
+    awd = await startSessionDaemon({ orca: ORCA });
+    const unborn = await tempDir("awu-");
+    await execa("git", ["-C", unborn, "init", "-q", "-b", "main"]);
+    await awd.server.daemon
+      .workspace()
+      .files.writeDocument("tasks/devices/macbook-pro/bindings.yaml", {
+        kind: "bindings",
+        schema: 1,
+        device: "macbook-pro",
+        may_run: true,
+        use_orca: true,
+        checkouts: [{ project: "billing-api", path: unborn }],
+      });
+    const task = await awd.createTask("reply never");
+    const comment = await awd.waitRow(
+      task.id,
+      (r) => r.type === "comment.added" && text(r).startsWith("The session did not start"),
+    );
+    expect(text(comment)).toContain(`${unborn} has no commit yet`);
+    if (!REAL) {
+      const file = join(awd.orcaState!, "state.json");
+      const state = existsSync(file)
+        ? (JSON.parse(await readFile(file, "utf8")) as { repos: unknown[]; worktrees: unknown[] })
+        : { repos: [], worktrees: [] };
+      expect(state.worktrees).toEqual([]);
+      expect(state.repos).toEqual([]);
+    }
+  }, 60_000);
+
+  it("runs a session of the project checkout in Orca, in the main folder, with its own branch", async () => {
+    awd = await startSessionDaemon({ orca: ORCA });
+    const created = await awd.aw([
+      "--json",
+      "task",
+      "create",
+      "--project",
+      "billing-api",
+      "--title",
+      "Checkout in Orca",
+      "--first-message",
+      "reply in the checkout",
+      "--assignee",
+      "claude@macbook-pro",
+      "--work-in",
+      "checkout",
+      "--keep-branch",
+    ]);
+    expect(created.code, created.stderr).toBe(0);
+    const id = (JSON.parse(created.stdout) as { task: { id: string } }).task.id;
+    const started = await awd.waitRow(id, (r) => r.type === "session.started", 40_000);
+    expect(data(started)).toMatchObject({ host: "orca", cwd: awd.checkout, work_in: "checkout" });
+    await awd.waitRow(id, (r) => r.type === "message.agent" && text(r).includes("checkout"));
+    const head = await execa("git", ["-C", awd.checkout, "symbolic-ref", "--short", "HEAD"]);
+    expect(head.stdout).toBe("main");
+    expect(
+      (await awd.rows(id)).some((r) => r.type === "comment.added" && text(r).includes("tmux")),
+    ).toBe(false);
+    if (!REAL) {
+      const state = JSON.parse(await readFile(join(awd.orcaState!, "state.json"), "utf8")) as {
+        worktrees: unknown[];
+      };
+      expect(state.worktrees).toEqual([]);
+    }
   }, 120_000);
 
   it("keeps the branch and the folder of a task that moves from Orca to tmux", async () => {

@@ -12,6 +12,8 @@ data class EffectiveSessionOptions(
     val workIn: String,
     /** The absolute folder of `work_in: folder`, else null. */
     val folder: String?,
+    /** True: a session in the checkout checks out `aw/<key>`; false: it keeps the branch. */
+    val switchBranch: Boolean = true,
 )
 
 object SessionOptions {
@@ -40,6 +42,7 @@ object SessionOptions {
             agentTeams = own?.agentTeams ?: false,
             workIn = own?.workIn ?: WORKTREE,
             folder = if (own?.workIn == FOLDER) own.folder else null,
+            switchBranch = own?.switchBranch ?: true,
         )
     }
 }

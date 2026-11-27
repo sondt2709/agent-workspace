@@ -115,7 +115,8 @@
                     { "type": "string", "maxLength": 4096, "pattern": "^\\/" },
                     { "type": "null" }
                   ]
-                }
+                },
+                "switch_branch": { "default": true, "type": "boolean" }
               },
               "additionalProperties": {}
             }
@@ -184,7 +185,8 @@
                     { "type": "string", "maxLength": 4096, "pattern": "^\\/" },
                     { "type": "null" }
                   ]
-                }
+                },
+                "switch_branch": { "default": true, "type": "boolean" }
               },
               "additionalProperties": {}
             }
@@ -931,7 +933,10 @@
         },
         "data": {
           "type": "object",
-          "properties": { "text": { "type": "string" } },
+          "properties": {
+            "text": { "type": "string" },
+            "kind": { "type": "string", "enum": ["start_failed"] }
+          },
           "required": ["text"],
           "additionalProperties": {}
         }

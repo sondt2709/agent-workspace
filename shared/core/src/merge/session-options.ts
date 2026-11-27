@@ -9,6 +9,8 @@ export interface EffectiveSessionOptions {
   agent_teams: boolean;
   work_in: WorkIn;
   folder: string | null;
+  /** True: a session in the checkout checks out `aw/<key>`; false: it keeps the branch. */
+  switch_branch: boolean;
 }
 
 /**
@@ -28,5 +30,6 @@ export function effectiveSessionOptions(
     agent_teams: own?.agent_teams ?? false,
     work_in: own?.work_in ?? "worktree",
     folder: own?.work_in === "folder" ? own.folder : null,
+    switch_branch: own?.switch_branch ?? true,
   };
 }

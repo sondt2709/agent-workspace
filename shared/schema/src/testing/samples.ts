@@ -340,6 +340,20 @@ export const documentSamples: {
     invalidPath: "queue.max_working",
   },
   {
+    name: "health checkouts with no commit",
+    schema: "health.v1",
+    value: () => ({
+      ...fixtureDocument("health"),
+      checkouts: [{ project: "billing-api", has_commit: false }],
+    }),
+  },
+  {
+    name: "health checkout with no has_commit",
+    schema: "health.v1",
+    value: () => ({ ...fixtureDocument("health"), checkouts: [{ project: "billing-api" }] }),
+    invalidPath: "checkouts.0.has_commit",
+  },
+  {
     name: "fixture bindings",
     schema: "bindings.v1",
     value: () => fixtureDocument("bindings", "ubuntu-01"),
@@ -512,6 +526,33 @@ export const eventSamples: { name: string; value: unknown; invalidPath?: string 
         folder: "/work/billing-api/services/api",
       },
     }),
+  },
+  {
+    name: "task.assigned in the checkout with no branch switch",
+    value: event("task.assigned", {
+      assignee: "claude@ubuntu-01",
+      session_options: { work_in: "checkout", switch_branch: false },
+    }),
+  },
+  {
+    name: "task.assigned with switch_branch as text",
+    value: event("task.assigned", {
+      assignee: "claude@ubuntu-01",
+      session_options: { work_in: "checkout", switch_branch: "no" },
+    }),
+    invalidPath: "data.session_options.switch_branch",
+  },
+  {
+    name: "comment.added of a failed start",
+    value: event("comment.added", {
+      text: "The session did not start on ubuntu-01: /work/notes has no commit yet.",
+      kind: "start_failed",
+    }),
+  },
+  {
+    name: "comment.added with an unknown kind",
+    value: event("comment.added", { text: "A note", kind: "note" }),
+    invalidPath: "data.kind",
   },
   {
     name: "task.created session options with a relative folder",

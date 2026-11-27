@@ -6,6 +6,7 @@ import { systemClock } from "@aw/core/clock";
 import { mkdir, readFile, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { healthDocument } from "../continuity/health.ts";
 import { otherDevice, startTestDaemon, type TestDaemon } from "../testing.ts";
 
 let d: TestDaemon;
@@ -69,6 +70,21 @@ describe("session hosts", () => {
       use_orca: true,
       checkouts: [{ project: "billing-api", path: "/srv/billing-api", session_host: "orca" }],
     });
+    // The health of ubuntu-01 says that its billing-api checkout has no commit.
+    await ubuntu.writeDocument(
+      "tasks/devices/ubuntu-01/health.yaml",
+      healthDocument({
+        device: "ubuntu-01",
+        updated: "2026-11-27T08:00:00.000Z#0000",
+        bootTime: "2026-11-27T07:00:00.000Z",
+        versions: {},
+        sessions: [],
+        usage: null,
+        loginExpiresAt: null,
+        disk: 10,
+        checkouts: [{ project: "billing-api", has_commit: false }],
+      }),
+    );
     await d.server.daemon.workspace().refresh();
     const reply = await desktop.sessionHosts("-");
     expect(reply.device).toBe("macbook-pro");
@@ -85,7 +101,7 @@ describe("session hosts", () => {
       device: "ubuntu-01",
       may_run: true,
       use_orca: true,
-      checkouts: [{ project: "billing-api", session_host: "orca" }],
+      checkouts: [{ project: "billing-api", session_host: "orca", has_commit: false }],
       orca: null,
     });
     expect(JSON.stringify(reply)).not.toContain("/srv/billing-api");

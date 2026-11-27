@@ -303,6 +303,7 @@ private fun Panes(
                                     onSend = { text, sent -> vm.sendMessage(task.id, text, sent) },
                                     onStopSession = { vm.stopSession(task.id) },
                                     onNewSession = { assignee, options -> vm.newSession(task.id, assignee, options) },
+                                    onRestart = { vm.restartAgent(task.id) },
                                     onArchive = { vm.archiveTask(task.id) },
                                     onUnarchive = { vm.unarchiveTask(task.id) },
                                 ),

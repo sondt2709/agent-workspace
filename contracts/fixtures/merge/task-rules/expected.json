@@ -366,6 +366,7 @@
         },
         "session_options": null,
         "stage": "implement",
+        "start_failure": null,
         "subtasks": [
           "01a203c5-6d80-7428-9915-5e8403a66c02",
           "01a203c5-6d80-7428-9915-5b5a12b91ba1"
@@ -463,6 +464,7 @@
         },
         "session_options": null,
         "stage": "backlog",
+        "start_failure": null,
         "subtasks": [],
         "test_server": null,
         "title": "New title"
@@ -542,6 +544,7 @@
         "session": null,
         "session_options": null,
         "stage": "backlog",
+        "start_failure": null,
         "subtasks": [],
         "test_server": null,
         "title": "Task AW-21"
@@ -596,6 +599,7 @@
         "session": null,
         "session_options": null,
         "stage": "backlog",
+        "start_failure": null,
         "subtasks": [],
         "test_server": null,
         "title": "Task AW-22"
@@ -654,6 +658,7 @@
         "session": null,
         "session_options": null,
         "stage": "backlog",
+        "start_failure": null,
         "subtasks": [],
         "test_server": null,
         "title": "Task AW-23"

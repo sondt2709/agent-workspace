@@ -89,6 +89,29 @@ describe("dispatchCall", () => {
     expect(answerGate).toHaveBeenCalledWith("-", "0193a", { answer: "100/min", version: 2 });
   });
 
+  it("passes the full session options of New task, also switch_branch (project-checkout-no-worktree)", async () => {
+    const createTask = vi.fn(() => Promise.resolve({ applied: true }));
+    const body = {
+      project: "billing-api",
+      title: "Check the cloud cost",
+      first_message: "Check the cloud cost",
+      assignee: "claude@macbook-pro",
+      session_options: {
+        permission_mode: "skip",
+        agent_teams: true,
+        work_in: "checkout",
+        folder: null,
+        switch_branch: false,
+      },
+    };
+    const result = await dispatchCall(
+      { method: "createTask", args: { ws: "-", body } },
+      deps({ createTask } as unknown as Partial<CallClient>),
+    );
+    expect(result).toEqual({ ok: true, value: { applied: true } });
+    expect(createTask).toHaveBeenCalledWith("-", body);
+  });
+
   it("maps awd errors to plain data", async () => {
     const task = vi.fn(() =>
       Promise.reject(

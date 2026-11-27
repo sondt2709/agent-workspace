@@ -84,6 +84,21 @@ describe("@aw/host-orca", () => {
     for (const [file, schema] of pairs) {
       expect(() => parseReply(capturedReply(file), file, orcaReplies[schema])).not.toThrow();
     }
+    // orca 1.4.240 (the captures of inbox2agent): an unknown folder, and a folder that is no repo.
+    expect(() =>
+      parseReply(
+        capturedReply("selector-not-found.json", "orca-1.4.240"),
+        "terminal create",
+        orcaReplies.terminalCreate,
+      ),
+    ).toThrow(expect.objectContaining({ code: "selector_not_found" }));
+    expect(() =>
+      parseReply(
+        capturedReply("repo-add-not-git.json", "orca-1.4.240"),
+        "repo add",
+        orcaReplies.repoAdd,
+      ),
+    ).toThrow(/Not a valid git repository/);
     expect(() =>
       parseReply(capturedReply("terminal-show-stale.json"), "terminal show", orcaReplies.any),
     ).toThrow(expect.objectContaining({ code: "terminal_handle_stale", requestId: null }));
@@ -367,6 +382,55 @@ describe.skipIf(!tmux)("the Orca host with the fake Orca CLI", () => {
     const again = await host.worktree({ name: "aw-task-12", checkout, branch: "aw/AW-12" });
     expect(again.id).toBe(id);
     expect(await terminals(id)).toEqual([]);
+  });
+
+  it("opens a terminal in the main folder of a checkout that Orca does not know: adds it once", async () => {
+    const main = join(dir, "main-checkout");
+    await mkdir(main);
+    await execa("git", ["-C", main, "init", "-q", "-b", "main"]);
+    const program = await reader("pm");
+    const ref = await host.open({
+      name: "aw-task-main",
+      cwd: main,
+      command: program.command,
+      env: { AW_HOME: join(dir, "aw-home") },
+    });
+    expect(ref).toMatchObject({ host: "orca", pane: expect.stringMatching(/^term_/) as unknown });
+    await waitFor(() => existsSync(program.pids));
+    const saved = JSON.parse(await readFile(join(state, "state.json"), "utf8")) as {
+      repos: { path: string }[];
+      worktrees: unknown[];
+    };
+    const real = await execa("realpath", [main]);
+    expect(saved.repos.filter((r) => r.path === real.stdout)).toHaveLength(1);
+    // A second terminal finds the repo: no second repo entry, and no worktree for the main folder.
+    const again = await reader("pm2");
+    const second = await host.open({
+      name: "aw-task-main",
+      cwd: main,
+      command: again.command,
+      env: {},
+    });
+    const after = JSON.parse(await readFile(join(state, "state.json"), "utf8")) as {
+      repos: { path: string }[];
+      worktrees: unknown[];
+    };
+    expect(after.repos.filter((r) => r.path === real.stdout)).toHaveLength(1);
+    expect(after.worktrees).toEqual(saved.worktrees);
+    // The terminal list of the host shows only the aw- folders, never the main folder.
+    expect((await host.list()).some((p) => p.pane === ref.pane)).toBe(false);
+    await host.stop(ref, { graceMs: 500 });
+    await host.stop(second, { graceMs: 500 });
+    await host.forgetRepo(main);
+  });
+
+  it("fails with the Orca message when Orca cannot add the folder", async () => {
+    const plain = join(dir, "plain-folder");
+    await mkdir(plain);
+    const program = await reader("pp");
+    await expect(
+      host.open({ name: "aw-task-plain", cwd: plain, command: program.command, env: {} }),
+    ).rejects.toThrow(/Not a valid git repository/);
   });
 
   it("opens a terminal, sends one bracketed paste, and stops the whole process group", async () => {

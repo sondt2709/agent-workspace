@@ -52,9 +52,10 @@ data class NewTaskDraft(
     companion object {
         /**
          * The session options that New task starts with: "Skip permissions", the product default
-         * (openspec polish-skip-default). Only a person fills New task, so no agent task gets it.
+         * (openspec polish-skip-default), and "Agent teams" (openspec session-options). Only a person
+         * fills New task, so no agent task gets them.
          */
-        val START_OPTIONS = SessionOptionsDraft(permissionMode = SessionOptions.SKIP)
+        val START_OPTIONS = SessionOptionsDraft(permissionMode = SessionOptions.SKIP, agentTeams = true)
 
         /**
          * "Create task" of New task is enabled with a project, a first message that is not blank,
@@ -248,6 +249,17 @@ class PhoneActions(
                 return ActionResult.Refused("Write the assignee as agent@device, for example claude@ubuntu-01.")
             }
         return write(task) { path -> writer.write(path, "task.assigned", TaskAssignedV1.serializer(), data) }
+    }
+
+    /**
+     * "Restart agent" (openspec restart-agent): a person `task.assigned` with the same assignee. It has no
+     * `session_options` and no `session_host`, so the task keeps its options and its host choice.
+     */
+    suspend fun restartAgent(task: String): ActionResult {
+        val view = snapshot().task(task) ?: return ActionResult.Refused("The task is not on this phone.")
+        val assignee = view.assignee ?: return ActionResult.Refused("Assign the task first.")
+        if (!TaskActions.canRestart(view)) return ActionResult.Refused("A session of this task runs.")
+        return assign(task, assignee)
     }
 
     /**

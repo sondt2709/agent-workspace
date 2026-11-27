@@ -162,6 +162,21 @@ data class SessionOptionsView(
     @SerialName("work_in") val workIn: String,
     /** The absolute folder of `work_in: folder`, else null. */
     val folder: String?,
+    /** `work_in: checkout`: false keeps the branch of the checkout. */
+    @SerialName("switch_branch") val switchBranch: Boolean = true,
+)
+
+/**
+ * The last failed start of the session of a task (openspec restart-agent): the `start_failed`
+ * comment of awd. [retrying] is true after a newer person assignment ("Restart agent").
+ */
+@Serializable
+data class StartFailureView(
+    val device: String,
+    val text: String,
+    /** The HLC of the comment. */
+    val at: String,
+    val retrying: Boolean,
 )
 
 @Serializable
@@ -199,6 +214,8 @@ data class TaskView(
     @SerialName("created_by") val createdBy: String? = null,
     /** The session options of the newest event of a person that set them, or null. */
     @SerialName("session_options") val sessionOptions: SessionOptionsView? = null,
+    /** The last failed start, until a newer claim (openspec restart-agent). */
+    @SerialName("start_failure") val startFailure: StartFailureView? = null,
     val claim: ClaimView?,
     @SerialName("moving_to") val movingTo: String?,
     @SerialName("released_epoch") val releasedEpoch: Long?,

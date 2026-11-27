@@ -76,6 +76,24 @@ class SessionOptionsTest {
         }
 
     @Test
+    fun aCheckoutKeepsItsBranchOnlyWithSwitchBranchFalse() =
+        runTest {
+            assertEquals(true, SessionOptions.effective(task(), null).switchBranch)
+            val keep = task().copy(sessionOptions = options(workIn = "checkout").copy(switchBranch = false))
+            assertEquals(false, SessionOptions.effective(keep, null).switchBranch)
+            val fold = TaskFold(TASK)
+            val created = """"key":"AW-1","project":"billing-api","title":"T","first_message":"T""""
+            fold.apply(line(1, "task.created", "human@pixel-9", "{$created,$NO_SWITCH}"), NO_CONTEXT)
+            assertEquals(SessionOptionsView(null, false, "checkout", null, false), fold.toView().sessionOptions)
+            // An older event has no field: the session switches the branch.
+            fold.apply(
+                line(2, "task.assigned", "human@pixel-9", """{"assignee":"claude@ubuntu-01",$FOLDER}"""),
+                NO_CONTEXT,
+            )
+            assertEquals(true, fold.toView().sessionOptions?.switchBranch)
+        }
+
+    @Test
     fun theProjectViewGivesItsPermissionMode() =
         runTest {
             val view = runMergeCase("session-options").update.view
@@ -139,5 +157,16 @@ class SessionOptionsTest {
         const val CHECKOUT =
             """"session_options":{"permission_mode":"skip","agent_teams":true,"work_in":"checkout","folder":"/x"}"""
         const val FOLDER = """"session_options":{"work_in":"folder","folder":"/work/api"}"""
+        const val NO_SWITCH = """"session_options":{"work_in":"checkout","switch_branch":false}"""
+
+        val NO_CONTEXT =
+            object : TaskContext {
+                override fun project(slug: String): ProjectV1? = null
+
+                override fun ownerAt(
+                    task: String,
+                    key: OrderKey,
+                ): String? = null
+            }
     }
 }

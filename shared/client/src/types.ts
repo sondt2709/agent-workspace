@@ -239,6 +239,8 @@ export interface SessionOptionsInput {
   work_in?: "worktree" | "checkout" | "folder";
   /** The absolute folder on the session device, only with `work_in: folder`. */
   folder?: string | null;
+  /** With `work_in: checkout`: true (default) checks out `aw/<key>`; false keeps the branch. */
+  switch_branch?: boolean;
 }
 
 export interface EditTaskInput {

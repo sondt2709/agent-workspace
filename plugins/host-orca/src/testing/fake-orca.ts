@@ -112,15 +112,37 @@ function option(args: string[], name: string): string | undefined {
 }
 
 function selectWorktree(selector: string | undefined): Worktree {
-  const found = state.worktrees.find((w) =>
+  // The main folder of a known repo is a worktree too, as in Orca: id `<repo-id>::<path>`.
+  const mains: Worktree[] = state.repos.map((r) => ({
+    id: `${r.id}::${r.path}`,
+    repoId: r.id,
+    path: r.path,
+    branch: "main",
+    displayName: "main",
+  }));
+  const found = [...state.worktrees, ...mains].find((w) =>
     selector?.startsWith("id:")
       ? w.id === selector.slice(3)
       : selector?.startsWith("path:")
-        ? w.path === selector.slice(5)
+        ? w.path === selector.slice(5) || w.path === realPath(selector.slice(5))
         : false,
   );
-  if (!found) fail("worktree_not_found", "worktree_not_found");
+  // As orca 1.4.240 (fixtures/orca-1.4.240/selector-not-found.json).
+  if (!found) {
+    fail("selector_not_found", "selector_not_found", {
+      selector,
+      nextSteps: [`No Orca workspace matched the worktree selector "${selector ?? ""}".`],
+    });
+  }
   return found;
+}
+
+function realPath(path: string): string {
+  try {
+    return realpathSync(path);
+  } catch {
+    return path;
+  }
 }
 
 function worktreeRow(w: Worktree) {
@@ -260,6 +282,10 @@ switch (command) {
     break;
   case "repo add": {
     const path = realpathSync(option(argv, "--path") ?? "");
+    // As orca 1.4.240 (fixtures/orca-1.4.240/repo-add-not-git.json): the default kind is git.
+    if (git(["-C", path, "rev-parse", "--git-dir"]).code !== 0) {
+      fail("runtime_error", `Not a valid git repository: ${path}`);
+    }
     const repo: Repo = { id: randomUUID(), path, displayName: basename(path) };
     state.repos.push(repo);
     save(state);

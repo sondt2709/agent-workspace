@@ -309,6 +309,7 @@
         },
         "session_options": null,
         "stage": "implement",
+        "start_failure": null,
         "subtasks": [],
         "test_server": "billing-k3d",
         "title": "Fix the flaky invoice test"
@@ -367,6 +368,7 @@
         "session": null,
         "session_options": null,
         "stage": "backlog",
+        "start_failure": null,
         "subtasks": [],
         "test_server": null,
         "title": "Show the invoice total in the email"
@@ -426,6 +428,7 @@
         "session": null,
         "session_options": null,
         "stage": "backlog",
+        "start_failure": null,
         "subtasks": [],
         "test_server": null,
         "title": "Fix the refund rounding"
@@ -484,6 +487,7 @@
         "session": null,
         "session_options": null,
         "stage": "backlog",
+        "start_failure": null,
         "subtasks": [],
         "test_server": null,
         "title": "Add a test for the refund webhook"
@@ -542,6 +546,7 @@
         "session": null,
         "session_options": null,
         "stage": "backlog",
+        "start_failure": null,
         "subtasks": [],
         "test_server": null,
         "title": "Update the README of the billing API"

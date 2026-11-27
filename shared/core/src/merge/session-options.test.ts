@@ -6,6 +6,7 @@ const own = {
   agent_teams: true,
   work_in: "folder" as const,
   folder: "/work/api",
+  switch_branch: true,
 };
 
 describe("effectiveSessionOptions", () => {
@@ -21,6 +22,7 @@ describe("effectiveSessionOptions", () => {
       agent_teams: false,
       work_in: "worktree",
       folder: null,
+      switch_branch: true,
     });
   });
 
@@ -51,5 +53,13 @@ describe("effectiveSessionOptions", () => {
       created_by: "human@pixel-9",
     };
     expect(effectiveSessionOptions(task, null).folder).toBeNull();
+  });
+
+  it("keeps switch_branch false for a session in the checkout", () => {
+    const task = {
+      session_options: { ...own, work_in: "checkout" as const, switch_branch: false },
+      created_by: "human@pixel-9",
+    };
+    expect(effectiveSessionOptions(task, null).switch_branch).toBe(false);
   });
 });

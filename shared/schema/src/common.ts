@@ -124,6 +124,11 @@ export const sessionOptions = z.looseObject({
   agent_teams: z.boolean().default(false),
   work_in: workIn.default("worktree"),
   folder: absolutePath.nullable().default(null),
+  /**
+   * `work_in: checkout` only: true checks out `aw/<key>` in the checkout; false keeps the branch
+   * of the checkout, as `folder` does (openspec project-checkout-no-worktree).
+   */
+  switch_branch: z.boolean().default(true),
 });
 export type SessionOptions = z.infer<typeof sessionOptions>;
 

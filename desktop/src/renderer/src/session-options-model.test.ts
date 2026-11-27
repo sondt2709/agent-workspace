@@ -4,10 +4,14 @@ import {
   DEFAULT_FORM,
   formOf,
   formProblem,
+  NEW_TASK_FORM,
+  newSessionForm,
   nextOptions,
   optionsBody,
   shownOptions,
+  withWorktreeRule,
   worksInText,
+  worktreeBlocked,
 } from "./session-options-model.ts";
 import { makeTask } from "./testing.tsx";
 
@@ -21,7 +25,52 @@ describe("session options model", () => {
       agent_teams: false,
       work_in: "checkout",
       folder: null,
+      switch_branch: true,
     });
+    // "Switch to the task branch" off is not a default: the body has switch_branch false.
+    expect(
+      optionsBody({ ...DEFAULT_FORM, workIn: "checkout", switchBranch: false })?.switch_branch,
+    ).toBe(false);
+  });
+
+  it("preselects Agent teams in New task, and in New session of a task with no options", () => {
+    expect(NEW_TASK_FORM).toMatchObject({ mode: "skip", teams: true, switchBranch: true });
+    const plain = withOptions({});
+    expect(newSessionForm(plain).teams).toBe(true);
+    // The task has no teams: the preselected teams are a change, so New session sends them.
+    expect(changedOptionsBody(newSessionForm(plain), plain)).toMatchObject({ agent_teams: true });
+    const off = withOptions({
+      session_options: {
+        permission_mode: null,
+        agent_teams: false,
+        work_in: "worktree",
+        folder: null,
+      },
+    });
+    expect(newSessionForm(off).teams).toBe(false);
+  });
+
+  it("disables Separate worktree for a checkout with no commit on that device", () => {
+    const hosts = {
+      devices: [
+        {
+          device: "macbook-pro",
+          checkouts: [
+            { project: "my-notes", has_commit: false },
+            { project: "billing-api", has_commit: true },
+            { project: "docs", has_commit: null },
+          ],
+        },
+      ],
+    };
+    expect(worktreeBlocked(hosts, "macbook-pro", "my-notes")).toBe(true);
+    expect(worktreeBlocked(hosts, "macbook-pro", "billing-api")).toBe(false);
+    expect(worktreeBlocked(hosts, "macbook-pro", "docs")).toBe(false);
+    expect(worktreeBlocked(hosts, "ubuntu-01", "my-notes")).toBe(false);
+    expect(worktreeBlocked(undefined, "macbook-pro", "my-notes")).toBe(false);
+    expect(withWorktreeRule(DEFAULT_FORM, true).workIn).toBe("checkout");
+    expect(withWorktreeRule({ ...DEFAULT_FORM, workIn: "folder" }, true).workIn).toBe("folder");
+    expect(withWorktreeRule(DEFAULT_FORM, false).workIn).toBe("worktree");
   });
 
   it("checks the folder of Other folder", () => {
@@ -42,7 +91,13 @@ describe("session options model", () => {
       },
     });
     const form = formOf(task);
-    expect(form).toEqual({ mode: "skip", teams: true, workIn: "worktree", folder: "" });
+    expect(form).toEqual({
+      mode: "skip",
+      teams: true,
+      workIn: "worktree",
+      folder: "",
+      switchBranch: true,
+    });
     expect(changedOptionsBody(form, task)).toBeUndefined();
     // Back to the defaults: the full object replaces the options of the task.
     expect(changedOptionsBody(DEFAULT_FORM, task)).toEqual({
@@ -50,6 +105,7 @@ describe("session options model", () => {
       agent_teams: false,
       work_in: "worktree",
       folder: null,
+      switch_branch: true,
     });
   });
 

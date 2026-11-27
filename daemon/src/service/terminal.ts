@@ -98,9 +98,14 @@ export async function terminalView(
       }
     : null;
   const window = `aw-${task.id}`;
+  // A session in the project checkout runs in its main folder in Orca, not in an aw- worktree.
+  const orcaPlace =
+    task.session?.work_in === "checkout"
+      ? `the ${task.project ?? "project"} checkout in Orca`
+      : `the Orca worktree ${window}`;
   let note: string | null = null;
   if (session?.host === "orca") {
-    note = `AW does not read the screen of an Orca session. Open the Orca worktree ${window} on ${session.device}.`;
+    note = `AW does not read the screen of an Orca session. Open ${orcaPlace} on ${session.device}.`;
   } else if (!newest) {
     note =
       "No terminal snapshot yet. A tmux session writes one at most every 30 s when its screen changes, and at each gate.";
@@ -152,7 +157,7 @@ export async function terminalView(
         device,
         local: false,
         command: null,
-        text: `Open the Orca worktree ${window} on ${device}.`,
+        text: `Open ${orcaPlace} on ${device}.`,
       };
     } else {
       open = {

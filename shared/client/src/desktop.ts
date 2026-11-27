@@ -83,6 +83,12 @@ export const sessionHostsReply = z
           z.looseObject({
             project: z.string(),
             session_host: z.enum(["tmux", "orca"]).nullable(),
+            has_commit: z
+              .boolean()
+              .nullable()
+              .describe(
+                "From health.yaml of the device: false disables Separate worktree; null: not known",
+              ),
           }),
         ),
         orca: orcaState

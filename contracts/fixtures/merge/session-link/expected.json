@@ -290,6 +290,7 @@
         },
         "session_options": null,
         "stage": "implement",
+        "start_failure": null,
         "subtasks": [],
         "test_server": "billing-k3d",
         "title": "Fix the flaky invoice test"
@@ -366,6 +367,7 @@
         },
         "session_options": null,
         "stage": "backlog",
+        "start_failure": null,
         "subtasks": [],
         "test_server": null,
         "title": "Task AW-40"

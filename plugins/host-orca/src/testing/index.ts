@@ -7,10 +7,10 @@ import { fileURLToPath } from "node:url";
 /** The fake Orca CLI for `AW_ORCA` (src/testing/fake-orca.ts). */
 export const FAKE_ORCA = fileURLToPath(new URL("../../testing/bin/orca", import.meta.url));
 
-/** A captured reply of `orca-ide` 1.4.257 (fixtures/orca-1.4.257/<name>). */
-export function capturedReply(name: string): string {
+/** A captured reply of the Orca CLI (fixtures/<folder>/<name>, default orca-ide 1.4.257). */
+export function capturedReply(name: string, folder = "orca-1.4.257"): string {
   return readFileSync(
-    fileURLToPath(new URL(`../../fixtures/orca-1.4.257/${name}`, import.meta.url)),
+    fileURLToPath(new URL(`../../fixtures/${folder}/${name}`, import.meta.url)),
     "utf8",
   );
 }

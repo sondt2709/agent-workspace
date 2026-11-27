@@ -173,7 +173,11 @@ export const eventDataV1 = {
     to_session: uuidv7,
     kind: z.enum(["nudge"]).optional(),
   }),
-  "comment.added": z.looseObject({ text }),
+  /**
+   * `kind: start_failed`: the comment of awd when the session of the task did not start on its
+   * device (openspec restart-agent). The task view shows it as `start_failure`.
+   */
+  "comment.added": z.looseObject({ text, kind: z.enum(["start_failed"]).optional() }),
 
   // Gates (docs/workflow.md 3).
   "gate.opened": z.looseObject({

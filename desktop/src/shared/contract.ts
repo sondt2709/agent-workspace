@@ -56,6 +56,7 @@ const sessionOptions = z
       .refine((p) => p.startsWith("/"), "an absolute path")
       .nullable()
       .optional(),
+    switch_branch: z.boolean().optional(),
   })
   .strict();
 

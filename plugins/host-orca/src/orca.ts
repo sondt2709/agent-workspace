@@ -323,19 +323,31 @@ export class OrcaHost implements SessionHost {
     const command = terminalCommand(options.command, options.env);
     // The OS wall time, as the tmux host: stop() compares it with the start times from `ps`.
     const opened = this.#now();
-    const { terminal } = await this.#json(
-      [
-        "terminal",
-        "create",
-        "--worktree",
-        `path:${options.cwd}`,
-        "--title",
-        options.name,
-        "--command",
-        command,
-      ],
-      orcaReplies.terminalCreate,
-    );
+    const create = () =>
+      this.#json(
+        [
+          "terminal",
+          "create",
+          "--worktree",
+          `path:${options.cwd}`,
+          "--title",
+          options.name,
+          "--command",
+          command,
+        ],
+        orcaReplies.terminalCreate,
+      );
+    let reply: z.infer<typeof orcaReplies.terminalCreate>;
+    try {
+      reply = await create();
+    } catch (error) {
+      // A project checkout that Orca does not know yet: add it, then open the terminal in its main
+      // folder (openspec project-checkout-no-worktree, the pattern of the inbox2agent Orca driver).
+      if (!(error instanceof OrcaError) || error.code !== "selector_not_found") throw error;
+      await this.#json(["repo", "add", "--path", options.cwd], orcaReplies.repoAdd);
+      reply = await create();
+    }
+    const { terminal } = reply;
     return {
       host: this.name,
       window: terminal.worktreeId,

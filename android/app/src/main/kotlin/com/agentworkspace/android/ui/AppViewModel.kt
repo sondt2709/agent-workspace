@@ -325,6 +325,9 @@ class AppViewModel(
         options: SessionOptionsDraft?,
     ) = act("New session requested on $assignee", { it.actions.assign(task, assignee, options) })
 
+    /** Restart agent: the same assignee again, with the options of the task (openspec restart-agent). */
+    fun restartAgent(task: String) = act("Restart requested", { it.actions.restartAgent(task) })
+
     /** Stop session: the session device stops the running session (openspec session-options). */
     fun stopSession(task: String) = act("Stop requested", { it.actions.stopSession(task) })
 

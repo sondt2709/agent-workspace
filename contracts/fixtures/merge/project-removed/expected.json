@@ -358,6 +358,7 @@
         },
         "session_options": null,
         "stage": "implement",
+        "start_failure": null,
         "subtasks": [],
         "test_server": "billing-k3d",
         "title": "Fix the flaky invoice test"
@@ -416,6 +417,7 @@
         "session": null,
         "session_options": null,
         "stage": "backlog",
+        "start_failure": null,
         "subtasks": [],
         "test_server": null,
         "title": "Created on ubuntu-01 before the remove"
@@ -474,6 +476,7 @@
         "session": null,
         "session_options": null,
         "stage": "backlog",
+        "start_failure": null,
         "subtasks": [],
         "test_server": null,
         "title": "Web app task before the remove"
@@ -532,6 +535,7 @@
         "session": null,
         "session_options": null,
         "stage": "backlog",
+        "start_failure": null,
         "subtasks": [],
         "test_server": null,
         "title": "Web app task created after the remove on ubuntu-01"
@@ -593,6 +597,7 @@
         "session": null,
         "session_options": null,
         "stage": "backlog",
+        "start_failure": null,
         "subtasks": [],
         "test_server": null,
         "title": "Created on pixel-9 after the remove, before the add"
@@ -651,6 +656,7 @@
         "session": null,
         "session_options": null,
         "stage": "backlog",
+        "start_failure": null,
         "subtasks": [],
         "test_server": null,
         "title": "Created after the add again"
@@ -709,6 +715,7 @@
         "session": null,
         "session_options": null,
         "stage": "backlog",
+        "start_failure": null,
         "subtasks": [],
         "test_server": null,
         "title": "Docs task"
