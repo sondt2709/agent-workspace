@@ -744,6 +744,8 @@ class MergeEngine(
             devices = devices,
             queues = workspace.queues,
             slots = workspace.slots,
+            sources = workspace.sources,
+            cards = workspace.cards,
             issues = issues(now),
             lastHlc = lastHlc,
         )

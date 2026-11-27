@@ -33,6 +33,11 @@
 //   exit                        ends the session
 //   stop-failure <error>        ends the turn with a StopFailure hook (for example rate_limit)
 //   statusline <json>           runs the statusLine command of the --settings file with this JSON
+//   [AW triage batch <id>]      the triage session (openspec inbox-mattermost): calls inbox_batch,
+//                               then card_add or card_update for each thread (a text with "can you",
+//                               "please" or "fix" is an action, a "?" a question, else info; "today"
+//                               or "urgent" is high urgency), then inbox_done
+//   [AW inbox ask <id> card <card>] <text>  calls inbox_answer with "Got: <text>"
 //   any other text              ends the turn with "Got: <text>."
 //
 // Permission modes as in Claude Code (spike session-options): `bypassPermissions` asks no
@@ -72,6 +77,10 @@ interface Args {
   resume: string | null;
   name: string | null;
   pluginDir: string | null;
+  /** `--mcp-config`: with `--strict-mcp-config` the only MCP servers (a session of untrusted input). */
+  mcpConfig: string | null;
+  /** `--add-dir`: Claude Code 2.1.332 asks the person to trust each folder before the session. */
+  addDirs: string[];
   permissionMode: string;
   allowedTools: string[];
   message: string | null;
@@ -84,6 +93,8 @@ function parseArgs(argv: string[]): Args {
     resume: null,
     name: null,
     pluginDir: null,
+    mcpConfig: null,
+    addDirs: [],
     permissionMode: "default",
     allowedTools: [],
     message: null,
@@ -98,6 +109,10 @@ function parseArgs(argv: string[]): Args {
     else if (arg === "--resume" || arg === "-r") args.resume = next();
     else if (arg === "-n" || arg === "--name") args.name = next();
     else if (arg === "--plugin-dir") args.pluginDir = next();
+    else if (arg === "--mcp-config") args.mcpConfig = next();
+    // The flags of a session of untrusted input: the fake agent needs no more than their values.
+    else if (arg === "--setting-sources" || arg === "--tools") next();
+    else if (arg === "--add-dir") args.addDirs.push(next());
     else if (arg === "--permission-mode") args.permissionMode = next();
     else if (arg === "--allowedTools" || arg === "--allowed-tools") {
       while (i + 1 < argv.length && !argv[i + 1]!.startsWith("-")) args.allowedTools.push(next());
@@ -124,6 +139,19 @@ if (process.argv[2] === "auth" && process.argv[3] === "status") {
   process.exit(env.FAKE_CLAUDE_LOGGED_OUT === "1" ? 1 : 0);
 }
 const args = parseArgs(process.argv.slice(2));
+/**
+ * The name prefix of the AW MCP tools: Claude Code names the tools of a server of `--mcp-config`
+ * `mcp__<server>__`, and the tools of a plugin server `mcp__plugin_<plugin>_<server>__`.
+ */
+const AW_TOOLS = args.mcpConfig ? "mcp__aw__" : "mcp__plugin_aw_aw__";
+if (args.addDirs.length > 0) {
+  // As Claude Code: an added folder that the session has not used asks for trust, and the session
+  // waits for a person (captured from Claude Code 2.1.332 on 2026-11-28).
+  process.stdout.write(
+    `\n Adding a new directory:\n ${args.addDirs[0]}\n This session hasn't worked here before. Is this a directory you created or one you trust?\n ❯ No, exit\n   Yes, add it\n`,
+  );
+  await new Promise(() => undefined);
+}
 const home = env.HOME ?? "/";
 const configDir = env.CLAUDE_CONFIG_DIR || join(home, ".claude");
 const stateFile = join(env.CLAUDE_CONFIG_DIR || home, ".claude.json");
@@ -417,6 +445,12 @@ async function tool(
     out(`  ⎿  Error: ${ruleDeny}\n`);
     return { ok: false, text: ruleDeny };
   }
+  if (!allowedByRule(name, input) && args.permissionMode === "dontAsk") {
+    // dontAsk: a tool that no rule allows is refused at once, with no prompt.
+    const message = `Permission to use ${name} has been denied.`;
+    out(`  ⎿  Error: ${message}\n`);
+    return { ok: false, text: message };
+  }
   if (!allowedByRule(name, input)) {
     const decision = await permission(name, input);
     if (!decision.allow) {
@@ -478,7 +512,9 @@ function expand(value: string): string {
 
 /** Calls a tool of the server `aw` of the plugin `.mcp.json` (the MCP config of Claude Code). */
 async function mcpCall(name: string, input: Record<string, unknown>): Promise<string> {
-  const config = JSON.parse(readFileSync(join(args.pluginDir ?? "", ".mcp.json"), "utf8")) as {
+  // As Claude Code: the servers of `--mcp-config`, else the `.mcp.json` of the plugin.
+  const file = args.mcpConfig ?? join(args.pluginDir ?? "", ".mcp.json");
+  const config = JSON.parse(readFileSync(file, "utf8")) as {
     mcpServers: Record<string, { url: string; headers?: Record<string, string> }>;
   };
   const server = config.mcpServers.aw!;
@@ -500,10 +536,80 @@ async function mcpCall(name: string, input: Record<string, unknown>): Promise<st
   }
 }
 
+interface TriageThread {
+  conversation: { id: string };
+  thread: string | null;
+  card: { card: string } | null;
+  messages: { id: string; author: string; text: string }[];
+}
+
+/** The fake triage of a batch: one card for each thread with a simple rule (no model). */
+async function triageBatch(batch: string): Promise<void> {
+  const read = await tool(`${AW_TOOLS}inbox_batch`, {}, () => mcpCall("inbox_batch", {}));
+  const json = read.ok ? read.text.replace(/^MCP result /, "") : "";
+  let threads: TriageThread[];
+  try {
+    threads = (JSON.parse(json) as { threads: TriageThread[] }).threads;
+  } catch {
+    await stop(`The batch did not read: ${read.text.slice(0, 300)}`);
+    return;
+  }
+  for (const thread of threads) {
+    const ids = thread.messages.map((m) => m.id);
+    const all = thread.messages.map((m) => m.text).join("\n");
+    if (thread.card) {
+      await tool(`${AW_TOOLS}card_update`, {}, () =>
+        mcpCall("card_update", { card: thread.card!.card, messages: ids }),
+      );
+      continue;
+    }
+    const category = /can you|please|fix/i.test(all)
+      ? "action"
+      : all.includes("?")
+        ? "question"
+        : "info";
+    const first = thread.messages[0]!;
+    const title = first.text.split("\n")[0]!.slice(0, 80) || "Message";
+    const quoted = thread.messages.map((m) => `> ${m.author}: ${m.text}`).join("\n");
+    await tool(`${AW_TOOLS}card_add`, {}, () =>
+      mcpCall("card_add", {
+        conversation: thread.conversation.id,
+        thread: thread.thread,
+        messages: ids,
+        category,
+        urgency: /today|urgent|waits/i.test(all) ? "high" : "normal",
+        title,
+        summary: `${thread.messages.length} messages from ${first.author}.`,
+        ...(category === "action"
+          ? {
+              task: { title: `Do: ${title}`.slice(0, 120), first_message: `${title}\n\n${quoted}` },
+            }
+          : {}),
+        ...(category === "question" ? { answer: { text: `Got: ${title}`, from: null } } : {}),
+      }),
+    );
+  }
+  const done = await tool(`${AW_TOOLS}inbox_done`, {}, () => mcpCall("inbox_done", { batch }));
+  await stop(`Sorted ${threads.length} threads. ${done.text.slice(0, 200)}`);
+}
+
 async function turn(text: string): Promise<boolean> {
   out(`❯ ${text}\n`);
   record("user", { message: { role: "user", content: text } });
   await hook("UserPromptSubmit", { prompt: text, prompt_id: randomUUID() });
+  const batch = /^\[AW triage batch (\S+)\]/.exec(text);
+  if (batch) {
+    await triageBatch(batch[1]!);
+    return true;
+  }
+  const inboxAsk = /^\[AW inbox ask (\S+)(?: card \S+)?\] ([\s\S]*)$/.exec(text);
+  if (inboxAsk) {
+    const result = await tool(`${AW_TOOLS}inbox_answer`, {}, () =>
+      mcpCall("inbox_answer", { ask: inboxAsk[1], text: `Got: ${inboxAsk[2]!.trim()}` }),
+    );
+    await stop(result.text.slice(0, 300));
+    return true;
+  }
   const body = text.replace(/^\[AW [^\]]*\]\s*/, "");
   const firstLine = body.split("\n")[0]!.trim();
   const space = firstLine.indexOf(" ");

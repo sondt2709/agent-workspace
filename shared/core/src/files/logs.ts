@@ -77,7 +77,7 @@ export interface LogScope {
   task?: string;
 }
 
-const WORKSPACE_PREFIXES = ["slot.", "queue.", "credential.", "project."];
+const WORKSPACE_PREFIXES = ["slot.", "queue.", "credential.", "project.", "source.", "inbox."];
 
 /** True when an event type belongs in a log of this kind. */
 export function logAccepts(kind: LogKind, type: string): boolean {

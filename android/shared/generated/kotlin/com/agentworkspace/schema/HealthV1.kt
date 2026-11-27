@@ -15,6 +15,8 @@ private val PATTERN_2 = Regex("^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d
 private val PATTERN_3 = Regex("^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})\\z")
 private val VALUES_4 = setOf("running", "gate", "paused", "ended")
 private val VALUES_5 = setOf("lan", "tailscale", "relay", "unknown")
+private val PATTERN_6 = Regex("^[a-z0-9]+(?:[-_.][a-z0-9]+)*\\z")
+private val VALUES_7 = setOf("running", "waiting", "paused", "stopped")
 
 /** AW health.yaml. */
 @Serializable
@@ -32,6 +34,7 @@ data class HealthV1(
     @AwOptional @EncodeDefault(EncodeDefault.Mode.NEVER) @SerialName("queue") val queue: Queue? = null,
     @SerialName("sync") val sync: List<SyncItem> = emptyList(),
     @SerialName("repairs") val repairs: List<RepairsItem> = emptyList(),
+    @AwOptional @EncodeDefault(EncodeDefault.Mode.NEVER) @SerialName("inbox") val inbox: Inbox? = null,
 ) {
     init {
         AwChecks.equal(kind, "health", "kind")
@@ -171,6 +174,33 @@ data class HealthV1(
         init {
             AwChecks.pattern(at, PATTERN_2, "at")
             AwChecks.minLength(path, 1, "path")
+        }
+    }
+
+    @Serializable
+    data class Inbox(
+        @SerialName("source") val source: String,
+        @SerialName("last_read_at") val lastReadAt: String? = null,
+        @SerialName("last_batch_at") val lastBatchAt: String? = null,
+        @SerialName("waiting") val waiting: Long = 0L,
+        @SerialName("triage") val triage: String,
+        @SerialName("error") val error: String? = null,
+    ) {
+        init {
+            AwChecks.pattern(source, PATTERN_6, "source")
+            AwChecks.maxLength(source, 63, "source")
+            if (lastReadAt != null) {
+                AwChecks.pattern(lastReadAt, PATTERN_2, "last_read_at")
+            }
+            if (lastBatchAt != null) {
+                AwChecks.pattern(lastBatchAt, PATTERN_2, "last_batch_at")
+            }
+            AwChecks.atLeast(waiting, 0L, "waiting")
+            AwChecks.atMost(waiting, 9007199254740991L, "waiting")
+            AwChecks.oneOf(triage, VALUES_7, "triage")
+            if (error != null) {
+                AwChecks.maxLength(error, 2000, "error")
+            }
         }
     }
 }

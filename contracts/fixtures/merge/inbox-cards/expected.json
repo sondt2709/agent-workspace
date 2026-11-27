@@ -1,0 +1,603 @@
+{
+  "presence": {
+    "devices": [
+      {
+        "device": "macbook-pro",
+        "last_heartbeat_hlc": "2026-11-22T14:21:00.000Z#0000",
+        "offline_since": "2026-11-22T14:22:30.000Z",
+        "online": false,
+        "received_at": "2026-11-22T14:21:00.000Z"
+      },
+      {
+        "device": "pixel-9",
+        "last_heartbeat_hlc": "2026-11-22T14:21:00.000Z#0000",
+        "offline_since": "2026-11-22T14:22:30.000Z",
+        "online": false,
+        "received_at": "2026-11-22T14:21:00.000Z"
+      },
+      {
+        "device": "ubuntu-01",
+        "last_heartbeat_hlc": "2026-11-22T14:21:00.000Z#0000",
+        "offline_since": "2026-11-22T14:22:30.000Z",
+        "online": false,
+        "received_at": "2026-11-22T14:21:00.000Z"
+      }
+    ],
+    "now": "2026-11-27T12:00:00.000Z",
+    "offline_tasks": [
+      {
+        "cause": "device_offline",
+        "device": "ubuntu-01",
+        "since": "2026-11-22T14:22:30.000Z",
+        "task": "01a2038e-7f00-70eb-b429-fa86d481c263"
+      }
+    ]
+  },
+  "view": {
+    "cards": [
+      {
+        "added": {
+          "dev": "ubuntu-01",
+          "event": "01a20400-0000-7000-8000-000000000004",
+          "hlc": "2026-11-27T10:05:00.000Z#0000"
+        },
+        "answer": {
+          "from": "rate-limits.md",
+          "text": "Yes, 600 per minute."
+        },
+        "card": "01a20400-0000-7000-8000-000000000901",
+        "category": "question",
+        "chat": [
+          {
+            "answered": true,
+            "by": "human@pixel-9",
+            "dev": "pixel-9",
+            "event": "01a20400-0000-7000-8000-000000000010",
+            "hlc": "2026-11-27T10:31:00.000Z#0000",
+            "id": "01a20400-0000-7000-8000-000000000951",
+            "kind": "ask",
+            "text": "Check the partner limit in the knowledge."
+          },
+          {
+            "by": "aw@ubuntu-01",
+            "dev": "ubuntu-01",
+            "event": "01a20400-0000-7000-8000-000000000016",
+            "hlc": "2026-11-27T10:31:30.000Z#0000",
+            "id": "01a20400-0000-7000-8000-000000000951",
+            "kind": "answer",
+            "text": "rate-limits.md: partner tier 600 per minute."
+          }
+        ],
+        "conversation": {
+          "id": "dm-lan",
+          "kind": "direct",
+          "name": "@lan.pham"
+        },
+        "done": false,
+        "last_message_at": "2026-11-27T10:59:00.000Z",
+        "messages": [
+          {
+            "at": "2026-11-27T10:03:00.000Z",
+            "author": "Lan Pham",
+            "id": "p1",
+            "quote": null,
+            "text": "Can partner keys get a higher limit?",
+            "url": null
+          },
+          {
+            "at": "2026-11-27T10:04:00.000Z",
+            "author": "Lan Pham",
+            "id": "p2",
+            "quote": null,
+            "text": "Acme expects 400 per minute.",
+            "url": null
+          },
+          {
+            "at": "2026-11-27T10:59:00.000Z",
+            "author": "Lan Pham",
+            "id": "p21",
+            "quote": null,
+            "text": "Can we test it on staging first?",
+            "url": null
+          }
+        ],
+        "project": null,
+        "read": false,
+        "replies": [
+          {
+            "by": "human@pixel-9",
+            "error": null,
+            "in_thread": true,
+            "post": "p20",
+            "reply": "01a20400-0000-7000-8000-000000000952",
+            "requested": {
+              "dev": "pixel-9",
+              "event": "01a20400-0000-7000-8000-000000000011",
+              "hlc": "2026-11-27T10:32:00.000Z#0000"
+            },
+            "result_hlc": "2026-11-27T10:32:30.000Z#0000",
+            "state": "sent",
+            "text": "Yes, 600 per minute.",
+            "url": "https://chat.example.com/team/pl/p20"
+          }
+        ],
+        "source": "mattermost",
+        "summary": "Lan asks for a higher limit.",
+        "task": null,
+        "tasks": [],
+        "thread": "p1",
+        "title": "Can partner keys get a higher rate limit?",
+        "updated_hlc": "2026-11-27T11:00:00.000Z#0000",
+        "urgency": "normal"
+      },
+      {
+        "added": {
+          "dev": "ubuntu-01",
+          "event": "01a20400-0000-7000-8000-000000000006",
+          "hlc": "2026-11-27T10:06:30.000Z#0000"
+        },
+        "answer": null,
+        "card": "01a20400-0000-7000-8000-000000000903",
+        "category": "action",
+        "chat": [],
+        "conversation": {
+          "id": "ch-billing",
+          "kind": "channel",
+          "name": "~billing"
+        },
+        "done": false,
+        "last_message_at": "2026-11-27T10:06:10.000Z",
+        "messages": [
+          {
+            "at": "2026-11-27T10:06:10.000Z",
+            "author": "Sam Lee",
+            "id": "p6",
+            "quote": null,
+            "text": "From Monday each PR needs 2 approvals.",
+            "url": null
+          }
+        ],
+        "project": "billing-api",
+        "read": true,
+        "replies": [],
+        "source": "mattermost",
+        "summary": "",
+        "task": {
+          "first_message": "Two approvals for each PR\n\nSource: ~billing\n> Sam Lee (2026-11-27 10:06): From Monday each PR needs 2 approvals.",
+          "project": "billing-api",
+          "title": "Two approvals for each PR"
+        },
+        "tasks": [],
+        "thread": null,
+        "title": "Two approvals for each PR",
+        "updated_hlc": "2026-11-27T11:00:20.000Z#0000",
+        "urgency": "high"
+      },
+      {
+        "added": {
+          "dev": "ubuntu-01",
+          "event": "01a20400-0000-7000-8000-000000000005",
+          "hlc": "2026-11-27T10:06:00.000Z#0000"
+        },
+        "answer": null,
+        "card": "01a20400-0000-7000-8000-000000000902",
+        "category": "action",
+        "chat": [
+          {
+            "by": "human@pixel-9",
+            "dev": "pixel-9",
+            "event": "01a20400-0000-7000-8000-000000000014",
+            "hlc": "2026-11-27T10:35:00.000Z#0000",
+            "id": "01a20400-0000-7000-8000-000000000953",
+            "kind": "task",
+            "text": ""
+          }
+        ],
+        "conversation": {
+          "id": "ch-billing",
+          "kind": "channel",
+          "name": "~billing"
+        },
+        "done": false,
+        "last_message_at": "2026-11-27T10:05:30.000Z",
+        "messages": [
+          {
+            "at": "2026-11-27T10:05:30.000Z",
+            "author": "Minh Tran",
+            "id": "p5",
+            "quote": null,
+            "text": "Export CSV gives a 500",
+            "url": null
+          }
+        ],
+        "project": "billing-api",
+        "read": false,
+        "replies": [],
+        "source": "mattermost",
+        "summary": "Old invoices have no currency.",
+        "task": {
+          "first_message": "Fix the error 500.",
+          "project": "billing-api",
+          "title": "Fix the CSV export"
+        },
+        "tasks": ["01a20400-0000-7000-8000-000000000953"],
+        "thread": "p5",
+        "title": "Invoice CSV export fails with error 500",
+        "updated_hlc": "2026-11-27T11:00:10.000Z#0000",
+        "urgency": "normal"
+      }
+    ],
+    "credentials": [],
+    "devices": [
+      {
+        "health": {
+          "boot_time": "2026-11-22T08:00:00.000Z",
+          "disk_used_percentage": 61,
+          "updated": "2026-11-22T14:21:00.000Z#0000"
+        },
+        "heartbeat": {
+          "boot_time": "2026-11-22T08:00:00.000Z",
+          "count": 3,
+          "last_hlc": "2026-11-22T14:21:00.000Z#0000"
+        },
+        "may_run": true,
+        "name": "MacBook Pro",
+        "priority": 0,
+        "resources": {},
+        "revoked": false,
+        "role": "local",
+        "slug": "macbook-pro"
+      },
+      {
+        "health": {
+          "boot_time": "2026-11-19T03:12:00.000Z",
+          "disk_used_percentage": 48,
+          "updated": "2026-11-22T14:21:00.000Z#0000"
+        },
+        "heartbeat": {
+          "boot_time": "2026-11-19T03:12:00.000Z",
+          "count": 3,
+          "last_hlc": "2026-11-22T14:21:00.000Z#0000"
+        },
+        "may_run": true,
+        "name": "ubuntu-01",
+        "priority": 1,
+        "resources": {
+          "k3d": 1
+        },
+        "revoked": false,
+        "role": "remote",
+        "slug": "ubuntu-01"
+      },
+      {
+        "health": {
+          "boot_time": "2026-11-21T22:40:00.000Z",
+          "disk_used_percentage": 72,
+          "updated": "2026-11-22T14:21:00.000Z#0000"
+        },
+        "heartbeat": {
+          "boot_time": "2026-11-21T22:40:00.000Z",
+          "count": 3,
+          "last_hlc": "2026-11-22T14:21:00.000Z#0000"
+        },
+        "may_run": false,
+        "name": "Pixel 9",
+        "priority": 2,
+        "resources": {},
+        "revoked": false,
+        "role": "mobile",
+        "slug": "pixel-9"
+      }
+    ],
+    "issues": [
+      {
+        "code": "ignored",
+        "event": "01a20400-0000-7000-8000-000000000003",
+        "line": 3,
+        "message": "inbox.run_requested of macbook-pro not applied: unknown_source",
+        "path": "tasks/log/macbook-pro.jsonl",
+        "reason": "unknown_source",
+        "task": null
+      },
+      {
+        "code": "ignored",
+        "event": "01a20400-0000-7000-8000-000000000106",
+        "line": 5,
+        "message": "inbox.card_updated of macbook-pro not applied: not_collector",
+        "path": "tasks/log/macbook-pro.jsonl",
+        "reason": "not_collector",
+        "task": null
+      },
+      {
+        "code": "ignored",
+        "event": "01a20400-0000-7000-8000-000000000008",
+        "line": 1,
+        "message": "inbox.card_added of pixel-9 not applied: not_agent",
+        "path": "tasks/log/pixel-9.jsonl",
+        "reason": "not_agent",
+        "task": null
+      },
+      {
+        "code": "ignored",
+        "event": "01a20400-0000-7000-8000-000000000015",
+        "line": 9,
+        "message": "inbox.card_set of pixel-9 not applied: unknown_card",
+        "path": "tasks/log/pixel-9.jsonl",
+        "reason": "unknown_card",
+        "task": null
+      },
+      {
+        "code": "ignored",
+        "event": "01a20400-0000-7000-8000-000000000007",
+        "line": 4,
+        "message": "inbox.card_added of ubuntu-01 not applied: duplicate_card",
+        "path": "tasks/log/ubuntu-01.jsonl",
+        "reason": "duplicate_card",
+        "task": null
+      },
+      {
+        "code": "ignored",
+        "event": "01a20400-0000-7000-8000-000000000017",
+        "line": 6,
+        "message": "inbox.answer of ubuntu-01 not applied: unknown_ask",
+        "path": "tasks/log/ubuntu-01.jsonl",
+        "reason": "unknown_ask",
+        "task": null
+      },
+      {
+        "code": "ignored",
+        "event": "01a20400-0000-7000-8000-000000000019",
+        "line": 8,
+        "message": "inbox.reply_result of ubuntu-01 not applied: already_sent",
+        "path": "tasks/log/ubuntu-01.jsonl",
+        "reason": "already_sent",
+        "task": null
+      },
+      {
+        "code": "ignored",
+        "event": "01a20400-0000-7000-8000-000000000020",
+        "line": 9,
+        "message": "inbox.card_set of ubuntu-01 not applied: not_human",
+        "path": "tasks/log/ubuntu-01.jsonl",
+        "reason": "not_human",
+        "task": null
+      }
+    ],
+    "last_hlc": "2026-11-27T11:00:20.000Z#0000",
+    "projects": [
+      {
+        "added_at": null,
+        "archived": false,
+        "default_agent": "claude",
+        "devices": ["ubuntu-01", "macbook-pro"],
+        "kind": "project",
+        "links": ["github:example/billing-api"],
+        "main_repo": null,
+        "name": "Billing API",
+        "permission_mode": "skip",
+        "schema": 1,
+        "slug": "billing-api",
+        "switches": {
+          "assign_new_subtasks_to_default_device": false
+        },
+        "tasks": ["01a2038e-7f00-70eb-b429-fa86d481c263"],
+        "test_servers": ["billing-k3d"]
+      }
+    ],
+    "queues": [],
+    "removed_projects": [],
+    "removed_tasks": [],
+    "slots": [],
+    "sources": [
+      {
+        "collector": "ubuntu-01",
+        "configured": {
+          "dev": "macbook-pro",
+          "event": "01a20400-0000-7000-8000-000000000001",
+          "hlc": "2026-11-27T10:00:00.000Z#0000"
+        },
+        "conversations": [
+          {
+            "id": "ch-billing",
+            "kind": "channel",
+            "name": "~billing",
+            "project": "billing-api",
+            "read": "all"
+          },
+          {
+            "id": "dm-lan",
+            "kind": "direct",
+            "name": "@lan.pham",
+            "project": null,
+            "read": "all"
+          }
+        ],
+        "credential": "mattermost-alex",
+        "default_read": "mentions",
+        "kind": "mattermost",
+        "name": "Mattermost",
+        "read_every_s": 60,
+        "removed": false,
+        "run_requested": {
+          "dev": "macbook-pro",
+          "event": "01a20400-0000-7000-8000-000000000002",
+          "hlc": "2026-11-27T10:00:30.000Z#0000"
+        },
+        "server_url": "https://chat.example.com",
+        "source": "mattermost",
+        "triage": {
+          "days": [1, 2, 3, 4, 5],
+          "every_min": 15,
+          "from": "08:00",
+          "instruction": "",
+          "model": "haiku",
+          "paused": false,
+          "to": "20:00"
+        },
+        "username": "alex"
+      }
+    ],
+    "tasks": [
+      {
+        "archived": false,
+        "artifacts": [],
+        "assignee": "claude@ubuntu-01",
+        "branch": "aw/AW-7",
+        "claim": {
+          "device": "ubuntu-01",
+          "epoch": 1,
+          "event": "01a20390-53c0-7d86-9882-e3491cbd3235",
+          "session": "01a20390-53c0-73f3-af1e-cebbd1410ab4"
+        },
+        "comments": [
+          {
+            "by": "human@pixel-9",
+            "dev": "pixel-9",
+            "event": "01a203a2-a340-7844-9cfa-16e686340e68",
+            "gate": null,
+            "hlc": "2026-11-22T14:22:00.000Z#0000",
+            "source": "comment",
+            "text": "Also check the refund test, please."
+          }
+        ],
+        "created": {
+          "dev": "macbook-pro",
+          "event": "01a2038e-7f00-7ce5-a904-0a1e60c3ed48",
+          "hlc": "2026-11-22T14:00:00.000Z#0000"
+        },
+        "created_by": "human@macbook-pro",
+        "created_key": "AW-7",
+        "credentials": ["stripe-test"],
+        "depends_on": [],
+        "event_count": 20,
+        "first_message": "/opsx:explore The invoice test fails 1 time in 5 on CI.",
+        "gates": [
+          {
+            "answer": "Fake clock in the test",
+            "answer_event": "01a20394-7270-7675-90a8-c5dd35e24e72",
+            "answers": [
+              {
+                "answer": "Fake clock in the test",
+                "by": "human@pixel-9",
+                "comment": null,
+                "dev": "pixel-9",
+                "event": "01a20394-7270-7675-90a8-c5dd35e24e72",
+                "hlc": "2026-11-22T14:06:30.000Z#0000",
+                "use": "used",
+                "version": 1
+              }
+            ],
+            "file": null,
+            "gate": "01a20393-12e0-78a6-a158-03674c770697",
+            "kind": "question",
+            "opened": {
+              "dev": "ubuntu-01",
+              "event": "01a20393-12e0-788f-8b89-62da8cc4ab87",
+              "hlc": "2026-11-22T14:05:00.000Z#0000"
+            },
+            "options": ["Fake clock in the test", "Retry the test"],
+            "resolved_by": "ubuntu-01",
+            "state": "resolved",
+            "title": "Which fix?",
+            "version": 1
+          },
+          {
+            "answer": "Approve",
+            "answer_event": "01a20399-7b80-73e6-b93e-974147ddfe38",
+            "answers": [
+              {
+                "answer": "Approve",
+                "by": "human@macbook-pro",
+                "comment": null,
+                "dev": "macbook-pro",
+                "event": "01a20399-7b80-73e6-b93e-974147ddfe38",
+                "hlc": "2026-11-22T14:12:00.000Z#0000",
+                "use": "used",
+                "version": 1
+              }
+            ],
+            "file": "proposal/v1.md",
+            "gate": "01a20397-a6c0-7e6c-bb4d-77006b2cc4c0",
+            "kind": "approve_proposal",
+            "opened": {
+              "dev": "ubuntu-01",
+              "event": "01a20397-a6c0-77fa-97ab-af0d3aeaca24",
+              "hlc": "2026-11-22T14:10:00.000Z#0001"
+            },
+            "options": ["Approve"],
+            "resolved_by": "ubuntu-01",
+            "state": "resolved",
+            "title": "Proposal v1",
+            "version": 1
+          }
+        ],
+        "id": "01a2038e-7f00-70eb-b429-fa86d481c263",
+        "includes": {
+          "macbook-pro": 2,
+          "pixel-9": 3,
+          "ubuntu-01": 15
+        },
+        "key": "AW-7",
+        "key_state": "ok",
+        "last_hlc": "2026-11-22T14:22:00.000Z#0000",
+        "learned": false,
+        "links": ["github:example/billing-api#412"],
+        "moving_to": null,
+        "needs_you": [],
+        "needs_you_lane": false,
+        "needs_you_reasons": [],
+        "open_dependencies": [],
+        "owner": "ubuntu-01",
+        "parent": null,
+        "paused": null,
+        "priority": null,
+        "progress": "Run the tests",
+        "project": "billing-api",
+        "proposal": {
+          "approved": 1,
+          "latest": 1
+        },
+        "ready": {
+          "missing": [],
+          "passed_on": "ubuntu-01"
+        },
+        "rekey_by": null,
+        "released_epoch": null,
+        "result": null,
+        "session": {
+          "agent_teams": null,
+          "branch": "aw/AW-7",
+          "cwd": "~/code/billing-api/.worktrees/aw-01a2038e-7f00-70eb-b429-fa86d481c263",
+          "device": "ubuntu-01",
+          "host": "tmux",
+          "name": null,
+          "permission_mode": null,
+          "pid": 41250,
+          "reason": null,
+          "session": "01a20390-53c0-73f3-af1e-cebbd1410ab4",
+          "state": "running",
+          "terminal": null,
+          "work_in": null
+        },
+        "session_options": null,
+        "stage": "implement",
+        "start_failure": null,
+        "subtasks": [],
+        "test_server": "billing-k3d",
+        "title": "Fix the flaky invoice test"
+      }
+    ],
+    "workspace": {
+      "device_order": ["macbook-pro", "ubuntu-01", "pixel-9"],
+      "id": "01a2038e-7f00-721a-b230-e03772a58aff",
+      "key_prefix": "AW",
+      "kind": "workspace",
+      "name": "Example workspace",
+      "new_project_permission_mode": "skip",
+      "schema": 1,
+      "switches": {
+        "community_relays": true
+      }
+    }
+  }
+}

@@ -2,7 +2,7 @@ import { cleanup, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 import { installBridge, makeTask, renderApp, stubWindowWidth } from "../testing.tsx";
-import { Board, ProjectTasks, TaskList } from "./TaskViews.tsx";
+import { Board, TaskList, TaskScreen } from "./TaskViews.tsx";
 
 let restore: (() => void) | null = null;
 afterEach(() => {
@@ -129,7 +129,7 @@ describe("TaskList", () => {
       tasks: () => tasks,
       task: (a: { task: string }) => tasks.find((t) => t.id === a.task),
     });
-    const { router } = renderApp(<ProjectTasks view="list" />, {
+    const { router } = renderApp(<TaskScreen view="list" projects={["billing-api"]} />, {
       route: "/w/:ws/p/:project/list",
       url: "/w/ws-1/p/billing-api/list",
     });
@@ -146,7 +146,7 @@ describe("TaskList", () => {
   it("opens the task page for an old link with ?task=", async () => {
     restore = stubWindowWidth(1440);
     installBridge({ tasks: () => tasks });
-    const { router } = renderApp(<ProjectTasks view="board" />, {
+    const { router } = renderApp(<TaskScreen view="board" projects={["billing-api"]} />, {
       route: "/w/:ws/p/:project/board",
       url: "/w/ws-1/p/billing-api/board?task=a",
     });

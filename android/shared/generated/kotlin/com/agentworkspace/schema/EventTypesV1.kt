@@ -39,6 +39,13 @@ private val VALUES_25 = setOf("learned", "edit", "undo", "replaced", "delete")
 private val VALUES_26 = setOf("learned", "edit", "undo", "delete")
 private val VALUES_27 = setOf("rule", "locked", "shared", "other_person")
 private val VALUES_28 = setOf("accepted", "rejected")
+private val VALUES_29 = setOf("mattermost")
+private val VALUES_30 = setOf("all", "mentions", "off")
+private val VALUES_31 = setOf("direct", "group", "channel")
+private val PATTERN_32 = Regex("^([01]\\d|2[0-3]):[0-5]\\d\\z")
+private val VALUES_33 = setOf("action", "question", "info")
+private val VALUES_34 = setOf("high", "normal", "low")
+private val VALUES_35 = setOf("sent", "failed")
 
 /** The data of an event of a known type: AW event (one JSON Lines line). */
 sealed interface EventDataV1
@@ -406,6 +413,7 @@ data class GateOpenedV1(
             AwChecks.maxLength(file, 1024, "file")
             AwChecks.relativePath(file, "file")
         }
+        AwChecks.maxItems(questions, 10, "questions")
     }
 
     @Serializable
@@ -417,6 +425,8 @@ data class GateOpenedV1(
         init {
             AwChecks.minLength(question, 1, "question")
             AwChecks.maxLength(question, 2000, "question")
+            AwChecks.minItems(options, 1, "options")
+            AwChecks.maxItems(options, 20, "options")
             options.forEachIndexed { index, item ->
                 AwChecks.minLength(item, 1, "options" + "." + index)
                 AwChecks.maxLength(item, 500, "options" + "." + index)
@@ -439,6 +449,7 @@ data class GateOpenedV1(
             if (header != null) {
                 AwChecks.maxLength(header, 100, "header")
             }
+            AwChecks.maxItems(options, 20, "options")
         }
 
         @Serializable
@@ -979,6 +990,7 @@ data class KnowledgeSuggestedV1(
             AwChecks.pattern(task, PATTERN_3, "task")
         }
         AwChecks.oneOf(kind, VALUES_26, "kind")
+        AwChecks.minItems(reasons, 1, "reasons")
         reasons.forEachIndexed { index, item ->
             AwChecks.oneOf(item, VALUES_27, "reasons" + "." + index)
         }
@@ -995,6 +1007,428 @@ data class KnowledgeSuggestionResolvedV1(
     init {
         AwChecks.pattern(suggestion, PATTERN_3, "suggestion")
         AwChecks.oneOf(decision, VALUES_28, "decision")
+    }
+}
+
+/** The data of `source.configured`. */
+@Serializable
+data class SourceConfiguredV1(
+    @SerialName("source") val source: String,
+    @SerialName("kind") val kind: String,
+    @SerialName("name") val name: String,
+    @SerialName("server_url") val serverUrl: String,
+    @SerialName("credential") val credential: String,
+    @SerialName("collector") val collector: String?,
+    @SerialName("username") val username: String? = null,
+    @SerialName("read_every_s") val readEveryS: Long = 60L,
+    @SerialName("default_read") val defaultRead: String = "mentions",
+    @SerialName("conversations") val conversations: List<ConversationsItem> = emptyList(),
+    @SerialName("triage") val triage: Triage = Triage(model = "haiku", everyMin = 15L, days = listOf(1L, 2L, 3L, 4L, 5L), from = "08:00", to = "20:00", instruction = "", paused = false),
+    @SerialName("removed") val removed: Boolean = false,
+) : EventDataV1 {
+    init {
+        AwChecks.pattern(source, PATTERN_4, "source")
+        AwChecks.maxLength(source, 63, "source")
+        AwChecks.oneOf(kind, VALUES_29, "kind")
+        AwChecks.minLength(name, 1, "name")
+        AwChecks.maxLength(name, 200, "name")
+        AwChecks.maxLength(serverUrl, 2000, "server_url")
+        AwChecks.pattern(credential, PATTERN_4, "credential")
+        AwChecks.maxLength(credential, 63, "credential")
+        if (collector != null) {
+            AwChecks.pattern(collector, PATTERN_1, "collector")
+            AwChecks.maxLength(collector, 63, "collector")
+        }
+        if (username != null) {
+            AwChecks.minLength(username, 1, "username")
+            AwChecks.maxLength(username, 100, "username")
+        }
+        AwChecks.atLeast(readEveryS, 15L, "read_every_s")
+        AwChecks.atMost(readEveryS, 3600L, "read_every_s")
+        AwChecks.oneOf(defaultRead, VALUES_30, "default_read")
+        AwChecks.maxItems(conversations, 5000, "conversations")
+    }
+
+    @Serializable
+    data class ConversationsItem(
+        @SerialName("id") val id: String,
+        @SerialName("name") val name: String,
+        @SerialName("kind") val kind: String,
+        @SerialName("read") val read: String,
+        @SerialName("project") val project: String? = null,
+    ) {
+        init {
+            AwChecks.minLength(id, 1, "id")
+            AwChecks.maxLength(id, 200, "id")
+            AwChecks.minLength(name, 1, "name")
+            AwChecks.maxLength(name, 200, "name")
+            AwChecks.oneOf(kind, VALUES_31, "kind")
+            AwChecks.oneOf(read, VALUES_30, "read")
+            if (project != null) {
+                AwChecks.pattern(project, PATTERN_1, "project")
+                AwChecks.maxLength(project, 63, "project")
+            }
+        }
+    }
+
+    @Serializable
+    data class Triage(
+        @SerialName("model") val model: String = "haiku",
+        @SerialName("every_min") val everyMin: Long = 15L,
+        @SerialName("days") val days: List<Long> = listOf(1L, 2L, 3L, 4L, 5L),
+        @SerialName("from") val from: String? = "08:00",
+        @SerialName("to") val to: String? = "20:00",
+        @SerialName("instruction") val instruction: String = "",
+        @SerialName("paused") val paused: Boolean = false,
+    ) {
+        init {
+            AwChecks.minLength(model, 1, "model")
+            AwChecks.maxLength(model, 100, "model")
+            AwChecks.atLeast(everyMin, 1L, "every_min")
+            AwChecks.atMost(everyMin, 1440L, "every_min")
+            AwChecks.maxItems(days, 7, "days")
+            days.forEachIndexed { index, item ->
+                AwChecks.atLeast(item, 1L, "days" + "." + index)
+                AwChecks.atMost(item, 7L, "days" + "." + index)
+            }
+            if (from != null) {
+                AwChecks.pattern(from, PATTERN_32, "from")
+            }
+            if (to != null) {
+                AwChecks.pattern(to, PATTERN_32, "to")
+            }
+            AwChecks.maxLength(instruction, 8000, "instruction")
+        }
+    }
+}
+
+/** The data of `inbox.run_requested`. */
+@Serializable
+data class InboxRunRequestedV1(
+    @SerialName("source") val source: String,
+) : EventDataV1 {
+    init {
+        AwChecks.pattern(source, PATTERN_4, "source")
+        AwChecks.maxLength(source, 63, "source")
+    }
+}
+
+/** The data of `inbox.card_added`. */
+@Serializable
+data class InboxCardAddedV1(
+    @SerialName("card") val card: String,
+    @SerialName("source") val source: String,
+    @SerialName("conversation") val conversation: Conversation,
+    @SerialName("thread") val thread: String?,
+    @SerialName("project") val project: String? = null,
+    @SerialName("category") val category: String,
+    @SerialName("urgency") val urgency: String = "normal",
+    @SerialName("title") val title: String,
+    @SerialName("summary") val summary: String = "",
+    @SerialName("task") val task: Task? = null,
+    @SerialName("answer") val answer: Answer? = null,
+    @SerialName("messages") val messages: List<MessagesItem>,
+) : EventDataV1 {
+    init {
+        AwChecks.pattern(card, PATTERN_3, "card")
+        AwChecks.pattern(source, PATTERN_4, "source")
+        AwChecks.maxLength(source, 63, "source")
+        if (thread != null) {
+            AwChecks.minLength(thread, 1, "thread")
+            AwChecks.maxLength(thread, 200, "thread")
+        }
+        if (project != null) {
+            AwChecks.pattern(project, PATTERN_1, "project")
+            AwChecks.maxLength(project, 63, "project")
+        }
+        AwChecks.oneOf(category, VALUES_33, "category")
+        AwChecks.oneOf(urgency, VALUES_34, "urgency")
+        AwChecks.minLength(title, 1, "title")
+        AwChecks.maxLength(title, 500, "title")
+        AwChecks.maxLength(summary, 4000, "summary")
+        AwChecks.minItems(messages, 1, "messages")
+        AwChecks.maxItems(messages, 200, "messages")
+    }
+
+    @Serializable
+    data class Conversation(
+        @SerialName("id") val id: String,
+        @SerialName("name") val name: String,
+        @SerialName("kind") val kind: String,
+    ) {
+        init {
+            AwChecks.minLength(id, 1, "id")
+            AwChecks.maxLength(id, 200, "id")
+            AwChecks.minLength(name, 1, "name")
+            AwChecks.maxLength(name, 200, "name")
+            AwChecks.oneOf(kind, VALUES_31, "kind")
+        }
+    }
+
+    @Serializable
+    data class Task(
+        @SerialName("title") val title: String,
+        @SerialName("project") val project: String? = null,
+        @SerialName("first_message") val firstMessage: String,
+    ) {
+        init {
+            AwChecks.minLength(title, 1, "title")
+            AwChecks.maxLength(title, 500, "title")
+            if (project != null) {
+                AwChecks.pattern(project, PATTERN_1, "project")
+                AwChecks.maxLength(project, 63, "project")
+            }
+            AwChecks.minLength(firstMessage, 1, "first_message")
+            AwChecks.maxLength(firstMessage, 20000, "first_message")
+        }
+    }
+
+    @Serializable
+    data class Answer(
+        @SerialName("text") val text: String,
+        @SerialName("from") val from: String? = null,
+    ) {
+        init {
+            AwChecks.minLength(text, 1, "text")
+            AwChecks.maxLength(text, 8000, "text")
+            if (from != null) {
+                AwChecks.maxLength(from, 500, "from")
+            }
+        }
+    }
+
+    @Serializable
+    data class MessagesItem(
+        @SerialName("id") val id: String,
+        @SerialName("author") val author: String,
+        @SerialName("at") val at: String,
+        @SerialName("text") val text: String,
+        @SerialName("url") val url: String? = null,
+        @SerialName("quote") val quote: String? = null,
+    ) {
+        init {
+            AwChecks.minLength(id, 1, "id")
+            AwChecks.maxLength(id, 200, "id")
+            AwChecks.minLength(author, 1, "author")
+            AwChecks.maxLength(author, 200, "author")
+            AwChecks.pattern(at, PATTERN_12, "at")
+            AwChecks.maxLength(text, 8000, "text")
+            if (url != null) {
+                AwChecks.maxLength(url, 2000, "url")
+            }
+            if (quote != null) {
+                AwChecks.maxLength(quote, 500, "quote")
+            }
+        }
+    }
+}
+
+/** The data of `inbox.card_updated`. */
+@Serializable
+data class InboxCardUpdatedV1(
+    @SerialName("card") val card: String,
+    @SerialName("project") val project: String? = null,
+    @AwOptional @EncodeDefault(EncodeDefault.Mode.NEVER) @SerialName("category") val category: String? = null,
+    @AwOptional @EncodeDefault(EncodeDefault.Mode.NEVER) @SerialName("urgency") val urgency: String? = null,
+    @AwOptional @EncodeDefault(EncodeDefault.Mode.NEVER) @SerialName("title") val title: String? = null,
+    @AwOptional @EncodeDefault(EncodeDefault.Mode.NEVER) @SerialName("summary") val summary: String? = null,
+    @SerialName("task") val task: Task? = null,
+    @SerialName("answer") val answer: Answer? = null,
+    @SerialName("messages") val messages: List<MessagesItem> = emptyList(),
+) : EventDataV1 {
+    init {
+        AwChecks.pattern(card, PATTERN_3, "card")
+        if (project != null) {
+            AwChecks.pattern(project, PATTERN_1, "project")
+            AwChecks.maxLength(project, 63, "project")
+        }
+        if (category != null) {
+            AwChecks.oneOf(category, VALUES_33, "category")
+        }
+        if (urgency != null) {
+            AwChecks.oneOf(urgency, VALUES_34, "urgency")
+        }
+        if (title != null) {
+            AwChecks.minLength(title, 1, "title")
+            AwChecks.maxLength(title, 500, "title")
+        }
+        if (summary != null) {
+            AwChecks.maxLength(summary, 4000, "summary")
+        }
+        AwChecks.maxItems(messages, 200, "messages")
+    }
+
+    @Serializable
+    data class Task(
+        @SerialName("title") val title: String,
+        @SerialName("project") val project: String? = null,
+        @SerialName("first_message") val firstMessage: String,
+    ) {
+        init {
+            AwChecks.minLength(title, 1, "title")
+            AwChecks.maxLength(title, 500, "title")
+            if (project != null) {
+                AwChecks.pattern(project, PATTERN_1, "project")
+                AwChecks.maxLength(project, 63, "project")
+            }
+            AwChecks.minLength(firstMessage, 1, "first_message")
+            AwChecks.maxLength(firstMessage, 20000, "first_message")
+        }
+    }
+
+    @Serializable
+    data class Answer(
+        @SerialName("text") val text: String,
+        @SerialName("from") val from: String? = null,
+    ) {
+        init {
+            AwChecks.minLength(text, 1, "text")
+            AwChecks.maxLength(text, 8000, "text")
+            if (from != null) {
+                AwChecks.maxLength(from, 500, "from")
+            }
+        }
+    }
+
+    @Serializable
+    data class MessagesItem(
+        @SerialName("id") val id: String,
+        @SerialName("author") val author: String,
+        @SerialName("at") val at: String,
+        @SerialName("text") val text: String,
+        @SerialName("url") val url: String? = null,
+        @SerialName("quote") val quote: String? = null,
+    ) {
+        init {
+            AwChecks.minLength(id, 1, "id")
+            AwChecks.maxLength(id, 200, "id")
+            AwChecks.minLength(author, 1, "author")
+            AwChecks.maxLength(author, 200, "author")
+            AwChecks.pattern(at, PATTERN_12, "at")
+            AwChecks.maxLength(text, 8000, "text")
+            if (url != null) {
+                AwChecks.maxLength(url, 2000, "url")
+            }
+            if (quote != null) {
+                AwChecks.maxLength(quote, 500, "quote")
+            }
+        }
+    }
+}
+
+/** The data of `inbox.card_set`. */
+@Serializable
+data class InboxCardSetV1(
+    @SerialName("card") val card: String,
+    @AwOptional @EncodeDefault(EncodeDefault.Mode.NEVER) @SerialName("read") val read: Boolean? = null,
+    @AwOptional @EncodeDefault(EncodeDefault.Mode.NEVER) @SerialName("done") val done: Boolean? = null,
+    @AwOptional @EncodeDefault(EncodeDefault.Mode.NEVER) @SerialName("category") val category: String? = null,
+) : EventDataV1 {
+    init {
+        AwChecks.pattern(card, PATTERN_3, "card")
+        if (category != null) {
+            AwChecks.oneOf(category, VALUES_33, "category")
+        }
+    }
+}
+
+/** The data of `inbox.card_project`. */
+@Serializable
+data class InboxCardProjectV1(
+    @SerialName("card") val card: String,
+    @SerialName("project") val project: String?,
+) : EventDataV1 {
+    init {
+        AwChecks.pattern(card, PATTERN_3, "card")
+        if (project != null) {
+            AwChecks.pattern(project, PATTERN_1, "project")
+            AwChecks.maxLength(project, 63, "project")
+        }
+    }
+}
+
+/** The data of `inbox.ask`. */
+@Serializable
+data class InboxAskV1(
+    @SerialName("card") val card: String,
+    @SerialName("ask") val ask: String,
+    @SerialName("text") val text: String,
+) : EventDataV1 {
+    init {
+        AwChecks.pattern(card, PATTERN_3, "card")
+        AwChecks.pattern(ask, PATTERN_3, "ask")
+        AwChecks.minLength(text, 1, "text")
+        AwChecks.maxLength(text, 8000, "text")
+    }
+}
+
+/** The data of `inbox.answer`. */
+@Serializable
+data class InboxAnswerV1(
+    @SerialName("card") val card: String,
+    @SerialName("ask") val ask: String,
+    @SerialName("text") val text: String,
+) : EventDataV1 {
+    init {
+        AwChecks.pattern(card, PATTERN_3, "card")
+        AwChecks.pattern(ask, PATTERN_3, "ask")
+        AwChecks.minLength(text, 1, "text")
+        AwChecks.maxLength(text, 8000, "text")
+    }
+}
+
+/** The data of `inbox.reply_requested`. */
+@Serializable
+data class InboxReplyRequestedV1(
+    @SerialName("card") val card: String,
+    @SerialName("reply") val reply: String,
+    @SerialName("text") val text: String,
+    @SerialName("in_thread") val inThread: Boolean = true,
+) : EventDataV1 {
+    init {
+        AwChecks.pattern(card, PATTERN_3, "card")
+        AwChecks.pattern(reply, PATTERN_3, "reply")
+        AwChecks.minLength(text, 1, "text")
+        AwChecks.maxLength(text, 16000, "text")
+    }
+}
+
+/** The data of `inbox.reply_result`. */
+@Serializable
+data class InboxReplyResultV1(
+    @SerialName("card") val card: String,
+    @SerialName("reply") val reply: String,
+    @SerialName("state") val state: String,
+    @SerialName("post") val post: String? = null,
+    @SerialName("url") val url: String? = null,
+    @SerialName("error") val error: String? = null,
+) : EventDataV1 {
+    init {
+        AwChecks.pattern(card, PATTERN_3, "card")
+        AwChecks.pattern(reply, PATTERN_3, "reply")
+        AwChecks.oneOf(state, VALUES_35, "state")
+        if (post != null) {
+            AwChecks.minLength(post, 1, "post")
+            AwChecks.maxLength(post, 200, "post")
+        }
+        if (url != null) {
+            AwChecks.maxLength(url, 2000, "url")
+        }
+        if (error != null) {
+            AwChecks.maxLength(error, 2000, "error")
+        }
+    }
+}
+
+/** The data of `inbox.task_created`. */
+@Serializable
+data class InboxTaskCreatedV1(
+    @SerialName("card") val card: String,
+    @SerialName("task") val task: String,
+) : EventDataV1 {
+    init {
+        AwChecks.pattern(card, PATTERN_3, "card")
+        AwChecks.pattern(task, PATTERN_3, "task")
     }
 }
 
@@ -1054,6 +1488,17 @@ object EventTypesV1 {
         "knowledge.undo_requested" to KnowledgeUndoRequestedV1.serializer(),
         "knowledge.suggested" to KnowledgeSuggestedV1.serializer(),
         "knowledge.suggestion_resolved" to KnowledgeSuggestionResolvedV1.serializer(),
+        "source.configured" to SourceConfiguredV1.serializer(),
+        "inbox.run_requested" to InboxRunRequestedV1.serializer(),
+        "inbox.card_added" to InboxCardAddedV1.serializer(),
+        "inbox.card_updated" to InboxCardUpdatedV1.serializer(),
+        "inbox.card_set" to InboxCardSetV1.serializer(),
+        "inbox.card_project" to InboxCardProjectV1.serializer(),
+        "inbox.ask" to InboxAskV1.serializer(),
+        "inbox.answer" to InboxAnswerV1.serializer(),
+        "inbox.reply_requested" to InboxReplyRequestedV1.serializer(),
+        "inbox.reply_result" to InboxReplyResultV1.serializer(),
+        "inbox.task_created" to InboxTaskCreatedV1.serializer(),
         "device.heartbeat" to DeviceHeartbeatV1.serializer(),
     )
 }

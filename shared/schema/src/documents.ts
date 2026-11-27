@@ -18,6 +18,7 @@ import {
   taskKey,
   uuidv7,
 } from "./common.ts";
+import { healthInbox } from "./inbox.ts";
 
 /** `tasks/workspace.yaml`: a shared file. */
 export const workspaceV1 = z.looseObject({
@@ -239,6 +240,8 @@ export const healthV1 = z.looseObject({
   repairs: z
     .array(z.looseObject({ at: isoTime, path: z.string().min(1), text: z.string() }))
     .default([]),
+  /** The collector of a source on this device (openspec inbox-mattermost). Absent: none. */
+  inbox: healthInbox.optional(),
 });
 export type HealthDocument = z.infer<typeof healthV1>;
 

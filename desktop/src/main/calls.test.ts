@@ -12,6 +12,7 @@ import {
   type DesktopCallClient,
   type HostDeps,
   type IdentityCallClient,
+  type InboxCallClient,
   type KnowledgeCallClient,
 } from "./calls.ts";
 import { openableFolder, openablePath } from "./files.ts";
@@ -24,6 +25,7 @@ function deps(
     identity?: Partial<IdentityCallClient>;
     knowledge?: Partial<KnowledgeCallClient>;
     desktop?: Partial<DesktopCallClient>;
+    inbox?: Partial<InboxCallClient>;
     setup?: Partial<SetupCallClient>;
     host?: Partial<HostDeps>;
     terminal?: TerminalLauncher;
@@ -35,6 +37,7 @@ function deps(
     identity: (more.identity ?? {}) as IdentityCallClient,
     knowledge: (more.knowledge ?? {}) as KnowledgeCallClient,
     desktop: (more.desktop ?? {}) as DesktopCallClient,
+    inbox: (more.inbox ?? {}) as InboxCallClient,
     setup: (more.setup ?? {}) as SetupCallClient,
     host: (more.host ?? {}) as HostDeps,
     connection: () => ({ state: "connecting" }),
@@ -56,6 +59,29 @@ describe("isTrustedSender", () => {
 });
 
 describe("dispatchCall", () => {
+  it("passes a reply of a card to the inbox client, in the thread by default", async () => {
+    const reply = vi.fn(() => Promise.resolve({ reply: "r1", card: {} }));
+    const result = await dispatchCall(
+      { method: "replyCard", args: { ws: "acme", card: "c1", text: "Yes" } },
+      deps({}, { inbox: { reply } as never }),
+    );
+    expect(result.ok).toBe(true);
+    expect(reply).toHaveBeenCalledWith("acme", "c1", "Yes", true);
+  });
+
+  it("refuses a card task with no project (a task always has a project)", async () => {
+    const createTask = vi.fn();
+    const result = await dispatchCall(
+      {
+        method: "cardTask",
+        args: { ws: "acme", card: "c1", body: { title: "Fix", first_message: "Fix it" } },
+      },
+      deps({}, { inbox: { createTask } }),
+    );
+    expect(result.ok).toBe(false);
+    expect(createTask).not.toHaveBeenCalled();
+  });
+
   it("refuses a method that is not in the contract and calls nothing", async () => {
     const archiveTask = vi.fn();
     const result = await dispatchCall(

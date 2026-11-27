@@ -5,6 +5,7 @@ import { AwApiError, AwProtocolError, AwUnreachableError, type AwClient } from "
 import type { DesktopClient } from "@aw/client/desktop";
 import type { DoctorClient } from "@aw/client/doctor";
 import type { IdentityClient } from "@aw/client/identity";
+import type { InboxClient } from "@aw/client/inbox-api";
 import type { KnowledgeClient } from "@aw/client/knowledge";
 import { z } from "zod";
 import {
@@ -75,6 +76,21 @@ export type DesktopCallClient = Pick<
   "presence" | "sessionHosts" | "taskFiles" | "taskFile" | "restoreDocument" | "queues" | "terminal"
 >;
 
+export type InboxCallClient = Pick<
+  InboxClient,
+  | "cards"
+  | "card"
+  | "setState"
+  | "ask"
+  | "reply"
+  | "createTask"
+  | "run"
+  | "sources"
+  | "setSource"
+  | "conversations"
+  | "status"
+>;
+
 /** The parts of the app and the system that the calls use (Electron in index.ts, fakes in tests). */
 export interface HostDeps {
   /** Opens a checked absolute path in the default app; the result is an error text or "". */
@@ -108,6 +124,8 @@ export interface CallDeps {
   identity: IdentityCallClient;
   knowledge: KnowledgeCallClient;
   desktop: DesktopCallClient;
+  /** The Inbox and the sources (openspec inbox-mattermost). */
+  inbox: InboxCallClient;
   setup: SetupCallClient;
   /** The setup check (gap-install). */
   doctor?: Pick<DoctorClient, "doctor">;
@@ -257,6 +275,36 @@ async function run(request: CallRequest, deps: CallDeps): Promise<unknown> {
       return deps.desktop.sessionHosts(request.args.ws);
     case "queues":
       return deps.desktop.queues(request.args.ws);
+    case "inboxCards":
+      return deps.inbox.cards(
+        request.args.ws,
+        request.args.state ? { state: request.args.state } : {},
+      );
+    case "inboxCard":
+      return deps.inbox.card(request.args.ws, request.args.card);
+    case "setCardState":
+      return deps.inbox.setState(request.args.ws, request.args.card, request.args.body);
+    case "askCard":
+      return deps.inbox.ask(request.args.ws, request.args.card, request.args.text);
+    case "replyCard":
+      return deps.inbox.reply(
+        request.args.ws,
+        request.args.card,
+        request.args.text,
+        request.args.in_thread ?? true,
+      );
+    case "cardTask":
+      return deps.inbox.createTask(request.args.ws, request.args.card, request.args.body);
+    case "inboxRun":
+      return deps.inbox.run(request.args.ws);
+    case "sources":
+      return deps.inbox.sources(request.args.ws);
+    case "setSource":
+      return deps.inbox.setSource(request.args.ws, request.args.source, request.args.body);
+    case "sourceConversations":
+      return deps.inbox.conversations(request.args.ws, request.args.source);
+    case "sourceStatus":
+      return deps.inbox.status(request.args.ws, request.args.source);
     case "revokeDevice":
       return deps.identity.revoke(request.args.ws, request.args.device);
     case "startPairing":

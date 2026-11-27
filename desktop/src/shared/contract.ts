@@ -3,6 +3,7 @@
 // 5.18). awd checks the bodies again with its own schemas, so these schemas check the shape and
 // the size, not each awd rule.
 import { PROPOSAL_TEXT } from "@aw/client/gates";
+import { cardStateBody, cardTaskBody, sourceBody } from "@aw/client/inbox-api";
 import { z } from "zod";
 import type { CallMethod } from "./channels.ts";
 import { setupCalls } from "./setup-contract.ts";
@@ -164,6 +165,30 @@ export const callRequest = z.discriminatedUnion("method", [
   call("presence", z.object(ws).strict()),
   call("sessionHosts", z.object(ws).strict()),
   call("queues", z.object(ws).strict()),
+  call(
+    "inboxCards",
+    z.object({ ...ws, state: z.enum(["open", "done", "all"]).optional() }).strict(),
+  ),
+  call("inboxCard", z.object({ ...ws, card: id }).strict()),
+  call("setCardState", z.object({ ...ws, card: id, body: cardStateBody }).strict()),
+  call("askCard", z.object({ ...ws, card: id, text: z.string().min(1).max(8000) }).strict()),
+  call(
+    "replyCard",
+    z
+      .object({
+        ...ws,
+        card: id,
+        text: z.string().min(1).max(16000),
+        in_thread: z.boolean().optional(),
+      })
+      .strict(),
+  ),
+  call("cardTask", z.object({ ...ws, card: id, body: cardTaskBody }).strict()),
+  call("inboxRun", z.object(ws).strict()),
+  call("sources", z.object(ws).strict()),
+  call("setSource", z.object({ ...ws, source: id, body: sourceBody }).strict()),
+  call("sourceConversations", z.object({ ...ws, source: id }).strict()),
+  call("sourceStatus", z.object({ ...ws, source: id }).strict()),
   call("revokeDevice", z.object({ ...ws, device: slug }).strict()),
   call("startPairing", z.object(ws).strict()),
   call("pairing", z.object({ id: pairingId }).strict()),

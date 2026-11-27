@@ -1,262 +1,353 @@
-// The Inbox keeps the answer notice of a task after its gate closes (gate-full-context check,
-// result open issue 1): the person answers in the Inbox, awd refuses, the task leaves the lane.
-// The Inbox is a list and a detail with the tabs "Needs you" and "Updates" (navigation-prototype).
+// The Inbox of the incoming messages (openspec inbox-mattermost, spec inbox-cards "Desktop Inbox"):
+// the rows with the category icon, the filter bar, the card dialog with its keys, the task form
+// with the required project, and the reply.
 import { cleanup, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
-import {
-  FakeCallError,
-  gateOpenedRow,
-  installBridge,
-  makeGate,
-  makeTask,
-  PROJECT,
-  renderApp,
-} from "../testing.tsx";
-import { Home } from "./AppShell.tsx";
-import { DialogsProvider } from "./dialogs.tsx";
+import type { InboxCard } from "../../../shared/channels.ts";
+import { installBridge, PROJECT, renderApp, type Handlers } from "../testing.tsx";
 import { Inbox } from "./Inbox.tsx";
 
 afterEach(cleanup);
 
-describe("Inbox answer notice", () => {
-  const gate = makeGate({
-    gate: "g-result",
-    kind: "approve_result",
-    options: ["Approve", "Request changes"],
-  });
-  const open = makeTask({
-    id: "t31",
-    key: "AW-31",
-    title: "Add rate limits",
-    stage: "review",
-    gates: [gate],
-    needs_you_lane: true,
-  });
-  const resolved = makeTask({
-    ...open,
-    stage: "done",
-    gates: [{ ...gate, state: "resolved", answer: "Approve" }],
-    needs_you_lane: false,
-  });
+const ref = { event: "e", dev: "ubuntu-01", hlc: "2026-11-23T09:00:00.000Z#0000" };
 
-  it("keeps the task card with the notice after the gate leaves the lane", async () => {
-    let answered = false;
-    installBridge({
-      tasks: () => [answered ? resolved : open],
-      thread: () => ({
-        task: { id: open.id, key: open.key, title: open.title },
-        events: [gateOpenedRow(gate)],
-        next: null,
-        prev: null,
-        ancestors: [],
-      }),
-      answerGate: () => {
-        answered = true;
-        throw new FakeCallError("gate_not_open", "resolved", 409, {
-          gate: gate.gate,
-          answer: "Approve",
-        });
-      },
-    });
-    renderApp(
-      <DialogsProvider ws="ws-1">
-        <Inbox />
-      </DialogsProvider>,
-      { route: "/w/:ws/inbox", url: "/w/ws-1/inbox" },
-    );
-    await userEvent.click(await screen.findByRole("button", { name: /AW-31/ }));
-    const card = await screen.findByRole("region", { name: "AW-31 needs you" });
-    await userEvent.click(await within(card).findByRole("button", { name: "Approve" }));
-    const text = "Another answer resolved this gate first: “Approve”. AW did not send your answer.";
-    expect(await screen.findByText(text)).toBeTruthy();
-    // The task list refreshes after the answer: the task is Done and out of the lane.
-    await waitFor(() =>
-      expect(
-        within(screen.getByLabelText("AW-31 needs you")).queryByRole("button", { name: "Approve" }),
-      ).toBeNull(),
-    );
-    expect(screen.getByText(text)).toBeTruthy();
-    // The row stays (as "Answer notice") while the notice shows: the tab still counts it.
-    expect(screen.getByRole("tab", { name: "Needs you 1" })).toBeTruthy();
-    // Close removes the notice and the card.
-    await userEvent.click(screen.getByRole("button", { name: "Close" }));
-    await waitFor(() => expect(screen.queryByLabelText("AW-31 needs you")).toBeNull());
-  });
-});
-
-describe("Inbox empty states (fix list cfc-3)", () => {
-  const digest = {
-    date: "2026-11-23",
-    learned: [
+function card(overrides: Partial<InboxCard>): InboxCard {
+  return {
+    card: "c1",
+    source: "mattermost",
+    conversation: { id: "dm-lan", name: "@lan.pham", kind: "direct" },
+    thread: null,
+    project: null,
+    category: "question",
+    urgency: "normal",
+    title: "Which Node version runs on staging?",
+    summary: "Minh asks for the Node version.",
+    task: null,
+    answer: { text: "Staging runs Node 26.", from: ".nvmrc" },
+    messages: [
       {
-        id: "c1",
-        hlc: "x",
-        at: "2026-11-23T09:59:00.000Z",
-        dev: "ubuntu-01",
-        path: "shared/learned/2026-11-23-aw-8-index.md",
-        hash: "a".repeat(64),
-        base: null,
-        author: "claude@ubuntu-01",
-        by: null,
-        task: "t8",
-        task_key: "AW-8",
-        kind: "learned" as const,
-        suggestion: null,
-        label: "Learned by claude@ubuntu-01 on AW-8",
+        id: "m1",
+        author: "minh.tran",
+        at: "2026-11-23T09:57:00.000Z",
+        text: "Which Node version do we run on staging now?",
+        url: "https://chat.example.com/acme/pl/m1",
+        quote: null,
       },
     ],
-    changes: [],
-    pending: [],
-    text: "",
+    last_message_at: "2026-11-23T09:57:00.000Z",
+    read: false,
+    done: false,
+    added: ref,
+    updated_hlc: ref.hlc,
+    chat: [],
+    replies: [],
+    tasks: [],
+    ...overrides,
   };
-  const bad = {
-    code: "bad_document",
-    path: "tasks/projects/broken/project.yaml",
-    line: 5,
-    event: null,
-    task: null,
-    reason: null,
-    message: "name: unclosed list",
-  };
+}
 
-  it.each([
-    ["no project", () => [], () => []],
-    ["only archived tasks", () => [PROJECT], () => [makeTask({ archived: true })]],
-  ])(
-    "shows the knowledge of today and the files to fix with %s",
-    async (_name, projects, tasks) => {
-      installBridge({ projects, tasks, kbDigest: () => digest, issues: () => [bad] });
-      renderApp(
-        <DialogsProvider ws="ws-1">
-          <Inbox />
-        </DialogsProvider>,
-        { route: "/w/:ws/inbox", url: "/w/ws-1/inbox" },
-      );
-      expect(await screen.findByLabelText("Knowledge today")).toBeTruthy();
-      expect(
-        await screen.findByLabelText("Fix a file tasks/projects/broken/project.yaml"),
-      ).toBeTruthy();
-    },
+const QUESTION = card({});
+const ACTION = card({
+  card: "c2",
+  category: "action",
+  urgency: "high",
+  title: "Invoice CSV export fails with error 500",
+  conversation: { id: "ch-billing", name: "~billing", kind: "channel" },
+  project: null,
+  answer: null,
+  task: { title: "Fix the CSV export", project: null, first_message: "Fix the error 500." },
+  last_message_at: "2026-11-23T09:20:00.000Z",
+});
+const INFO = card({
+  card: "c3",
+  category: "info",
+  urgency: "low",
+  title: "Two approvals for each PR",
+  project: "billing-api",
+  answer: null,
+  read: true,
+  last_message_at: "2026-11-23T08:00:00.000Z",
+});
+
+const SOURCE = {
+  source: "mattermost",
+  kind: "mattermost",
+  name: "Mattermost",
+  server_url: "https://chat.example.com",
+  credential: "mattermost-alex",
+  collector: "ubuntu-01",
+  username: "alex",
+  read_every_s: 60,
+  default_read: "mentions",
+  conversations: [],
+  triage: {
+    model: "haiku",
+    every_min: 15,
+    days: [1, 2, 3, 4, 5],
+    from: "08:00",
+    to: "20:00",
+    instruction: "",
+    paused: false,
+  },
+  removed: false,
+  configured: ref,
+  run_requested: null,
+};
+
+function show(handlers: Handlers = {}, url = "/w/ws-1/inbox") {
+  const cards = [QUESTION, ACTION, INFO];
+  const call = installBridge({
+    inboxCards: () => cards,
+    sources: () => [SOURCE],
+    sourceStatus: () => ({
+      source: "mattermost",
+      collector: "ubuntu-01",
+      health: null,
+      user: null,
+    }),
+    projects: () => [PROJECT],
+    devices: () => [],
+    setCardState: (args: { card: string }) => cards.find((c) => c.card === args.card),
+    ...handlers,
+  });
+  const app = renderApp(<Inbox />, { route: "/w/:ws/inbox", url });
+  return { call, ...app };
+}
+
+const rows = async () =>
+  (await screen.findAllByRole("button", { name: /^(Action|Question|Info): / })).map((b) =>
+    b.getAttribute("aria-label"),
   );
-});
 
-describe("Home (desktop-shell review 8)", () => {
-  it("shows the error when awd does not answer, not the first-run screen", async () => {
-    installBridge({
-      workspaces: () => {
-        throw new FakeCallError("unreachable", "awd is not reachable (ECONNREFUSED)", null);
-      },
-    });
-    renderApp(<Home />, { url: "/" });
-    expect(await screen.findByText(/awd is not reachable/)).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Create the Personal workspace" })).toBeNull();
-  });
-});
-
-describe("Inbox reasons and detail rows (proposal-and-discussion)", () => {
-  const question = makeGate({
-    gate: "g-question",
-    kind: "question",
-    title: "Where do the counters live?",
-    options: ["Redis", "In memory"],
-  });
-  const proposal = makeGate({
-    gate: "g-proposal",
-    kind: "approve_proposal",
-    title: "Rate limits",
-    options: ["Approve"],
-    file: "proposal/v2.md",
-  });
-  const asks = makeTask({
-    id: "t12",
-    key: "AW-12",
-    title: "Rate limits for the public API",
-    gates: [question],
-    needs_you_lane: true,
-    needs_you_reasons: [{ reason: "gate", kind: "question" }],
-  });
-  const waits = makeTask({
-    id: "t15",
-    key: "AW-15",
-    title: "Sign-in with passkeys",
-    gates: [proposal],
-    needs_you_lane: true,
-    needs_you_reasons: [{ reason: "gate", kind: "approve_proposal" }],
-  });
-
-  function show(url = "/w/ws-1/inbox") {
-    const call = installBridge({
-      tasks: () => [asks, waits],
-      thread: (args: { task: string }) => ({
-        task: { id: args.task, key: null, title: null },
-        events:
-          args.task === "t12"
-            ? [gateOpenedRow(question, { text: "Redis: one counter for all pods." })]
-            : [
-                gateOpenedRow(proposal, {
-                  text: "# Rate limits\n\nA token bucket.",
-                  file: "proposal/v2.md",
-                }),
-              ],
-        next: null,
-        prev: null,
-        ancestors: [],
-      }),
-      answerGate: () => ({ applied: true }),
-    });
-    renderApp(
-      <DialogsProvider ws="ws-1">
-        <Inbox />
-      </DialogsProvider>,
-      { route: "/w/:ws/inbox", url },
-    );
-    return call;
-  }
-
-  it("names the reasons, and answers a question in the detail with the reply field", async () => {
-    const call = show();
-    const rows = await screen.findByRole("list", { name: "Needs you" });
-    expect(
-      within(rows)
-        .getAllByRole("button")
-        .map((b) => b.getAttribute("aria-label")),
-    ).toEqual([
-      "Reply to a question: AW-12 Rate limits for the public API",
-      "Approve proposal: AW-15 Sign-in with passkeys",
+describe("Inbox list", () => {
+  it("sorts the open cards by urgency, with the category as an icon label", async () => {
+    show();
+    expect(await rows()).toEqual([
+      "Action: Invoice CSV export fails with error 500, unread",
+      "Question: Which Node version runs on staging?, unread",
+      "Info: Two approvals for each PR",
     ]);
-    await userEvent.click(within(rows).getByRole("button", { name: /AW-12/ }));
-    const detail = await screen.findByRole("region", { name: "AW-12 needs you" });
-    const message = await within(detail).findByRole("article", {
-      name: "Question: Where do the counters live?",
+    // Each category icon is one 24 × 24 box, so each title starts at the same place.
+    for (const label of ["Action", "Question", "Info"]) {
+      const icon = screen.getAllByRole("img", { name: label })[0]!;
+      expect(getComputedStyle(icon).width).toBe("24px");
+      expect(getComputedStyle(icon).height).toBe("24px");
+    }
+  });
+
+  it("filters by category, by No project, and by unread", async () => {
+    const { router } = show();
+    await rows();
+    await userEvent.click(screen.getByRole("button", { name: "Question 1" }));
+    expect(await rows()).toEqual(["Question: Which Node version runs on staging?, unread"]);
+    expect(router.state.location.search).toBe("?cat=question");
+    await userEvent.click(screen.getByRole("button", { name: "All" }));
+    await userEvent.click(screen.getByRole("button", { name: "Project" }));
+    const menu = await screen.findByRole("menu", { name: "Projects" });
+    await userEvent.click(within(menu).getByRole("menuitemcheckbox", { name: "Billing API" }));
+    await userEvent.keyboard("{Escape}");
+    await waitFor(async () => expect(await rows()).toEqual(["Info: Two approvals for each PR"]));
+    await userEvent.click(screen.getByRole("button", { name: "Clear the project filter" }));
+    await userEvent.click(screen.getByRole("button", { name: "Unread" }));
+    await waitFor(async () => expect((await rows()).length).toBe(2));
+  });
+
+  it("shows No source yet with Add a source when no source and no card exist", async () => {
+    installBridge({ inboxCards: () => [], sources: () => [] });
+    const { router } = renderApp(<Inbox />, { route: "/w/:ws/inbox", url: "/w/ws-1/inbox" });
+    await userEvent.click(await screen.findByRole("button", { name: "Add a source" }));
+    expect(router.state.location.pathname).toBe("/w/ws-1/sources");
+  });
+});
+
+describe("Card dialog", () => {
+  it("opens a card, marks it read, and moves with j", async () => {
+    const { call, router } = show();
+    await userEvent.click(
+      await screen.findByRole("button", { name: /^Question: Which Node version/ }),
+    );
+    const dialog = await screen.findByRole("dialog", {
+      name: "Which Node version runs on staging?",
     });
-    expect(within(message).getByText("Waits for your reply")).toBeTruthy();
-    expect(within(message).getByRole("button", { name: "Redis" })).toBeTruthy();
-    await userEvent.type(within(message).getByLabelText("Or write your answer"), "Redis, 60 s TTL");
-    await userEvent.click(within(message).getByRole("button", { name: "Send" }));
+    expect(within(dialog).getByText("Staging runs Node 26.")).toBeTruthy();
+    expect(within(dialog).getByText("Which Node version do we run on staging now?")).toBeTruthy();
     await waitFor(() =>
-      expect(call.mock.calls.filter(([m]) => m === "answerGate").map(([, a]) => a)).toEqual([
-        {
-          ws: "ws-1",
-          gate: "g-question",
-          body: { answer: "Redis, 60 s TTL", comment: null, version: 1 },
-        },
-      ]),
+      expect(call).toHaveBeenCalledWith("setCardState", {
+        ws: "ws-1",
+        card: "c1",
+        body: { read: true },
+      }),
+    );
+    await userEvent.keyboard("j");
+    expect(router.state.location.search).toBe("?card=c3");
+    await userEvent.keyboard("k");
+    expect(router.state.location.search).toBe("?card=c1");
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+
+  it("sends the edited reply to the thread", async () => {
+    const { call } = show(
+      { replyCard: () => ({ reply: "r1", card: QUESTION }) },
+      "/w/ws-1/inbox?card=c1",
+    );
+    const dialog = await screen.findByRole("dialog");
+    await userEvent.click(within(dialog).getByRole("button", { name: /^Reply/ }));
+    const field = within(dialog).getByRole("textbox", { name: "Reply" });
+    await userEvent.clear(field);
+    await userEvent.type(field, "Node 26, the same as CI.");
+    expect(within(dialog).getByText("As @alex · @lan.pham · in the thread")).toBeTruthy();
+    await userEvent.click(within(dialog).getByRole("button", { name: "Send" }));
+    await waitFor(() =>
+      expect(call).toHaveBeenCalledWith("replyCard", {
+        ws: "ws-1",
+        card: "c1",
+        text: "Node 26, the same as CI.",
+        in_thread: true,
+      }),
     );
   });
 
-  it("shows the proposal card in the detail of an Approve proposal row", async () => {
-    const call = show("/w/ws-1/inbox?item=task%3At15");
-    const detail = await screen.findByRole("region", { name: "AW-15 needs you" });
-    const card = await within(detail).findByRole("article", { name: "Proposal v2" });
-    expect(within(card).getByText("Waits for your approval")).toBeTruthy();
-    expect(await within(card).findByText("A token bucket.")).toBeTruthy();
-    await userEvent.click(within(card).getByRole("button", { name: "Approve proposal" }));
-    await waitFor(() =>
-      expect(call.mock.calls.filter(([m]) => m === "answerGate").map(([, a]) => a)).toEqual([
-        { ws: "ws-1", gate: "g-proposal", body: { answer: "Approve", comment: null, version: 1 } },
-      ]),
+  it("asks for a project before it creates the task of a card with no project", async () => {
+    const { call } = show(
+      { cardTask: () => ({ task: "t1", key: "AW-1", card: ACTION }) },
+      "/w/ws-1/inbox?card=c2",
     );
-    expect(screen.getByRole("button", { name: "Open task" })).toBeTruthy();
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByText("Choose a project")).toBeTruthy();
+    await userEvent.click(within(dialog).getByRole("button", { name: "Create task…" }));
+    const create = within(dialog).getByRole("button", { name: "Create task" });
+    expect(create.hasAttribute("disabled")).toBe(true);
+    await userEvent.click(within(dialog).getByRole("combobox", { name: /Project/ }));
+    await userEvent.click(await screen.findByRole("option", { name: "Billing API" }));
+    await userEvent.click(within(dialog).getByRole("button", { name: "Create task" }));
+    await waitFor(() =>
+      expect(call).toHaveBeenCalledWith("cardTask", {
+        ws: "ws-1",
+        card: "c2",
+        body: {
+          title: "Fix the CSV export",
+          project: "billing-api",
+          first_message: "Fix the error 500.",
+          assignee: null,
+        },
+      }),
+    );
+  });
+
+  it("changes the category with the menu", async () => {
+    const { call } = show({}, "/w/ws-1/inbox?card=c3");
+    const dialog = await screen.findByRole("dialog");
+    await userEvent.click(within(dialog).getByRole("button", { name: "Info ▾" }));
+    await userEvent.click(await screen.findByRole("menuitem", { name: /Action/ }));
+    await waitFor(() =>
+      expect(call).toHaveBeenCalledWith("setCardState", {
+        ws: "ws-1",
+        card: "c3",
+        body: { category: "action" },
+      }),
+    );
+  });
+
+  it("loads the answer of the new card when r opens the reply after j (no draft of the last card)", async () => {
+    const second = card({
+      card: "c4",
+      title: "Which database runs on staging?",
+      answer: { text: "Staging runs Postgres 18.", from: null },
+      last_message_at: "2026-11-23T09:50:00.000Z",
+    });
+    show({ inboxCards: () => [QUESTION, second] }, "/w/ws-1/inbox?card=c1");
+    const dialog = await screen.findByRole("dialog");
+    await userEvent.keyboard("r");
+    expect(within(dialog).getByRole<HTMLTextAreaElement>("textbox", { name: "Reply" }).value).toBe(
+      "Staging runs Node 26.",
+    );
+    await userEvent.keyboard("{Escape}");
+    await userEvent.click(await screen.findByRole("button", { name: /^Question: Which Node/ }));
+    const again = await screen.findByRole("dialog");
+    await userEvent.keyboard("j");
+    await within(again).findByText("Which database runs on staging?");
+    await userEvent.keyboard("r");
+    expect(within(again).getByRole<HTMLTextAreaElement>("textbox", { name: "Reply" }).value).toBe(
+      "Staging runs Postgres 18.",
+    );
+  });
+
+  it("keeps the card when ↓ moves in the category menu", async () => {
+    const { router } = show({}, "/w/ws-1/inbox?card=c1");
+    const dialog = await screen.findByRole("dialog");
+    await userEvent.click(within(dialog).getByRole("button", { name: "Question ▾" }));
+    await screen.findByRole("menu");
+    await userEvent.keyboard("{ArrowDown}");
+    expect(router.state.location.search).toBe("?card=c1");
+  });
+
+  it("goes to the next card after Done, when the done card leaves the list", async () => {
+    const cards = [card({}), INFO];
+    const { router } = show(
+      {
+        inboxCards: () => cards,
+        setCardState: (args: { card: string; body: { done?: boolean } }) => {
+          const c = cards.find((x) => x.card === args.card)!;
+          if (args.body.done !== undefined) c.done = args.body.done;
+          return c;
+        },
+      },
+      "/w/ws-1/inbox?card=c1",
+    );
+    await screen.findByRole("dialog");
+    await userEvent.keyboard("d");
+    await waitFor(() => expect(router.state.location.search).toBe("?card=c3"));
+  });
+
+  it("keeps Previous and Next when the open card leaves the Unread list", async () => {
+    const cards = [card({}), card({ card: "c5", title: "Second unread question" })];
+    const { router } = show(
+      {
+        inboxCards: () => cards,
+        setCardState: (args: { card: string; body: { read?: boolean } }) => {
+          const c = cards.find((x) => x.card === args.card)!;
+          if (args.body.read !== undefined) c.read = args.body.read;
+          return c;
+        },
+      },
+      "/w/ws-1/inbox?unread=1&card=c1",
+    );
+    const dialog = await screen.findByRole("dialog");
+    // Opening marks c1 read, so it leaves the list of unread cards.
+    await waitFor(() => expect(cards[0]!.read).toBe(true));
+    await waitFor(() =>
+      expect(
+        within(dialog).getByRole("button", { name: "Next (j)" }).hasAttribute("disabled"),
+      ).toBe(false),
+    );
+    await userEvent.keyboard("j");
+    expect(new URLSearchParams(router.state.location.search).get("card")).toBe("c5");
+  });
+
+  it("changes the project with the project menu", async () => {
+    const { call } = show({}, "/w/ws-1/inbox?card=c1");
+    const dialog = await screen.findByRole("dialog");
+    await userEvent.click(within(dialog).getByRole("button", { name: "Project: No project ▾" }));
+    await userEvent.click(await screen.findByRole("menuitem", { name: PROJECT.name }));
+    await waitFor(() =>
+      expect(call).toHaveBeenCalledWith("setCardState", {
+        ws: "ws-1",
+        card: "c1",
+        body: { project: PROJECT.slug },
+      }),
+    );
+  });
+});
+
+describe("Run now key", () => {
+  it("runs on ⇧⌘R, and leaves ⌘R to Sync now", async () => {
+    const { call } = show({ inboxRun: () => ({ ok: true }) });
+    await rows();
+    await userEvent.keyboard("{Meta>}r{/Meta}");
+    expect(call).not.toHaveBeenCalledWith("inboxRun", expect.anything());
+    await userEvent.keyboard("{Meta>}{Shift>}R{/Shift}{/Meta}");
+    await waitFor(() => expect(call).toHaveBeenCalledWith("inboxRun", { ws: "ws-1" }));
   });
 });

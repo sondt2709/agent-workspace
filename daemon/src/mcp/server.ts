@@ -14,6 +14,7 @@ import type { Daemon } from "../service/daemon.ts";
 import { writePrivate } from "../sessions/records.ts";
 import { bearerToken } from "./tokens.ts";
 import { buildMcpServer, RetryCache } from "./tools.ts";
+import { buildTriageMcpServer } from "./triage-tools.ts";
 
 /** The body limit of the MCP endpoint (docs/tech-stack.md 2.2). */
 export const MCP_BODY_LIMIT = 4 * 1024 * 1024;
@@ -53,7 +54,11 @@ function buildApp(daemon: Daemon, log: Logger): { app: FastifyInstance; close():
   const cache = new RetryCache(daemon.clock);
   const handler = createMcpHandler(
     (context) => {
-      const session = (context.authInfo?.extra as { session?: string } | undefined)?.session;
+      const extra = context.authInfo?.extra as { session?: string; triage?: string } | undefined;
+      if (extra?.triage) {
+        return buildTriageMcpServer({ daemon, workspace: extra.triage, log, cache });
+      }
+      const session = extra?.session;
       if (!session) throw new Error("An MCP request with no session reached the factory");
       return buildMcpServer({ daemon, session, log, cache });
     },
@@ -70,12 +75,22 @@ function buildApp(daemon: Daemon, log: Logger): { app: FastifyInstance; close():
   app.all(MCP_PATH, async (request, reply) => {
     const token = bearerToken(request.headers.authorization);
     const session = token === null ? null : (daemon.sessions?.tokens.session(token) ?? null);
-    if (session === null) {
+    // A triage token opens only the triage tools (openspec inbox-mattermost, spec mcp-server).
+    const triage = session === null && token !== null ? daemon.inbox.triageOf(token) : null;
+    if (session === null && triage === null) {
       // No WWW-Authenticate header: the token is the configured header of the AW plugin, so
       // Claude Code reports a failed server and starts no OAuth flow (decision 4, spike S12).
       return reply.code(401).header("content-type", "application/json").send(UNAUTHORIZED);
     }
-    const auth: AuthInfo = { token: "session", clientId: session, scopes: [], extra: { session } };
+    const auth: AuthInfo =
+      triage === null
+        ? { token: "session", clientId: session!, scopes: [], extra: { session } }
+        : {
+            token: "triage",
+            clientId: triage.session,
+            scopes: [],
+            extra: { triage: triage.workspace },
+          };
     reply.hijack();
     await node(Object.assign(request.raw, { auth }), reply.raw, request.body);
   });

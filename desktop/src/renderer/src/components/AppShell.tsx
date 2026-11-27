@@ -2,16 +2,19 @@
 // a 240 px drawer above), the top bar with New task and New session, the connection banner and the
 // screen of the route (docs/tech-stack.md 1.4 "Layout", docs/design.md 8.1 to 8.3). On macOS the
 // traffic lights sit in the 44 px title row of the sidebar, and the title rows move the window.
+import { cardCounts } from "@aw/client/inbox";
 import { mainVar, tint } from "@aw/ui";
 import Add from "@mui/icons-material/AddOutlined";
 import ChevronRight from "@mui/icons-material/ChevronRightOutlined";
 import Devices from "@mui/icons-material/DevicesOutlined";
+import FolderOpen from "@mui/icons-material/FolderOpenOutlined";
 import Inbox from "@mui/icons-material/InboxOutlined";
 import Key from "@mui/icons-material/KeyOutlined";
 import Laptop from "@mui/icons-material/LaptopMacOutlined";
 import MenuBook from "@mui/icons-material/MenuBookOutlined";
 import MenuIcon from "@mui/icons-material/MenuOutlined";
 import PanTool from "@mui/icons-material/PanToolOutlined";
+import Power from "@mui/icons-material/PowerOutlined";
 import SettingsIcon from "@mui/icons-material/SettingsOutlined";
 import Sync from "@mui/icons-material/SyncOutlined";
 import Terminal from "@mui/icons-material/TerminalOutlined";
@@ -23,7 +26,6 @@ import {
   Breadcrumbs,
   Button,
   ButtonBase,
-  Divider,
   Drawer,
   IconButton,
   Link,
@@ -47,7 +49,6 @@ import {
   useParams,
   useSearchParams,
 } from "react-router";
-import type { Task, WorkspaceSummary } from "../../../shared/channels.ts";
 import { bridge, errorText } from "../bridge.ts";
 import { useNow } from "../clock.ts";
 import { useConnection } from "../events.ts";
@@ -55,7 +56,6 @@ import {
   activeCount,
   crumbs,
   needsYouCount,
-  projectCounts,
   syncSummary,
   workspaceName,
   type SyncTone,
@@ -63,6 +63,7 @@ import {
 import { isMac, TITLE_ROW, TRAFFIC_LIGHTS_WIDTH } from "../platform.ts";
 import {
   useGateNoticeTasks,
+  useInboxCards,
   useIssues,
   useProjects,
   useStatus,
@@ -95,8 +96,10 @@ function useNavData(ws: string | undefined) {
   // The sync state reads again every 10 s, as the Devices screen (openspec navigation-prototype).
   const sync = useSyncStatus(10_000).data;
   const now = useNow(10_000);
+  const cards = useInboxCards(ws).data ?? [];
   return {
     tasks,
+    unread: cardCounts(cards).unread,
     needsYou: needsYouCount(tasks, issues, notices),
     active: activeCount(tasks),
     sync: syncSummary(sync, now),
@@ -174,84 +177,6 @@ function NavItem(props: {
     </Tooltip>
   ) : (
     item
-  );
-}
-
-/** A section label of the sidebar ("Projects", "Workspace", "This device"): not a heading. */
-function NavSection({
-  label,
-  compact,
-  action,
-}: {
-  label: string;
-  compact: boolean;
-  action?: ReactNode;
-}) {
-  if (compact) return <Divider sx={{ mx: 4, my: 2 }} />;
-  return (
-    <Stack direction="row" sx={{ alignItems: "center", px: 4, pr: 2, pt: 4, pb: 1, minHeight: 28 }}>
-      <Typography variant="subtitle2" component="div" color="text.secondary" sx={{ flex: 1 }}>
-        {label}
-      </Typography>
-      {action}
-    </Stack>
-  );
-}
-
-/** One row per project: the letter tile, the name and the counts "needs you · working". */
-function ProjectRows({
-  ws,
-  tasks,
-  compact,
-  onNavigate,
-}: {
-  ws: string;
-  tasks: Task[];
-  compact: boolean;
-  onNavigate?: (() => void) | undefined;
-}) {
-  const projects = useProjects(ws);
-  return (
-    <>
-      {(projects.data ?? []).map((p) => {
-        const counts = projectCounts(tasks, p.slug);
-        const label = p.archived ? `${p.name} · archived` : p.name;
-        return (
-          <NavItem
-            key={p.slug}
-            to={`/w/${ws}/p/${p.slug}/board`}
-            match={`/w/${ws}/p/${p.slug}/`}
-            compact={compact}
-            label={label}
-            icon={<LetterTile name={p.name} size={18} />}
-            count={compact ? counts.you : 0}
-            you
-            trailing={
-              <Typography variant="caption" color="text.secondary" title="Needs you · working">
-                <Box component="span" sx={{ color: counts.you > 0 ? "warning.main" : undefined }}>
-                  {counts.you}
-                </Box>
-                {` · ${counts.working}`}
-              </Typography>
-            }
-            onNavigate={onNavigate}
-          />
-        );
-      })}
-    </>
-  );
-}
-
-/** The "+" of the Projects section: Add a project (openspec create-flows). */
-function AddProjectButton({ ws }: { ws: WorkspaceSummary }) {
-  const dialogs = useDialogs();
-  const label = `Add a project to ${workspaceName(ws)}`;
-  return (
-    <Tooltip title={label}>
-      <IconButton size="small" aria-label={label} onClick={() => dialogs.addProject(ws.id)}>
-        <Add fontSize="small" />
-      </IconButton>
-    </Tooltip>
   );
 }
 
@@ -397,52 +322,62 @@ export function Sidebar({
             compact={compact}
             icon={<Inbox fontSize="small" />}
             label="Inbox"
-            count={data.needsYou}
-            you
+            count={data.unread}
             onNavigate={onNavigate}
           />
           <NavItem
             to={`/w/${ws}/tasks`}
-            exact
+            match={`/w/${ws}/tasks`}
             compact={compact}
             icon={<ViewKanban fontSize="small" />}
-            label="All tasks"
-            count={data.active}
-            onNavigate={onNavigate}
-          />
-          <NavSection
-            label="Projects"
-            compact={compact}
-            {...(selected ? { action: <AddProjectButton ws={selected} /> } : {})}
-          />
-          <ProjectRows ws={ws} tasks={data.tasks} compact={compact} onNavigate={onNavigate} />
-          <NavSection label="Workspace" compact={compact} />
-          <NavItem
-            to={`/w/${ws}/knowledge`}
-            compact={compact}
-            icon={<MenuBook fontSize="small" />}
-            label="Shared knowledge"
-            onNavigate={onNavigate}
-          />
-          <NavItem
-            to={`/w/${ws}/credentials`}
-            compact={compact}
-            icon={<Key fontSize="small" />}
-            label="Credentials"
+            label="Tasks"
+            count={data.needsYou}
+            you
             onNavigate={onNavigate}
           />
         </List>
       )}
-      <List disablePadding>
-        <NavSection label="This device" compact={compact} />
+      <Box sx={{ flex: 1 }} />
+      {/* The tools at the bottom (openspec nav-tasks-needs-you): projects are a filter, not rows. */}
+      <List disablePadding sx={{ borderTop: 1, borderColor: "divider", pt: 1 }}>
         {ws && (
-          <NavItem
-            to={`/w/${ws}/devices`}
-            compact={compact}
-            icon={<Devices fontSize="small" />}
-            label="Devices & sync"
-            onNavigate={onNavigate}
-          />
+          <>
+            <NavItem
+              to={`/w/${ws}/projects`}
+              compact={compact}
+              icon={<FolderOpen fontSize="small" />}
+              label="Projects"
+              onNavigate={onNavigate}
+            />
+            <NavItem
+              to={`/w/${ws}/knowledge`}
+              compact={compact}
+              icon={<MenuBook fontSize="small" />}
+              label="Knowledge"
+              onNavigate={onNavigate}
+            />
+            <NavItem
+              to={`/w/${ws}/sources`}
+              compact={compact}
+              icon={<Power fontSize="small" />}
+              label="Sources"
+              onNavigate={onNavigate}
+            />
+            <NavItem
+              to={`/w/${ws}/credentials`}
+              compact={compact}
+              icon={<Key fontSize="small" />}
+              label="Credentials"
+              onNavigate={onNavigate}
+            />
+            <NavItem
+              to={`/w/${ws}/devices`}
+              compact={compact}
+              icon={<Devices fontSize="small" />}
+              label="Devices & sync"
+              onNavigate={onNavigate}
+            />
+          </>
         )}
         <NavItem
           to="/settings"
@@ -452,7 +387,6 @@ export function Sidebar({
           onNavigate={onNavigate}
         />
       </List>
-      <Box sx={{ flex: 1 }} />
       {ws && (
         <Box
           sx={{
@@ -660,10 +594,10 @@ function TopBar({ onMenu, ws }: { onMenu?: () => void; ws: string | undefined })
       <Breadcrumb ws={ws} narrow={narrow} />
       {/* With no workspace, these actions do nothing: the first-run screen has the next step (F-32). */}
       {ws && data.needsYou > 0 && (
-        <Tooltip title="Open the Inbox (⌘1)">
+        <Tooltip title="Open the tasks that need you">
           <Button
             component={RouterLink}
-            to={`/w/${ws}/inbox`}
+            to={`/w/${ws}/tasks?tab=needs`}
             aria-label={`Needs you: ${data.needsYou}`}
             startIcon={<PanTool sx={{ fontSize: 16 }} />}
             sx={{

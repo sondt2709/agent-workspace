@@ -9,7 +9,7 @@ import { queueIndex, queueLine } from "../queue-model.ts";
 import { installBridge, makeTask, renderApp } from "../testing.tsx";
 import { DialogsProvider } from "./dialogs.tsx";
 import { TaskDetail } from "./TaskDetail.tsx";
-import { ProjectTasks } from "./TaskViews.tsx";
+import { TaskScreen } from "./TaskViews.tsx";
 
 afterEach(cleanup);
 
@@ -73,7 +73,7 @@ describe("queue on the desktop", () => {
 
   it("puts the task in the Queued group of the List with its position and cause", async () => {
     installBridge(handlers);
-    renderApp(<ProjectTasks view="list" />, {
+    renderApp(<TaskScreen view="list" projects={["billing-api"]} />, {
       route: "/w/:ws/p/:project/list",
       url: "/w/ws-1/p/billing-api/list",
     });
@@ -87,7 +87,7 @@ describe("queue on the desktop", () => {
 
   it("shows the chip on the Board card in its stage column", async () => {
     installBridge(handlers);
-    renderApp(<ProjectTasks view="board" />, {
+    renderApp(<TaskScreen view="board" projects={["billing-api"]} />, {
       route: "/w/:ws/p/:project/board",
       url: "/w/ws-1/p/billing-api/board",
     });

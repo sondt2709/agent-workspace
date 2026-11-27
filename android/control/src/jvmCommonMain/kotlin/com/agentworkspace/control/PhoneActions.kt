@@ -1,6 +1,12 @@
 package com.agentworkspace.control
 
 import com.agentworkspace.schema.GateAnsweredV1
+import com.agentworkspace.schema.InboxAskV1
+import com.agentworkspace.schema.InboxCardProjectV1
+import com.agentworkspace.schema.InboxCardSetV1
+import com.agentworkspace.schema.InboxReplyRequestedV1
+import com.agentworkspace.schema.InboxRunRequestedV1
+import com.agentworkspace.schema.InboxTaskCreatedV1
 import com.agentworkspace.schema.MessageSentV1
 import com.agentworkspace.schema.SchemaViolation
 import com.agentworkspace.schema.SessionStopRequestedV1
@@ -48,6 +54,8 @@ data class NewTaskDraft(
     val sessionOptions: SessionOptionsDraft? = null,
     /** The title; blank: the first line of the first message, as on the desktop. */
     val title: String? = null,
+    /** The links of the task, for example `inbox:<card>` (openspec inbox-mattermost). */
+    val links: List<String> = emptyList(),
 ) {
     companion object {
         /**
@@ -109,6 +117,105 @@ class PhoneActions(
         GateRules.problem(open, answer, comment)?.let { return ActionResult.Refused(it) }
         val data = GateAnsweredV1(gate, open.version, answer.trim(), comment?.trim()?.takeIf { it.isNotEmpty() })
         return write(task) { path -> writer.write(path, "gate.answered", GateAnsweredV1.serializer(), data) }
+    }
+
+    // ---- The Inbox (openspec inbox-mattermost): person events in the workspace log ----
+
+    /**
+     * Marks a card read or unread, done or not done, or changes its category: `inbox.card_set`.
+     * It never writes a project: the project is its own event (`setCardProject`), so a read on the
+     * phone never changes a project that another device set.
+     */
+    suspend fun setCard(
+        card: String,
+        read: Boolean? = null,
+        done: Boolean? = null,
+        category: String? = null,
+    ): ActionResult {
+        if (snapshot().cards.none { it.card == card }) return ActionResult.Refused(NO_CARD)
+        val data = InboxCardSetV1(card, read, done, category)
+        return writeWorkspace { path -> writer.write(path, "inbox.card_set", InboxCardSetV1.serializer(), data) }
+    }
+
+    /** Changes the project of a card (null: no project): `inbox.card_project`. */
+    suspend fun setCardProject(
+        card: String,
+        project: String?,
+    ): ActionResult {
+        if (snapshot().cards.none { it.card == card }) return ActionResult.Refused(NO_CARD)
+        if (project != null && snapshot().projects.none { it.slug == project }) {
+            return ActionResult.Refused("No project $project on this phone.")
+        }
+        val data = InboxCardProjectV1(card, project)
+        return writeWorkspace { path ->
+            writer.write(path, "inbox.card_project", InboxCardProjectV1.serializer(), data)
+        }
+    }
+
+    /** Asks the triage agent about a card: `inbox.ask`. */
+    suspend fun askCard(
+        card: String,
+        text: String,
+    ): ActionResult {
+        if (snapshot().cards.none { it.card == card }) return ActionResult.Refused(NO_CARD)
+        if (text.isBlank()) return ActionResult.Refused("Write a question.")
+        val data = InboxAskV1(card, newId(time.now()), text.trim())
+        return writeWorkspace { path -> writer.write(path, "inbox.ask", InboxAskV1.serializer(), data) }
+    }
+
+    /** Sends a reply to the thread of a card: the collecting computer posts it once. */
+    suspend fun replyCard(
+        card: String,
+        text: String,
+    ): ActionResult {
+        val view = snapshot().cards.firstOrNull { it.card == card } ?: return ActionResult.Refused(NO_CARD)
+        if (text.isBlank()) return ActionResult.Refused("Write a reply.")
+        // One reply at a time: a double tap or a retry never posts twice.
+        if (view.replies.any { it.state == "requested" }) {
+            return ActionResult.Refused("A reply of this card is not sent yet. Wait for it.")
+        }
+        val data = InboxReplyRequestedV1(card, newId(time.now()), text.trim(), true)
+        return writeWorkspace { path ->
+            writer.write(path, "inbox.reply_requested", InboxReplyRequestedV1.serializer(), data)
+        }
+    }
+
+    /** "Run now": the collecting computer reads the source and sends a batch. */
+    suspend fun runInbox(source: String): ActionResult {
+        val data = InboxRunRequestedV1(source)
+        return writeWorkspace { path ->
+            writer.write(path, "inbox.run_requested", InboxRunRequestedV1.serializer(), data)
+        }
+    }
+
+    /**
+     * Creates the task of a card: a task always has a project (the draft must name one). The task
+     * has the link `inbox:<card>`, then `inbox.task_created` names it on the card.
+     */
+    suspend fun createTaskFromCard(
+        card: String,
+        draft: NewTaskDraft,
+    ): ActionResult {
+        val view = snapshot().cards.firstOrNull { it.card == card } ?: return ActionResult.Refused(NO_CARD)
+        if (draft.project.isBlank()) return ActionResult.Refused("Choose a project.")
+        // One task for a card: also a task whose inbox.task_created was not written has the link.
+        val link = "inbox:$card"
+        if (view.tasks.isNotEmpty() || snapshot().tasks.any { link in it.links }) {
+            return ActionResult.Refused("This card already has a task.")
+        }
+        val created = createTask(draft.copy(links = draft.links + link))
+        if (created !is ActionResult.Done) return created
+        val data = InboxTaskCreatedV1(card, created.task)
+        // A refused write keeps the task: its link stops a second task from this card.
+        writeWorkspace { path -> writer.write(path, "inbox.task_created", InboxTaskCreatedV1.serializer(), data) }
+        return created
+    }
+
+    private suspend fun writeWorkspace(block: (String) -> Unit): ActionResult {
+        val path = EventWriter.workspaceLog(writer.device)
+        val result = lock.withLock { writeLocked(WORKSPACE, path, snapshot(), block) }
+        if (result is ActionResult.Done) afterWrite(path)
+        return result
     }
 
     /** Sends free text to the running session of a task: `message.sent {id, text, to_session}`. */
@@ -208,6 +315,7 @@ class PhoneActions(
                             .filter { it.isNotEmpty() }
                             .distinct(),
                     sessionOptions = options?.forCreate(),
+                    links = draft.links,
                 )
             } catch (e: SchemaViolation) {
                 return ActionResult.Refused("Check the field ${e.field}: ${e.message}")
@@ -382,7 +490,12 @@ class PhoneActions(
         }
     }
 
-    private companion object {
+    companion object {
+        /** The task of a workspace event in an [ActionResult.Done]: none. */
+        const val WORKSPACE = ""
+
+        private const val NO_CARD = "The card is not on this phone."
+
         /** The refusal of a create before the phone has `workspace.yaml` (awd: `not_ready`). */
         const val NO_KEY_PREFIX =
             "The phone does not have workspace.yaml of this workspace yet. Wait for the sync, then try again."

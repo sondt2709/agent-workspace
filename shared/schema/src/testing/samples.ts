@@ -110,6 +110,40 @@ export const validData: Record<EventType, Record<string, unknown>> = {
   },
   "knowledge.suggestion_resolved": { suggestion: ID2, decision: "accepted", comment: null },
   "device.heartbeat": { boot_time: "2026-11-22T08:00:00.000Z" },
+  "source.configured": {
+    source: "mattermost",
+    kind: "mattermost",
+    name: "Mattermost",
+    server_url: "https://chat.example.com",
+    credential: "mattermost-alex",
+    collector: "ubuntu-01",
+    conversations: [
+      { id: "ch-billing", name: "~billing", kind: "channel", read: "all", project: "billing-api" },
+    ],
+  },
+  "inbox.run_requested": { source: "mattermost" },
+  "inbox.card_added": {
+    card: ID,
+    source: "mattermost",
+    conversation: { id: "ch-billing", name: "~billing", kind: "channel" },
+    thread: "post-1",
+    category: "action",
+    urgency: "high",
+    title: "Invoice CSV export fails with error 500",
+    summary: "Export CSV returns error 500.",
+    task: { title: "Fix the CSV export", project: "billing-api", first_message: "Fix it." },
+    messages: [
+      { id: "post-1", author: "Minh Tran", at: "2026-11-27T10:12:00.000Z", text: "Export fails" },
+    ],
+  },
+  "inbox.card_updated": { card: ID, urgency: "normal" },
+  "inbox.card_set": { card: ID, read: true },
+  "inbox.card_project": { card: ID, project: "billing-api" },
+  "inbox.ask": { card: ID, ask: ID2, text: "Make it shorter" },
+  "inbox.answer": { card: ID, ask: ID2, text: "Done." },
+  "inbox.reply_requested": { card: ID, reply: ID2, text: "Yes, today." },
+  "inbox.reply_result": { card: ID, reply: ID2, state: "sent", post: "post-9" },
+  "inbox.task_created": { card: ID, task: ID2 },
 };
 
 export function event(type: string, data: unknown, extra: Record<string, unknown> = {}) {
@@ -648,5 +682,23 @@ export const eventSamples: { name: string; value: unknown; invalidPath?: string 
     name: "by null",
     value: event("comment.added", validData["comment.added"], { by: null }),
     invalidPath: "by",
+  },
+  {
+    name: "inbox.card_added with the category maybe",
+    value: event("inbox.card_added", { ...validData["inbox.card_added"], category: "maybe" }),
+    invalidPath: "data.category",
+  },
+  {
+    name: "inbox.card_added with no message",
+    value: event("inbox.card_added", { ...validData["inbox.card_added"], messages: [] }),
+    invalidPath: "data.messages",
+  },
+  {
+    name: "source.configured with the read level some",
+    value: event("source.configured", {
+      ...validData["source.configured"],
+      default_read: "some",
+    }),
+    invalidPath: "data.default_read",
   },
 ];

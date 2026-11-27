@@ -70,6 +70,22 @@ object AwChecks {
         if (value.length > max) fail(field, "use at most $max characters")
     }
 
+    fun minItems(
+        value: Collection<*>,
+        min: Int,
+        field: String,
+    ) {
+        if (value.size < min) fail(field, "use at least $min items")
+    }
+
+    fun maxItems(
+        value: Collection<*>,
+        max: Int,
+        field: String,
+    ) {
+        if (value.size > max) fail(field, "use at most $max items")
+    }
+
     fun atLeast(
         value: Long,
         min: Long,

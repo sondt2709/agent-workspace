@@ -3,6 +3,7 @@
 import { assigneeDevice, type Clock } from "@aw/core";
 import type { AgentInfo, HostInfo } from "@aw/plugin-api";
 import type { FetchLike } from "@aw/push-webpush";
+import type { HealthInbox } from "@aw/schema";
 import { readFileSync } from "node:fs";
 import { uptime } from "node:os";
 import { join } from "node:path";
@@ -24,6 +25,8 @@ export interface SessionServiceOptions {
   settings: Settings;
   log: Logger;
   clock: Clock;
+  /** The `inbox` part of health.yaml of a workspace (openspec inbox-mattermost). */
+  inboxHealth?: (workspace: string) => HealthInbox | null;
   /** The wait of the permission hook. Default 120 s (tests give a short one). */
   permissionTimeoutMs?: number;
   /** The wait before a new try of a failed session start. Default 60 s (tests give a short one). */
@@ -60,6 +63,7 @@ export class SessionService {
   readonly #hostNoticeMs: number | undefined;
   readonly #prepareRetryMs: number;
   readonly #managers = new Map<string, SessionManager>();
+  readonly #inboxHealth: ((workspace: string) => HealthInbox | null) | undefined;
   /** The session tokens of this device (add-mcp-server, decision 3). */
   readonly tokens: SessionTokens;
   /** Open workspaces with no manager: the host or the agent was missing at the open. */
@@ -95,6 +99,7 @@ export class SessionService {
     this.#hostNoticeMs = options.hostNoticeMs;
     this.#prepareRetryMs = options.prepareRetryMs ?? PREPARE_RETRY_MS;
     this.tokens = new SessionTokens(options.settings.home);
+    this.#inboxHealth = options.inboxHealth;
     // The session tokens are secrets of the redaction of each workspace (architecture.md 6.4.2).
     this.tokens.onChange(() => {
       for (const service of this.#services()) this.#redactTokens(service);
@@ -151,6 +156,11 @@ export class SessionService {
    * The host, the agent and the session folder, once. A failed setup, no host or no agent binary
    * is not kept: the next try (every PREPARE_RETRY_MS) looks again, with no restart of awd.
    */
+  /** The host, the agent and the launcher of this device, or null (the triage session uses them). */
+  tools(): Promise<SessionTools | null> {
+    return this.#prepare();
+  }
+
   #prepare(): Promise<SessionTools | null> {
     const prepared = (this.#tools ??= (async () => {
       const host = await makeHost(this.#settings, this.#log);
@@ -235,6 +245,7 @@ export class SessionService {
       ...(this.#hostNoticeMs === undefined ? {} : { hostNoticeMs: this.#hostNoticeMs }),
       auth: () => auth.state,
       bootMs: this.#bootMs,
+      inboxHealth: () => this.#inboxHealth?.(service.id) ?? null,
       // The guard and the "Other folder" check protect each workspace folder of this device.
       workspaceFolders: () => this.#services().map((other) => other.root),
       ...(this.#slotTtlMs === undefined ? {} : { slotTtlMs: this.#slotTtlMs }),

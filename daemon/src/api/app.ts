@@ -51,6 +51,7 @@ import { registerCallerRule, type Access } from "./caller.ts";
 import { registerDesktopRoutes } from "./desktop-routes.ts";
 import { registerDoctorRoutes } from "./doctor-routes.ts";
 import { registerIdentityRoutes } from "./identity-routes.ts";
+import { registerInboxRoutes } from "./inbox-routes.ts";
 import { registerKnowledgeRoutes } from "./knowledge.ts";
 import { registerMessageRoutes } from "./messages.ts";
 import type { PeerTools } from "./peer.ts";
@@ -664,6 +665,7 @@ export async function createApp(daemon: Daemon, options: AppOptions = {}) {
   registerSetupRoutes(api, daemon);
   registerDoctorRoutes(api, daemon);
   registerQueueRoutes(api, daemon);
+  registerInboxRoutes(api, daemon);
   registerTerminalRoutes(api, daemon);
 
   // ---- Events ----

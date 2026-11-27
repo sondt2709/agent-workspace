@@ -904,6 +904,8 @@ export class MergeEngine {
       devices,
       queues: structuredClone(this.#workspace.queues),
       slots: structuredClone(this.#workspace.slots),
+      sources: structuredClone(this.#workspace.sources),
+      cards: structuredClone(this.#workspace.cards),
       issues: this.#issues(now),
       last_hlc: this.#lastHlc,
     };

@@ -373,6 +373,10 @@ data class WorkspaceView(
     val devices: List<DeviceView>,
     val queues: List<QueueView>,
     val slots: List<SlotView>,
+    /** The sources of the Inbox (openspec inbox-mattermost), as zod-output JSON. */
+    val sources: List<JsonObject> = emptyList(),
+    /** The Inbox cards, the newest message first, as zod-output JSON. */
+    val cards: List<JsonObject> = emptyList(),
     val issues: List<MergeIssue>,
     @SerialName("last_hlc") val lastHlc: String?,
 )

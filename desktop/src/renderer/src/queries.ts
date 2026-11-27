@@ -1,6 +1,7 @@
 // TanStack Query keys and hooks: the only store of awd data in the renderer (docs/tech-stack.md
 // 2.4). Each queryFn calls the bridge. Events invalidate the keys (events.ts).
 import { gateContext, PROPOSAL_TEXT } from "@aw/client/gates";
+import { sourceInputOf, type SourceInput } from "@aw/client/inbox-api";
 import { deviceNames, withPresencePause } from "@aw/client/pause";
 import {
   QueryClient,
@@ -76,6 +77,14 @@ export const keys = {
   gateNotice: (ws: string, task: string) => ["aw", "ws", ws, "gate-notice", task] as const,
   taskFile: (ws: string, task: string, path: string) =>
     ["aw", "ws", ws, "files", task, path] as const,
+  // ---- openspec inbox-mattermost ----
+  inbox: (ws: string) => ["aw", "ws", ws, "inbox"] as const,
+  cards: (ws: string) => ["aw", "ws", ws, "inbox", "cards"] as const,
+  sources: (ws: string) => ["aw", "ws", ws, "inbox", "sources"] as const,
+  sourceStatus: (ws: string, source: string) =>
+    ["aw", "ws", ws, "inbox", "status", source] as const,
+  conversations: (ws: string, source: string) =>
+    ["aw", "ws", ws, "inbox", "conversations", source] as const,
 };
 
 export const useStatus = () =>
@@ -581,3 +590,77 @@ export const useOpenTerminal = (ws: string, task: string) =>
   useMutation({
     mutationFn: (action: TerminalAction) => call("openTerminal", { ws, task, action }),
   });
+
+// ---- The Inbox and the sources (openspec inbox-mattermost) ----
+
+/** Each card of the workspace (open and done): the filters run in the renderer. */
+export const useInboxCards = (ws: string | undefined) =>
+  useQuery({
+    queryKey: keys.cards(ws ?? ""),
+    queryFn: () => call("inboxCards", { ws: ws!, state: "all" }),
+    enabled: !!ws,
+  });
+
+export const useSources = (ws: string | undefined) =>
+  useQuery({
+    queryKey: keys.sources(ws ?? ""),
+    queryFn: () => call("sources", { ws: ws! }),
+    enabled: !!ws,
+  });
+
+/** The collector state and a connection test; read again every 30 s. */
+export const useSourceStatus = (ws: string | undefined, source: string | undefined) =>
+  useQuery({
+    queryKey: keys.sourceStatus(ws ?? "", source ?? ""),
+    queryFn: () => call("sourceStatus", { ws: ws!, source: source! }),
+    enabled: !!ws && !!source,
+    refetchInterval: 30_000,
+  });
+
+export const useSourceConversations = (ws: string | undefined, source: string | undefined) =>
+  useQuery({
+    queryKey: keys.conversations(ws ?? "", source ?? ""),
+    queryFn: () => call("sourceConversations", { ws: ws!, source: source! }),
+    enabled: !!ws && !!source,
+  });
+
+/**
+ * A change of the configuration of one source. Each save reads the newest configuration when it
+ * runs and applies only its own change, and the saves of one source run one after another: two
+ * quick changes on the Sources page never overwrite each other.
+ */
+export function useSourceSave(ws: string, source: string) {
+  const client = useQueryClient();
+  return useMutation({
+    scope: { id: `source-save:${ws}:${source}` },
+    mutationFn: async (change: (input: SourceInput | null) => SourceInput) => {
+      const sources = await client.fetchQuery({
+        queryKey: keys.sources(ws),
+        queryFn: () => call("sources", { ws }),
+        staleTime: 0,
+      });
+      const current = sources.find((s) => s.source === source && !s.removed);
+      const body = change(current ? sourceInputOf(current) : null);
+      return call("setSource", { ws, source, body });
+    },
+    onSettled: async () => {
+      await client.invalidateQueries({ queryKey: keys.sources(ws) });
+    },
+  });
+}
+
+/**
+ * A write of the Inbox: it refreshes the cards and the sources, not the source status and the
+ * conversations, which call Mattermost.
+ */
+export function useInboxWrite<A, R>(ws: string, fn: (args: A) => Promise<R>) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: fn,
+    onSettled: async () => {
+      await client.invalidateQueries({ queryKey: keys.cards(ws) });
+      await client.invalidateQueries({ queryKey: keys.sources(ws) });
+      await client.invalidateQueries({ queryKey: keys.taskLists(ws) });
+    },
+  });
+}

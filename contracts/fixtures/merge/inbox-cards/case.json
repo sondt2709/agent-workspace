@@ -1,0 +1,4 @@
+{
+  "description": "The Inbox rules (openspec inbox-mattermost). awd adds and updates cards; a person adds none (not_agent). A person sets read, done, category and project; an agent does not (not_human). A second card_added of a card is refused (duplicate_card). A new message in a done and read card makes it unread and not done; a known message id is kept once. A category change to action gives a task suggestion. An answer needs its ask (unknown_ask). A sent reply stays sent (already_sent). A run request of an unknown source is refused. Only the collecting device writes cards, answers and reply results (not_collector). A category or a project of a person wins over a later change of the agent; inbox.card_project sets the project (also null), and a project in inbox.card_set changes nothing. Two card_set events with the same HLC: the device slug breaks the tie.",
+  "now": "2026-11-27T12:00:00.000Z"
+}

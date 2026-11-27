@@ -6,5 +6,6 @@ export * from "./events.ts";
 export * from "./generated.ts";
 export * from "./hlc.ts";
 export * from "./ids.ts";
+export * from "./inbox.ts";
 export * from "./legacy.ts";
 export * from "./registry.ts";

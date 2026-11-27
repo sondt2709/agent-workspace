@@ -29,6 +29,7 @@ data class Decision(
 }
 
 /** The fold of the workspace logs: queues, slot leases and credential names (`workspace.ts`). */
+@Suppress("LongParameterList") // One list per part of the view; the Inbox added 2 (inbox-mattermost).
 class WorkspaceFold(
     val queues: List<QueueView>,
     val slots: List<SlotView>,
@@ -36,6 +37,9 @@ class WorkspaceFold(
     val decisions: Map<String, Decision>,
     /** Each `project.removed` of a person, in merge order. */
     val removals: List<RemovedProjectView> = emptyList(),
+    /** The sources and the Inbox cards (`inbox.ts`), as the zod-output JSON of the views. */
+    val sources: List<JsonObject> = emptyList(),
+    val cards: List<JsonObject> = emptyList(),
 ) {
     companion object {
         val EMPTY = WorkspaceFold(emptyList(), emptyList(), emptyList(), emptyMap())
@@ -46,6 +50,7 @@ class WorkspaceFold(
  * Folds the workspace events. The caller gives them in merge order. `resources` reads `bindings.yaml`;
  * `revokedAt` gives the revoke HLC of a revoked device.
  */
+@Suppress("LongMethod") // One branch per workspace event; the Inbox types added 13 lines (inbox-mattermost).
 fun foldWorkspace(
     lines: List<LogLine>,
     revokedAt: (String) -> String? = { null },
@@ -56,6 +61,7 @@ fun foldWorkspace(
     val slots = SlotLeases(resources)
     val decisions = HashMap<String, Decision>()
     val removals = ArrayList<RemovedProjectView>()
+    val inbox = InboxAccumulator()
     for (line in lines) {
         val e = line.event
         if (isAfterRevoke(e, revokedAt)) {
@@ -66,6 +72,22 @@ fun foldWorkspace(
             when (val data = e.data) {
                 null -> {
                     Decision.reject("unknown_type")
+                }
+
+                // The sources and the cards of the Inbox (openspec inbox-mattermost).
+                is com.agentworkspace.schema.SourceConfiguredV1,
+                is com.agentworkspace.schema.InboxRunRequestedV1,
+                is com.agentworkspace.schema.InboxCardAddedV1,
+                is com.agentworkspace.schema.InboxCardUpdatedV1,
+                is com.agentworkspace.schema.InboxCardSetV1,
+                is com.agentworkspace.schema.InboxCardProjectV1,
+                is com.agentworkspace.schema.InboxAskV1,
+                is com.agentworkspace.schema.InboxAnswerV1,
+                is com.agentworkspace.schema.InboxReplyRequestedV1,
+                is com.agentworkspace.schema.InboxReplyResultV1,
+                is com.agentworkspace.schema.InboxTaskCreatedV1,
+                -> {
+                    inbox.apply(e)
                 }
 
                 is QueueReorderedV1 -> {
@@ -102,7 +124,10 @@ fun foldWorkspace(
                 }
             }
     }
+    val (sourceViews, cardViews) = inbox.result()
     return WorkspaceFold(
+        sources = sourceViews,
+        cards = cardViews,
         queues = queues.values.sortedBy { it.agent },
         slots = slots.views(),
         credentials = credentials.views(),

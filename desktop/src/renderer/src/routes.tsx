@@ -1,16 +1,19 @@
 // The routes (docs/tech-stack.md 2.4 `react-router`): the route holds the selection and the view.
 import { Alert, Box } from "@mui/material";
-import { createHashRouter, Navigate, useRouteError, type RouteObject } from "react-router";
+import { createHashRouter, useRouteError, type RouteObject } from "react-router";
 import { AppShell, Home } from "./components/AppShell.tsx";
 import { DevicesPage } from "./components/Devices.tsx";
 import { FilesPage } from "./components/Files.tsx";
 import { Inbox } from "./components/Inbox.tsx";
 import { KnowledgePage } from "./components/Knowledge.tsx";
 import { ProjectFrame } from "./components/ProjectFrame.tsx";
+import { ProjectsPage } from "./components/Projects.tsx";
 import { ProjectSettingsPage } from "./components/ProjectSettings.tsx";
 import { CredentialsPage, SettingsPage } from "./components/Settings.tsx";
 import { SetupCheckPage } from "./components/SetupCheck.tsx";
-import { AllTasks, ProjectTasks, TaskPage } from "./components/TaskViews.tsx";
+import { SourcesPage } from "./components/Sources.tsx";
+import { TasksPage } from "./components/Tasks.tsx";
+import { ProjectTasks, TaskPage } from "./components/TaskViews.tsx";
 import { isMac, TITLE_ROW } from "./platform.ts";
 
 function RouteError() {
@@ -48,8 +51,9 @@ export const routes: RouteObject[] = [
         path: "w/:ws/p/:project",
         element: <ProjectFrame />,
         children: [
-          // A project URL with no tab opens the Board (fix list npc-8).
-          { index: true, element: <Navigate to="board" replace /> },
+          // A project URL with no tab, the Board or the List: Tasks with the filter of the project
+          // (openspec nav-tasks-needs-you).
+          { index: true, element: <ProjectTasks view="board" /> },
           { path: "board", element: <ProjectTasks view="board" /> },
           { path: "list", element: <ProjectTasks view="list" /> },
           { path: "knowledge", element: <KnowledgePage scope="project" /> },
@@ -57,7 +61,9 @@ export const routes: RouteObject[] = [
           { path: "settings", element: <ProjectSettingsPage /> },
         ],
       },
-      { path: "w/:ws/tasks", element: <AllTasks /> },
+      { path: "w/:ws/tasks", element: <TasksPage /> },
+      { path: "w/:ws/projects", element: <ProjectsPage /> },
+      { path: "w/:ws/sources", element: <SourcesPage /> },
       { path: "w/:ws/knowledge", element: <KnowledgePage scope="shared" /> },
       { path: "w/:ws/devices", element: <DevicesPage /> },
       { path: "w/:ws/credentials", element: <CredentialsPage /> },

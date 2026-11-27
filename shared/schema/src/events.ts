@@ -23,6 +23,7 @@ import {
   workIn,
 } from "./common.ts";
 import { projectV1 } from "./documents.ts";
+import { inboxEventData } from "./inbox.ts";
 
 /** The fields of each event, with any type and any data. */
 export const eventEnvelope = z.looseObject({
@@ -342,6 +343,9 @@ export const eventDataV1 = {
     decision: z.enum(["accepted", "rejected"]),
     comment: z.string().nullable().default(null),
   }),
+
+  // Sources and the Inbox (openspec inbox-mattermost): workspace log.
+  ...inboxEventData,
 
   // Presence: one line per 30 s in `devices/<device>/heartbeat/<date>.jsonl` (docs/phase-1.md 9.6).
   "device.heartbeat": z.looseObject({ boot_time: isoTime }),

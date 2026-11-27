@@ -51,7 +51,7 @@ describe("AppShell window parts", () => {
     expect(container.querySelectorAll(".aw-drag")).toHaveLength(2);
   });
 
-  it("shows the project names of the sidebar as labels, not as headings", async () => {
+  it("has no headings and no project rows in the sidebar (openspec nav-tasks-needs-you)", async () => {
     installBridge({
       workspaces: () => [{ id: "ws-1", name: "Personal", path: "/tmp/Personal", open_gates: 0 }],
     });
@@ -60,7 +60,8 @@ describe("AppShell window parts", () => {
       url: "/w/ws-1/inbox",
     });
     const nav = await screen.findByRole("navigation", { name: "Navigation" });
-    await within(nav).findByText("Billing API");
+    await within(nav).findByText("Sources");
+    expect(within(nav).queryByText("Billing API")).toBeNull();
     expect(within(nav).queryAllByRole("heading")).toEqual([]);
   });
 

@@ -297,8 +297,64 @@ export function sessionSettings(input: SessionSettingsInput): string {
   return `${JSON.stringify(settings, null, 2)}\n`;
 }
 
+/** The built-in tools of a session of untrusted input. */
+export const UNTRUSTED_BUILT_IN_TOOLS = "Read,Glob,Grep,ToolSearch,WaitForMcpServers";
+
+/** The MCP tools of a session of untrusted input: the AW server of `untrustedMcpConfig`. */
+export const UNTRUSTED_MCP_TOOLS = "mcp__aw__*";
+
+/**
+ * The MCP configuration of a session of untrusted input: only the AW server, with the same URL and
+ * token variables as the `.mcp.json` of the AW plugin (aw-launch sets them).
+ */
+export function untrustedMcpConfig(): string {
+  const server = {
+    type: "http",
+    url: "${AW_MCP_URL:-http://aw-mcp-url-not-set.invalid/mcp}",
+    headers: { Authorization: "Bearer ${AW_MCP_TOKEN:-none}" },
+  };
+  return `${JSON.stringify({ mcpServers: { aw: server } }, null, 2)}\n`;
+}
+
+/**
+ * The arguments of a session of untrusted input (openspec inbox-mattermost, design 6): no user
+ * settings, so no user allow rule, plugin or hook applies; no AW plugin; only the AW MCP server;
+ * the built-in tools Read, Glob and Grep, which the allow rules limit to the read folders;
+ * `dontAsk`, so a tool that is not allowed is refused at once and never waits for a person.
+ */
+function untrustedArgs(
+  input: LaunchInput,
+  untrusted: NonNullable<LaunchInput["untrusted"]>,
+): string[] {
+  return [
+    input.mode === "new" ? "--session-id" : "--resume",
+    input.sessionId,
+    "-n",
+    input.name,
+    "--settings",
+    input.settingsFile,
+    "--setting-sources",
+    "project",
+    "--permission-mode",
+    "dontAsk",
+    ...(input.model ? ["--model", input.model] : []),
+    "--strict-mcp-config",
+    "--mcp-config",
+    untrusted.mcpConfigFile,
+    // ToolSearch and WaitForMcpServers let the model wait for the AW server when the first input
+    // comes before it connects (code.claude.com/docs/en/mcp, 2026-11-28); they read no file.
+    "--tools",
+    UNTRUSTED_BUILT_IN_TOOLS,
+    // No --add-dir: Claude Code asks the person to trust each added folder, and nobody answers in
+    // this session. The allow rules of `untrustedFiles` give the reads in the read folders.
+    "--allowedTools",
+    UNTRUSTED_MCP_TOOLS,
+  ];
+}
+
 /** The arguments before `--` (docs/phase-1.md 9.1.3 and 9.1.4). Resume keeps the other flags. */
 export function launchArgs(input: LaunchInput): string[] {
+  if (input.untrusted) return untrustedArgs(input, input.untrusted);
   return [
     input.mode === "new" ? "--session-id" : "--resume",
     input.sessionId,
@@ -326,6 +382,14 @@ export class ClaudeAdapter implements AgentRuntimeAdapter {
   readonly binary: string;
   /** The Claude Code config folder (`CLAUDE_CONFIG_DIR`, default `~/.claude`): the transcripts. */
   readonly configDir: string | null;
+
+  untrustedFiles(readDirs: readonly string[]): { mcpConfig: string; allow: string[] } {
+    // `//` starts an absolute path in a permission rule of Claude Code.
+    return {
+      mcpConfig: untrustedMcpConfig(),
+      allow: [UNTRUSTED_MCP_TOOLS, ...readDirs.map((dir) => `Read(/${dir}/**)`)],
+    };
+  }
 
   constructor(options: { binary: string; configDir?: string | null }) {
     this.binary = options.binary;

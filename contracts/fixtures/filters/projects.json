@@ -1,0 +1,113 @@
+{
+  "description": "The project filter of Tasks and the Inbox (openspec nav-tasks-needs-you, spec tasks-view \"Project filter\"). The desktop (shared/client inbox.ts filterByProjects, projectFilterLabel, parseProjectFilter, projectFilterRows) and the phone (android/control ProjectFilter) run the same cases. Synthetic data, written by hand on 2026-11-27. The rows sort by the lower-case name, then by the name, by UTF-16 code unit in both apps (not by locale): a_b, AB, ab.",
+  "names": {
+    "demo-api": "Demo API",
+    "billing-api": "Billing API",
+    "infra": "Infra",
+    "a-under": "a_b",
+    "ab-lower": "ab",
+    "ab-upper": "AB"
+  },
+  "items": [
+    {
+      "id": "t1",
+      "project": "demo-api"
+    },
+    {
+      "id": "t2",
+      "project": "billing-api"
+    },
+    {
+      "id": "t3",
+      "project": "infra"
+    },
+    {
+      "id": "c4",
+      "project": null
+    }
+  ],
+  "filter": [
+    {
+      "name": "no selection keeps all",
+      "selected": [],
+      "ids": ["t1", "t2", "t3", "c4"],
+      "label": "Project"
+    },
+    {
+      "name": "one project",
+      "selected": ["demo-api"],
+      "ids": ["t1"],
+      "label": "Demo API"
+    },
+    {
+      "name": "two projects",
+      "selected": ["demo-api", "infra"],
+      "ids": ["t1", "t3"],
+      "label": "Demo API, Infra"
+    },
+    {
+      "name": "no project only",
+      "selected": ["none"],
+      "ids": ["c4"],
+      "label": "No project"
+    },
+    {
+      "name": "three selections",
+      "selected": ["none", "billing-api", "infra"],
+      "ids": ["t2", "t3", "c4"],
+      "label": "3 projects"
+    }
+  ],
+  "parse": [
+    {
+      "name": "empty",
+      "value": "",
+      "allow_none": true,
+      "selected": []
+    },
+    {
+      "name": "unknown slug and repeat dropped",
+      "value": "infra,nope,infra",
+      "allow_none": false,
+      "selected": ["infra"]
+    },
+    {
+      "name": "none only where allowed",
+      "value": "none,demo-api",
+      "allow_none": false,
+      "selected": ["demo-api"]
+    },
+    {
+      "name": "none allowed",
+      "value": "none,demo-api",
+      "allow_none": true,
+      "selected": ["none", "demo-api"]
+    }
+  ],
+  "rows": [
+    {
+      "name": "all rows of the Inbox",
+      "search": "",
+      "allow_none": true,
+      "slugs": ["none", "a-under", "ab-upper", "ab-lower", "billing-api", "demo-api", "infra"]
+    },
+    {
+      "name": "search ignores case",
+      "search": "BIL",
+      "allow_none": false,
+      "slugs": ["billing-api"]
+    },
+    {
+      "name": "search for the no-project row",
+      "search": "no",
+      "allow_none": true,
+      "slugs": ["none"]
+    },
+    {
+      "name": "names that differ only in case or by an underscore",
+      "search": "a",
+      "allow_none": false,
+      "slugs": ["a-under", "ab-upper", "ab-lower", "billing-api", "demo-api", "infra"]
+    }
+  ]
+}

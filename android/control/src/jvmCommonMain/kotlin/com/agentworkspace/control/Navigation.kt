@@ -28,6 +28,11 @@ sealed interface Route {
         val task: String,
     ) : Route
 
+    /** A card of the Inbox (openspec inbox-mattermost). */
+    data class Card(
+        val card: String,
+    ) : Route
+
     data object NewTask : Route
 
     data object AddCredential : Route
@@ -72,7 +77,7 @@ class Navigator(
      */
     fun open(route: Route) {
         when (route) {
-            is Route.Task, is Route.TaskPage, is Route.InboxItem -> {
+            is Route.Task, is Route.TaskPage, is Route.InboxItem, is Route.Card -> {
                 replace(listOf(stack.first(), route))
             }
 
@@ -117,8 +122,13 @@ class Navigator(
         if (top is Route.Task) stack.add(Route.TaskPage(top.id))
     }
 
-    /** A push opens the stack `[Inbox, TaskPage(id)]` (docs/phase-1.md 10.8), or `[Inbox]` with no task. */
-    fun openFromPush(task: String?) = replace(listOfNotNull(Route.Inbox, task?.let { Route.TaskPage(it) }))
+    /**
+     * A push of a task opens the stack `[Tasks, Task(id)]` (docs/phase-1.md 10.8; Needs you is in
+     * Tasks since openspec nav-tasks-needs-you). A push with no task (a card of the Inbox, a generic
+     * push) opens `[Inbox]`.
+     */
+    fun openFromPush(task: String?) =
+        replace(if (task == null) listOf(Route.Inbox) else listOf(Route.Tasks, Route.Task(task)))
 
     /**
      * Closes [route] when it is the top entry, for the end of a form action: the person can have left the

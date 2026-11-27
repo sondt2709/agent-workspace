@@ -252,9 +252,8 @@ export interface Crumb {
   mono?: boolean;
 }
 
+/** The project frame (openspec nav-tasks-needs-you): Board and List are in Tasks with a filter. */
 export const PROJECT_TABS = [
-  { tab: "board", label: "Board" },
-  { tab: "list", label: "List" },
   { tab: "knowledge", label: "Knowledge" },
   { tab: "files", label: "Files" },
   { tab: "settings", label: "Settings" },
@@ -262,8 +261,10 @@ export const PROJECT_TABS = [
 
 const WS_SCREENS: Record<string, string> = {
   inbox: "Inbox",
-  tasks: "All tasks",
-  knowledge: "Shared knowledge",
+  tasks: "Tasks",
+  projects: "Projects",
+  sources: "Sources",
+  knowledge: "Knowledge",
   devices: "Devices & sync",
   credentials: "Credentials",
 };
@@ -301,7 +302,7 @@ export function crumbs(
     const tab = PROJECT_TABS.find((t) => t.tab === project.params.tab);
     return [
       home,
-      { label: projectName(slug), to: `/w/${ws}/p/${slug}/board` },
+      { label: projectName(slug), to: `/w/${ws}/tasks?tab=all&projects=${slug}` },
       { label: tab?.label ?? project.params.tab ?? "", to: null },
     ];
   }
@@ -310,7 +311,10 @@ export function crumbs(
     const t = names.task;
     const parts: Crumb[] = [home];
     if (t?.project)
-      parts.push({ label: projectName(t.project), to: `/w/${ws}/p/${t.project}/board` });
+      parts.push({
+        label: projectName(t.project),
+        to: `/w/${ws}/tasks?tab=all&projects=${t.project}`,
+      });
     parts.push({ label: t ? taskLabel(t) : "Task", to: null, mono: true });
     return parts;
   }
@@ -403,7 +407,7 @@ export function commandOptions(input: {
       {
         group: "Screens",
         id: "s:tasks",
-        label: "All tasks",
+        label: "Tasks",
         shortcut: "⌘2",
         run: { go: `/w/${ws}/tasks` },
       },
@@ -416,9 +420,21 @@ export function commandOptions(input: {
       },
       {
         group: "Screens",
+        id: "s:projects",
+        label: "Projects",
+        run: { go: `/w/${ws}/projects` },
+      },
+      {
+        group: "Screens",
         id: "s:knowledge",
-        label: "Shared knowledge",
+        label: "Knowledge",
         run: { go: `/w/${ws}/knowledge` },
+      },
+      {
+        group: "Screens",
+        id: "s:sources",
+        label: "Sources",
+        run: { go: `/w/${ws}/sources` },
       },
       {
         group: "Screens",
@@ -442,8 +458,8 @@ export function commandOptions(input: {
       group: "Projects",
       id: `p:${p.slug}`,
       label: p.name,
-      hint: p.slug === p.name ? "Board" : `${p.slug} · Board`,
-      run: { go: `/w/${ws}/p/${p.slug}/board` },
+      hint: p.slug === p.name ? "Tasks" : `${p.slug} · Tasks`,
+      run: { go: `/w/${ws}/tasks?tab=all&projects=${p.slug}` },
     });
   }
   for (const t of input.tasks) {

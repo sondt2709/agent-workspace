@@ -391,7 +391,7 @@ The Kotlin app has the same interface. Contract tests run both clients against e
 | PushSender | `register(phone, subscription)`, `send(phone, preview)` | Web Push | P2 offline alert |
 | Link | `resolve(link)`, `fetch(link, sinceVersion?) → {content, version}` | GitHub | P2 Google Drive, Linear |
 | Storage | `put(key, bytes)`, `get(key)`, `list(prefix)`, `presign(key, op, ttl)` | — | P2 R2 |
-| Source, Send target | `channels()`, `collect(cursor)`, `post()`; `fields()`, `preview()`, `send()` | — | P2 |
+| Source, Send target | `me()`, `conversations()`, `collect(cursor)`, `post()`, `findPending()`; `fields()`, `preview()`, `send()` | Mattermost source (`plugins/source-mattermost`, decision `2026-11-27-inbox-and-tasks`) | P2 more sources, Send |
 
 ### 6.3 Local API and file API
 1. awd serves HTTP and WebSocket with fastify on `~/.aw/run/awd.sock` (mode 0600, folder 0700) for the `aw` CLI, the permission hook and the desktop app. It never listens on TCP for this API. The schema is OpenAPI 3.1 in `contracts/openapi.yaml`. Each reply carries `X-AW-Version` and `X-Trace-Id`. `/healthz`, `/readyz` (engine, index, session host) and `/version` are the probes.

@@ -5,6 +5,7 @@ import { AwClient } from "@aw/client";
 import { DesktopClient } from "@aw/client/desktop";
 import { DoctorClient } from "@aw/client/doctor";
 import { IdentityClient } from "@aw/client/identity";
+import { InboxClient } from "@aw/client/inbox-api";
 import { KnowledgeClient } from "@aw/client/knowledge";
 import { SetupClient } from "@aw/client/setup";
 import { systemClock } from "@aw/core/clock";
@@ -77,6 +78,7 @@ const client = new AwClient({ socketPath: settings.socketPath });
 const identity = new IdentityClient(client);
 const knowledge = new KnowledgeClient(client);
 const desktop = new DesktopClient(client);
+const inbox = new InboxClient(client);
 const setup = new SetupClient(client);
 const doctor = new DoctorClient(client);
 let window: BrowserWindow | null = null;
@@ -416,6 +418,7 @@ void app.whenReady().then(async () => {
       identity,
       knowledge,
       desktop,
+      inbox,
       setup,
       doctor,
       host,

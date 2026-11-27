@@ -29,6 +29,7 @@ import {
   newId,
   type EventData,
   type EventType,
+  type HealthInbox,
   type PauseCause,
   type PermissionMode,
 } from "@aw/schema";
@@ -241,6 +242,8 @@ export interface SessionManagerOptions {
   auth?: () => AuthState | null;
   /** The boot time of the computer in ms (the restart comment, the slot revoke). Default: 0. */
   bootMs?: number;
+  /** The `inbox` part of health.yaml (openspec inbox-mattermost). Default: none. */
+  inboxHealth?: () => HealthInbox | null;
   /** The TTL of a test slot lease (tests give a short one). Default 30 min. */
   slotTtlMs?: number;
   /**
@@ -403,6 +406,7 @@ export class SessionManager {
   readonly #credentialNoticed = new Set<string>();
   // ---- Continuity (add-continuity) ----
   readonly #auth: () => AuthState | null;
+  readonly #inboxHealth: () => HealthInbox | null;
   readonly #deviceWorking: () => number;
   readonly #revokedElsewhere: () => boolean;
   readonly #workspaceFolders: () => string[];
@@ -461,6 +465,7 @@ export class SessionManager {
     for (const record of options.records) this.#records.set(record.id, record);
     this.#work = new TaskLoop(this.#loopHost(), options.loop);
     this.#auth = options.auth ?? (() => null);
+    this.#inboxHealth = options.inboxHealth ?? (() => null);
     this.#deviceWorking = options.deviceWorking ?? (() => this.working());
     this.#revokedElsewhere = options.revokedElsewhere ?? (() => false);
     this.#workspaceFolders = options.workspaceFolders ?? (() => [this.service.root]);
@@ -3706,6 +3711,7 @@ export class SessionManager {
         diskFullPercent: this.#settings.sessions.diskFullPercent,
         loginValid: auth?.valid ?? null,
       },
+      inbox: this.#inboxHealth(),
     });
     const key = healthKey(doc);
     if (

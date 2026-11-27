@@ -2385,6 +2385,791 @@
           "x-aw-check": "hlc"
         },
         "dev": { "type": "string", "maxLength": 63, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "type": { "type": "string", "const": "source.configured" },
+        "task": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+        },
+        "by": {
+          "type": "string",
+          "maxLength": 127,
+          "pattern": "^[a-z][a-z0-9-]*@[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "source": {
+              "type": "string",
+              "maxLength": 63,
+              "pattern": "^[a-z0-9]+(?:[-_.][a-z0-9]+)*$"
+            },
+            "kind": { "type": "string", "enum": ["mattermost"] },
+            "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+            "server_url": { "type": "string", "maxLength": 2000, "format": "uri" },
+            "credential": {
+              "type": "string",
+              "maxLength": 63,
+              "pattern": "^[a-z0-9]+(?:[-_.][a-z0-9]+)*$"
+            },
+            "collector": {
+              "anyOf": [
+                { "type": "string", "maxLength": 63, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+                { "type": "null" }
+              ]
+            },
+            "username": {
+              "default": null,
+              "anyOf": [{ "type": "string", "minLength": 1, "maxLength": 100 }, { "type": "null" }]
+            },
+            "read_every_s": { "default": 60, "type": "integer", "minimum": 15, "maximum": 3600 },
+            "default_read": {
+              "default": "mentions",
+              "type": "string",
+              "enum": ["all", "mentions", "off"]
+            },
+            "conversations": {
+              "default": [],
+              "maxItems": 5000,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "string", "minLength": 1, "maxLength": 200 },
+                  "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+                  "kind": { "type": "string", "enum": ["direct", "group", "channel"] },
+                  "read": { "type": "string", "enum": ["all", "mentions", "off"] },
+                  "project": {
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 63,
+                        "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+                      },
+                      { "type": "null" }
+                    ]
+                  }
+                },
+                "required": ["id", "name", "kind", "read"],
+                "additionalProperties": {}
+              }
+            },
+            "triage": {
+              "default": {
+                "model": "haiku",
+                "every_min": 15,
+                "days": [1, 2, 3, 4, 5],
+                "from": "08:00",
+                "to": "20:00",
+                "instruction": "",
+                "paused": false
+              },
+              "type": "object",
+              "properties": {
+                "model": { "default": "haiku", "type": "string", "minLength": 1, "maxLength": 100 },
+                "every_min": { "default": 15, "type": "integer", "minimum": 1, "maximum": 1440 },
+                "days": {
+                  "default": [1, 2, 3, 4, 5],
+                  "maxItems": 7,
+                  "type": "array",
+                  "items": { "type": "integer", "minimum": 1, "maximum": 7 }
+                },
+                "from": {
+                  "default": "08:00",
+                  "anyOf": [
+                    { "type": "string", "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$" },
+                    { "type": "null" }
+                  ]
+                },
+                "to": {
+                  "default": "20:00",
+                  "anyOf": [
+                    { "type": "string", "pattern": "^([01]\\d|2[0-3]):[0-5]\\d$" },
+                    { "type": "null" }
+                  ]
+                },
+                "instruction": { "default": "", "type": "string", "maxLength": 8000 },
+                "paused": { "default": false, "type": "boolean" }
+              },
+              "additionalProperties": {}
+            },
+            "removed": { "default": false, "type": "boolean" }
+          },
+          "required": ["source", "kind", "name", "server_url", "credential", "collector"],
+          "additionalProperties": {}
+        }
+      },
+      "required": ["v", "id", "hlc", "dev", "type", "data"],
+      "additionalProperties": {}
+    },
+    {
+      "type": "object",
+      "properties": {
+        "v": { "type": "number", "const": 1 },
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+        },
+        "hlc": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z#\\d{4}$",
+          "x-aw-check": "hlc"
+        },
+        "dev": { "type": "string", "maxLength": 63, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "type": { "type": "string", "const": "inbox.run_requested" },
+        "task": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+        },
+        "by": {
+          "type": "string",
+          "maxLength": 127,
+          "pattern": "^[a-z][a-z0-9-]*@[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "source": {
+              "type": "string",
+              "maxLength": 63,
+              "pattern": "^[a-z0-9]+(?:[-_.][a-z0-9]+)*$"
+            }
+          },
+          "required": ["source"],
+          "additionalProperties": {}
+        }
+      },
+      "required": ["v", "id", "hlc", "dev", "type", "data"],
+      "additionalProperties": {}
+    },
+    {
+      "type": "object",
+      "properties": {
+        "v": { "type": "number", "const": 1 },
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+        },
+        "hlc": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z#\\d{4}$",
+          "x-aw-check": "hlc"
+        },
+        "dev": { "type": "string", "maxLength": 63, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "type": { "type": "string", "const": "inbox.card_added" },
+        "task": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+        },
+        "by": {
+          "type": "string",
+          "maxLength": 127,
+          "pattern": "^[a-z][a-z0-9-]*@[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "card": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+            },
+            "source": {
+              "type": "string",
+              "maxLength": 63,
+              "pattern": "^[a-z0-9]+(?:[-_.][a-z0-9]+)*$"
+            },
+            "conversation": {
+              "type": "object",
+              "properties": {
+                "id": { "type": "string", "minLength": 1, "maxLength": 200 },
+                "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+                "kind": { "type": "string", "enum": ["direct", "group", "channel"] }
+              },
+              "required": ["id", "name", "kind"],
+              "additionalProperties": {}
+            },
+            "thread": {
+              "anyOf": [{ "type": "string", "minLength": 1, "maxLength": 200 }, { "type": "null" }]
+            },
+            "project": {
+              "default": null,
+              "anyOf": [
+                { "type": "string", "maxLength": 63, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+                { "type": "null" }
+              ]
+            },
+            "category": { "type": "string", "enum": ["action", "question", "info"] },
+            "urgency": { "default": "normal", "type": "string", "enum": ["high", "normal", "low"] },
+            "title": { "type": "string", "minLength": 1, "maxLength": 500 },
+            "summary": { "default": "", "type": "string", "maxLength": 4000 },
+            "task": {
+              "default": null,
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "title": { "type": "string", "minLength": 1, "maxLength": 500 },
+                    "project": {
+                      "default": null,
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 63,
+                          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+                        },
+                        { "type": "null" }
+                      ]
+                    },
+                    "first_message": { "type": "string", "minLength": 1, "maxLength": 20000 }
+                  },
+                  "required": ["title", "first_message"],
+                  "additionalProperties": {}
+                },
+                { "type": "null" }
+              ]
+            },
+            "answer": {
+              "default": null,
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "text": { "type": "string", "minLength": 1, "maxLength": 8000 },
+                    "from": {
+                      "default": null,
+                      "anyOf": [{ "type": "string", "maxLength": 500 }, { "type": "null" }]
+                    }
+                  },
+                  "required": ["text"],
+                  "additionalProperties": {}
+                },
+                { "type": "null" }
+              ]
+            },
+            "messages": {
+              "minItems": 1,
+              "maxItems": 200,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "string", "minLength": 1, "maxLength": 200 },
+                  "author": { "type": "string", "minLength": 1, "maxLength": 200 },
+                  "at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  "text": { "type": "string", "maxLength": 8000 },
+                  "url": {
+                    "default": null,
+                    "anyOf": [{ "type": "string", "maxLength": 2000 }, { "type": "null" }]
+                  },
+                  "quote": {
+                    "default": null,
+                    "anyOf": [{ "type": "string", "maxLength": 500 }, { "type": "null" }]
+                  }
+                },
+                "required": ["id", "author", "at", "text"],
+                "additionalProperties": {}
+              }
+            }
+          },
+          "required": ["card", "source", "conversation", "thread", "category", "title", "messages"],
+          "additionalProperties": {}
+        }
+      },
+      "required": ["v", "id", "hlc", "dev", "type", "data"],
+      "additionalProperties": {}
+    },
+    {
+      "type": "object",
+      "properties": {
+        "v": { "type": "number", "const": 1 },
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+        },
+        "hlc": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z#\\d{4}$",
+          "x-aw-check": "hlc"
+        },
+        "dev": { "type": "string", "maxLength": 63, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "type": { "type": "string", "const": "inbox.card_updated" },
+        "task": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+        },
+        "by": {
+          "type": "string",
+          "maxLength": 127,
+          "pattern": "^[a-z][a-z0-9-]*@[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "card": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+            },
+            "project": {
+              "anyOf": [
+                { "type": "string", "maxLength": 63, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+                { "type": "null" }
+              ]
+            },
+            "category": { "type": "string", "enum": ["action", "question", "info"] },
+            "urgency": { "type": "string", "enum": ["high", "normal", "low"] },
+            "title": { "type": "string", "minLength": 1, "maxLength": 500 },
+            "summary": { "type": "string", "maxLength": 4000 },
+            "task": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "title": { "type": "string", "minLength": 1, "maxLength": 500 },
+                    "project": {
+                      "default": null,
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "maxLength": 63,
+                          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+                        },
+                        { "type": "null" }
+                      ]
+                    },
+                    "first_message": { "type": "string", "minLength": 1, "maxLength": 20000 }
+                  },
+                  "required": ["title", "first_message"],
+                  "additionalProperties": {}
+                },
+                { "type": "null" }
+              ]
+            },
+            "answer": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "text": { "type": "string", "minLength": 1, "maxLength": 8000 },
+                    "from": {
+                      "default": null,
+                      "anyOf": [{ "type": "string", "maxLength": 500 }, { "type": "null" }]
+                    }
+                  },
+                  "required": ["text"],
+                  "additionalProperties": {}
+                },
+                { "type": "null" }
+              ]
+            },
+            "messages": {
+              "default": [],
+              "maxItems": 200,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "string", "minLength": 1, "maxLength": 200 },
+                  "author": { "type": "string", "minLength": 1, "maxLength": 200 },
+                  "at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+                  },
+                  "text": { "type": "string", "maxLength": 8000 },
+                  "url": {
+                    "default": null,
+                    "anyOf": [{ "type": "string", "maxLength": 2000 }, { "type": "null" }]
+                  },
+                  "quote": {
+                    "default": null,
+                    "anyOf": [{ "type": "string", "maxLength": 500 }, { "type": "null" }]
+                  }
+                },
+                "required": ["id", "author", "at", "text"],
+                "additionalProperties": {}
+              }
+            }
+          },
+          "required": ["card"],
+          "additionalProperties": {}
+        }
+      },
+      "required": ["v", "id", "hlc", "dev", "type", "data"],
+      "additionalProperties": {}
+    },
+    {
+      "type": "object",
+      "properties": {
+        "v": { "type": "number", "const": 1 },
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+        },
+        "hlc": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z#\\d{4}$",
+          "x-aw-check": "hlc"
+        },
+        "dev": { "type": "string", "maxLength": 63, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "type": { "type": "string", "const": "inbox.card_set" },
+        "task": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+        },
+        "by": {
+          "type": "string",
+          "maxLength": 127,
+          "pattern": "^[a-z][a-z0-9-]*@[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "card": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+            },
+            "read": { "type": "boolean" },
+            "done": { "type": "boolean" },
+            "category": { "type": "string", "enum": ["action", "question", "info"] }
+          },
+          "required": ["card"],
+          "additionalProperties": {}
+        }
+      },
+      "required": ["v", "id", "hlc", "dev", "type", "data"],
+      "additionalProperties": {}
+    },
+    {
+      "type": "object",
+      "properties": {
+        "v": { "type": "number", "const": 1 },
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+        },
+        "hlc": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z#\\d{4}$",
+          "x-aw-check": "hlc"
+        },
+        "dev": { "type": "string", "maxLength": 63, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "type": { "type": "string", "const": "inbox.card_project" },
+        "task": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+        },
+        "by": {
+          "type": "string",
+          "maxLength": 127,
+          "pattern": "^[a-z][a-z0-9-]*@[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "card": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+            },
+            "project": {
+              "anyOf": [
+                { "type": "string", "maxLength": 63, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+                { "type": "null" }
+              ]
+            }
+          },
+          "required": ["card", "project"],
+          "additionalProperties": {}
+        }
+      },
+      "required": ["v", "id", "hlc", "dev", "type", "data"],
+      "additionalProperties": {}
+    },
+    {
+      "type": "object",
+      "properties": {
+        "v": { "type": "number", "const": 1 },
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+        },
+        "hlc": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z#\\d{4}$",
+          "x-aw-check": "hlc"
+        },
+        "dev": { "type": "string", "maxLength": 63, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "type": { "type": "string", "const": "inbox.ask" },
+        "task": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+        },
+        "by": {
+          "type": "string",
+          "maxLength": 127,
+          "pattern": "^[a-z][a-z0-9-]*@[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "card": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+            },
+            "ask": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+            },
+            "text": { "type": "string", "minLength": 1, "maxLength": 8000 }
+          },
+          "required": ["card", "ask", "text"],
+          "additionalProperties": {}
+        }
+      },
+      "required": ["v", "id", "hlc", "dev", "type", "data"],
+      "additionalProperties": {}
+    },
+    {
+      "type": "object",
+      "properties": {
+        "v": { "type": "number", "const": 1 },
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+        },
+        "hlc": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z#\\d{4}$",
+          "x-aw-check": "hlc"
+        },
+        "dev": { "type": "string", "maxLength": 63, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "type": { "type": "string", "const": "inbox.answer" },
+        "task": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+        },
+        "by": {
+          "type": "string",
+          "maxLength": 127,
+          "pattern": "^[a-z][a-z0-9-]*@[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "card": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+            },
+            "ask": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+            },
+            "text": { "type": "string", "minLength": 1, "maxLength": 8000 }
+          },
+          "required": ["card", "ask", "text"],
+          "additionalProperties": {}
+        }
+      },
+      "required": ["v", "id", "hlc", "dev", "type", "data"],
+      "additionalProperties": {}
+    },
+    {
+      "type": "object",
+      "properties": {
+        "v": { "type": "number", "const": 1 },
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+        },
+        "hlc": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z#\\d{4}$",
+          "x-aw-check": "hlc"
+        },
+        "dev": { "type": "string", "maxLength": 63, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "type": { "type": "string", "const": "inbox.reply_requested" },
+        "task": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+        },
+        "by": {
+          "type": "string",
+          "maxLength": 127,
+          "pattern": "^[a-z][a-z0-9-]*@[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "card": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+            },
+            "reply": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+            },
+            "text": { "type": "string", "minLength": 1, "maxLength": 16000 },
+            "in_thread": { "default": true, "type": "boolean" }
+          },
+          "required": ["card", "reply", "text"],
+          "additionalProperties": {}
+        }
+      },
+      "required": ["v", "id", "hlc", "dev", "type", "data"],
+      "additionalProperties": {}
+    },
+    {
+      "type": "object",
+      "properties": {
+        "v": { "type": "number", "const": 1 },
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+        },
+        "hlc": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z#\\d{4}$",
+          "x-aw-check": "hlc"
+        },
+        "dev": { "type": "string", "maxLength": 63, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "type": { "type": "string", "const": "inbox.reply_result" },
+        "task": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+        },
+        "by": {
+          "type": "string",
+          "maxLength": 127,
+          "pattern": "^[a-z][a-z0-9-]*@[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "card": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+            },
+            "reply": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+            },
+            "state": { "type": "string", "enum": ["sent", "failed"] },
+            "post": {
+              "default": null,
+              "anyOf": [{ "type": "string", "minLength": 1, "maxLength": 200 }, { "type": "null" }]
+            },
+            "url": {
+              "default": null,
+              "anyOf": [{ "type": "string", "maxLength": 2000 }, { "type": "null" }]
+            },
+            "error": {
+              "default": null,
+              "anyOf": [{ "type": "string", "maxLength": 2000 }, { "type": "null" }]
+            }
+          },
+          "required": ["card", "reply", "state"],
+          "additionalProperties": {}
+        }
+      },
+      "required": ["v", "id", "hlc", "dev", "type", "data"],
+      "additionalProperties": {}
+    },
+    {
+      "type": "object",
+      "properties": {
+        "v": { "type": "number", "const": 1 },
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+        },
+        "hlc": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z#\\d{4}$",
+          "x-aw-check": "hlc"
+        },
+        "dev": { "type": "string", "maxLength": 63, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "type": { "type": "string", "const": "inbox.task_created" },
+        "task": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+        },
+        "by": {
+          "type": "string",
+          "maxLength": 127,
+          "pattern": "^[a-z][a-z0-9-]*@[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "card": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+            },
+            "task": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+            }
+          },
+          "required": ["card", "task"],
+          "additionalProperties": {}
+        }
+      },
+      "required": ["v", "id", "hlc", "dev", "type", "data"],
+      "additionalProperties": {}
+    },
+    {
+      "type": "object",
+      "properties": {
+        "v": { "type": "number", "const": 1 },
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12})$"
+        },
+        "hlc": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z#\\d{4}$",
+          "x-aw-check": "hlc"
+        },
+        "dev": { "type": "string", "maxLength": 63, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
         "type": { "type": "string", "const": "device.heartbeat" },
         "task": {
           "type": "string",

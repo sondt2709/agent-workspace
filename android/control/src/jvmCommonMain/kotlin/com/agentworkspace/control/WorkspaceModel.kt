@@ -17,6 +17,7 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonObject
 
 /**
  * The data of the screens of one workspace: one [WorkspaceSnapshot] that is read again from the Room
@@ -80,6 +81,7 @@ class WorkspaceModel(
                     index.document("tasks/devices/${device.slug}/health.yaml")?.let { device.slug to it }
                 }.toMap()
         val workspaceFile = index.document("tasks/workspace.yaml")
+        val inbox = index.inboxView()
         return WorkspaceSnapshot(
             workspace = workspace,
             phone = me,
@@ -99,6 +101,8 @@ class WorkspaceModel(
             gateQuestions = gates.questions,
             gateContexts = gates.contexts,
             knownKeys = index.knownKeys(),
+            cards = InboxCards.fromView(inbox),
+            sources = (inbox?.get("sources") as? JsonArray)?.map { it.jsonObject }.orEmpty(),
         )
     }
 

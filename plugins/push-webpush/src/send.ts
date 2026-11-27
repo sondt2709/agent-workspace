@@ -11,7 +11,7 @@ export interface PushSubscription {
 }
 
 /** What a push is about: a gate, a Done task, or the agent login (gate-full-context, M23). */
-export type PushKind = "gate" | "done" | "login_expired" | "login_ends";
+export type PushKind = "gate" | "done" | "login_expired" | "login_ends" | "inbox";
 
 /** The preview of docs/phase-1.md 8.3. */
 export interface PushPreview {

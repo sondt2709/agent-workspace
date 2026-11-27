@@ -1,0 +1,32 @@
+{
+  "name": "@aw/source-mattermost",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The Mattermost source of the Inbox: REST API v4 through @mattermost/client.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "prettier": "@aw/config/prettier",
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@aw/plugin-api": "workspace:*",
+    "@mattermost/client": "11.9.0",
+    "@mattermost/types": "11.9.0"
+  },
+  "devDependencies": {
+    "@aw/config": "workspace:*",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

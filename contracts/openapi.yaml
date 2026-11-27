@@ -1969,6 +1969,448 @@ components:
         - ok
         - checks
       additionalProperties: {}
+    InboxCard:
+      type: object
+      properties:
+        card:
+          type: string
+        source:
+          type: string
+        conversation:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            kind:
+              type: string
+          required:
+            - id
+            - name
+            - kind
+          additionalProperties: {}
+        thread:
+          type:
+            - string
+            - "null"
+        project:
+          type:
+            - string
+            - "null"
+        category:
+          type: string
+          enum:
+            - action
+            - question
+            - info
+        urgency:
+          type: string
+          enum:
+            - high
+            - normal
+            - low
+        title:
+          type: string
+        summary:
+          type: string
+        task:
+          anyOf:
+            - type: object
+              properties:
+                title:
+                  type: string
+                project:
+                  type:
+                    - string
+                    - "null"
+                first_message:
+                  type: string
+              required:
+                - title
+                - project
+                - first_message
+              additionalProperties: {}
+            - type: "null"
+        answer:
+          anyOf:
+            - type: object
+              properties:
+                text:
+                  type: string
+                from:
+                  type:
+                    - string
+                    - "null"
+              required:
+                - text
+                - from
+              additionalProperties: {}
+            - type: "null"
+        messages:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              author:
+                type: string
+              at:
+                type: string
+              text:
+                type: string
+              url:
+                type:
+                  - string
+                  - "null"
+              quote:
+                type:
+                  - string
+                  - "null"
+            required:
+              - id
+              - author
+              - at
+              - text
+              - url
+              - quote
+            additionalProperties: {}
+        last_message_at:
+          type: string
+        read:
+          type: boolean
+        done:
+          type: boolean
+        added:
+          type: object
+          properties:
+            event:
+              type: string
+            dev:
+              type: string
+            hlc:
+              type: string
+          required:
+            - event
+            - dev
+            - hlc
+          additionalProperties: {}
+        updated_hlc:
+          type: string
+        chat:
+          type: array
+          items:
+            type: object
+            properties:
+              kind:
+                type: string
+                enum:
+                  - ask
+                  - answer
+                  - task
+              id:
+                type: string
+              text:
+                type: string
+              by:
+                type:
+                  - string
+                  - "null"
+              hlc:
+                type: string
+              answered:
+                type: boolean
+            required:
+              - kind
+              - id
+              - text
+              - by
+              - hlc
+            additionalProperties: {}
+        replies:
+          type: array
+          items:
+            type: object
+            properties:
+              reply:
+                type: string
+              text:
+                type: string
+              in_thread:
+                type: boolean
+              state:
+                type: string
+                enum:
+                  - requested
+                  - sent
+                  - failed
+              post:
+                type:
+                  - string
+                  - "null"
+              url:
+                type:
+                  - string
+                  - "null"
+              error:
+                type:
+                  - string
+                  - "null"
+              result_hlc:
+                type:
+                  - string
+                  - "null"
+            required:
+              - reply
+              - text
+              - in_thread
+              - state
+              - post
+              - url
+              - error
+              - result_hlc
+            additionalProperties: {}
+        tasks:
+          type: array
+          items:
+            type: string
+      required:
+        - card
+        - source
+        - conversation
+        - thread
+        - project
+        - category
+        - urgency
+        - title
+        - summary
+        - task
+        - answer
+        - messages
+        - last_message_at
+        - read
+        - done
+        - added
+        - updated_hlc
+        - chat
+        - replies
+        - tasks
+      additionalProperties: {}
+    InboxSource:
+      type: object
+      properties:
+        source:
+          type: string
+        kind:
+          type: string
+        name:
+          type: string
+        server_url:
+          type: string
+        credential:
+          type: string
+        collector:
+          type:
+            - string
+            - "null"
+        username:
+          type:
+            - string
+            - "null"
+        read_every_s:
+          type: number
+        default_read:
+          type: string
+          enum:
+            - all
+            - mentions
+            - off
+        conversations:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              kind:
+                type: string
+              read:
+                type: string
+                enum:
+                  - all
+                  - mentions
+                  - off
+              project:
+                type:
+                  - string
+                  - "null"
+            required:
+              - id
+              - name
+              - kind
+              - read
+              - project
+            additionalProperties: {}
+        triage:
+          type: object
+          properties:
+            model:
+              type: string
+            every_min:
+              type: number
+            days:
+              type: array
+              items:
+                type: number
+            from:
+              type:
+                - string
+                - "null"
+            to:
+              type:
+                - string
+                - "null"
+            instruction:
+              type: string
+            paused:
+              type: boolean
+          required:
+            - model
+            - every_min
+            - days
+            - from
+            - to
+            - instruction
+            - paused
+          additionalProperties: {}
+        removed:
+          type: boolean
+        configured:
+          type: object
+          properties:
+            event:
+              type: string
+            dev:
+              type: string
+            hlc:
+              type: string
+          required:
+            - event
+            - dev
+            - hlc
+          additionalProperties: {}
+        run_requested:
+          anyOf:
+            - type: object
+              properties:
+                event:
+                  type: string
+                dev:
+                  type: string
+                hlc:
+                  type: string
+              required:
+                - event
+                - dev
+                - hlc
+              additionalProperties: {}
+            - type: "null"
+      required:
+        - source
+        - kind
+        - name
+        - server_url
+        - credential
+        - collector
+        - username
+        - read_every_s
+        - default_read
+        - conversations
+        - triage
+        - removed
+        - configured
+        - run_requested
+      additionalProperties: {}
+    InboxSourceStatus:
+      type: object
+      properties:
+        source:
+          type: string
+        collector:
+          type:
+            - string
+            - "null"
+        health:
+          anyOf:
+            - type: object
+              properties:
+                last_read_at:
+                  type:
+                    - string
+                    - "null"
+                last_batch_at:
+                  type:
+                    - string
+                    - "null"
+                waiting:
+                  type: number
+                triage:
+                  type: string
+                error:
+                  type:
+                    - string
+                    - "null"
+              required:
+                - last_read_at
+                - last_batch_at
+                - waiting
+                - triage
+                - error
+              additionalProperties: {}
+            - type: "null"
+        user:
+          anyOf:
+            - type: object
+              properties:
+                id:
+                  type: string
+                username:
+                  type: string
+              required:
+                - id
+                - username
+              additionalProperties: {}
+            - type: "null"
+      required:
+        - source
+        - collector
+        - health
+        - user
+      additionalProperties: {}
+    InboxConversations:
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+          name:
+            type: string
+          kind:
+            type: string
+          last_message_at:
+            type:
+              - string
+              - "null"
+        required:
+          - id
+          - name
+          - kind
+          - last_message_at
+        additionalProperties: {}
     KnowledgeFile:
       type: object
       properties:
@@ -10161,6 +10603,1044 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Queues"
+        "400":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "401":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "403":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "409":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "503":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /v1/workspaces/{ws}/inbox/cards:
+    get:
+      operationId: listInboxCards
+      summary: The Inbox cards, the newest message first
+      tags:
+        - inbox
+      parameters:
+        - schema:
+            type: string
+            enum:
+              - open
+              - done
+              - all
+          in: query
+          name: state
+          required: false
+        - schema:
+            type: string
+            enum:
+              - "true"
+              - "false"
+          in: query
+          name: unread
+          required: false
+        - schema:
+            type: string
+            minLength: 1
+            maxLength: 128
+          in: path
+          name: ws
+          required: true
+          description: The workspace id or name. `-` selects the only workspace.
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InboxCard"
+        "400":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "401":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "403":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "409":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "503":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /v1/workspaces/{ws}/inbox/cards/{card}:
+    get:
+      operationId: getInboxCard
+      summary: One Inbox card with its messages, asks and replies
+      tags:
+        - inbox
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+            maxLength: 128
+          in: path
+          name: ws
+          required: true
+          description: The workspace id or name. `-` selects the only workspace.
+        - schema:
+            type: string
+            minLength: 1
+            maxLength: 128
+          in: path
+          name: card
+          required: true
+          description: The card id or an id prefix of 8+ characters
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InboxCard"
+        "400":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "401":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "403":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "409":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "503":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /v1/workspaces/{ws}/inbox/cards/{card}/state:
+    post:
+      operationId: setInboxCardState
+      summary: Mark a card read or unread, done or not done; change its category or
+        project
+      tags:
+        - inbox
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                read:
+                  type: boolean
+                done:
+                  type: boolean
+                category:
+                  type: string
+                  enum:
+                    - action
+                    - question
+                    - info
+                project:
+                  anyOf:
+                    - type: string
+                      maxLength: 63
+                      pattern: ^[a-z0-9]+(?:-[a-z0-9]+)*$
+                    - type: "null"
+              additionalProperties: false
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+            maxLength: 128
+          in: path
+          name: ws
+          required: true
+          description: The workspace id or name. `-` selects the only workspace.
+        - schema:
+            type: string
+            minLength: 1
+            maxLength: 128
+          in: path
+          name: card
+          required: true
+          description: The card id or an id prefix of 8+ characters
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InboxCard"
+        "400":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "401":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "403":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "409":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "503":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /v1/workspaces/{ws}/inbox/cards/{card}/ask:
+    post:
+      operationId: askInboxCard
+      summary: Ask the triage agent about a card (event inbox.ask)
+      tags:
+        - inbox
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+                  minLength: 1
+                  maxLength: 8000
+              required:
+                - text
+              additionalProperties: false
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+            maxLength: 128
+          in: path
+          name: ws
+          required: true
+          description: The workspace id or name. `-` selects the only workspace.
+        - schema:
+            type: string
+            minLength: 1
+            maxLength: 128
+          in: path
+          name: card
+          required: true
+          description: The card id or an id prefix of 8+ characters
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ask:
+                    type: string
+                  card:
+                    $ref: "#/components/schemas/InboxCard"
+                required:
+                  - ask
+                  - card
+                additionalProperties: {}
+        "400":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "401":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "403":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "409":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "503":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /v1/workspaces/{ws}/inbox/cards/{card}/reply:
+    post:
+      operationId: replyInboxCard
+      summary: Send a reply to the source; the collecting device posts it once
+      tags:
+        - inbox
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+                  minLength: 1
+                  maxLength: 16000
+                in_thread:
+                  type: boolean
+              required:
+                - text
+              additionalProperties: false
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+            maxLength: 128
+          in: path
+          name: ws
+          required: true
+          description: The workspace id or name. `-` selects the only workspace.
+        - schema:
+            type: string
+            minLength: 1
+            maxLength: 128
+          in: path
+          name: card
+          required: true
+          description: The card id or an id prefix of 8+ characters
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reply:
+                    type: string
+                  card:
+                    $ref: "#/components/schemas/InboxCard"
+                required:
+                  - reply
+                  - card
+                additionalProperties: {}
+        "400":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "401":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "403":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "409":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "503":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /v1/workspaces/{ws}/inbox/cards/{card}/task:
+    post:
+      operationId: createTaskFromInboxCard
+      summary: Create the task of a card (a task always has a project)
+      tags:
+        - inbox
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                project:
+                  type: string
+                  maxLength: 63
+                  pattern: ^[a-z0-9]+(?:-[a-z0-9]+)*$
+                  description: "Required: a task always has a project"
+                title:
+                  type: string
+                  minLength: 1
+                  maxLength: 500
+                first_message:
+                  type: string
+                  minLength: 1
+                  maxLength: 60000
+                assignee:
+                  anyOf:
+                    - type: string
+                      minLength: 1
+                      maxLength: 127
+                    - type: "null"
+              required:
+                - project
+                - title
+                - first_message
+              additionalProperties: false
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+            maxLength: 128
+          in: path
+          name: ws
+          required: true
+          description: The workspace id or name. `-` selects the only workspace.
+        - schema:
+            type: string
+            minLength: 1
+            maxLength: 128
+          in: path
+          name: card
+          required: true
+          description: The card id or an id prefix of 8+ characters
+      responses:
+        "201":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  task:
+                    type: string
+                  key:
+                    type: string
+                  card:
+                    $ref: "#/components/schemas/InboxCard"
+                required:
+                  - task
+                  - key
+                  - card
+                additionalProperties: {}
+        "400":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "401":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "403":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "409":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "503":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /v1/workspaces/{ws}/inbox/run:
+    post:
+      operationId: runInbox
+      summary: "Run now: the collecting device reads the source and sends a batch"
+      tags:
+        - inbox
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                source:
+                  type: string
+                  maxLength: 63
+                  pattern: ^[a-z0-9]+(?:[-_.][a-z0-9]+)*$
+              additionalProperties: false
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+            maxLength: 128
+          in: path
+          name: ws
+          required: true
+          description: The workspace id or name. `-` selects the only workspace.
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                required:
+                  - ok
+                additionalProperties: {}
+        "400":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "401":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "403":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "409":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "503":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /v1/workspaces/{ws}/sources:
+    get:
+      operationId: listSources
+      summary: The sources of the Inbox
+      tags:
+        - inbox
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+            maxLength: 128
+          in: path
+          name: ws
+          required: true
+          description: The workspace id or name. `-` selects the only workspace.
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InboxSource"
+        "400":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "401":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "403":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "409":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "503":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /v1/workspaces/{ws}/sources/{source}:
+    put:
+      operationId: setSource
+      summary: Write the whole configuration of a source (event source.configured)
+      tags:
+        - inbox
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                server_url:
+                  type: string
+                  maxLength: 2000
+                  format: uri
+                credential:
+                  type: string
+                  maxLength: 63
+                  pattern: ^[a-z0-9]+(?:[-_.][a-z0-9]+)*$
+                collector:
+                  anyOf:
+                    - type: string
+                      maxLength: 63
+                      pattern: ^[a-z0-9]+(?:-[a-z0-9]+)*$
+                    - type: "null"
+                username:
+                  anyOf:
+                    - type: string
+                      minLength: 1
+                      maxLength: 100
+                    - type: "null"
+                read_every_s:
+                  type: integer
+                  minimum: 15
+                  maximum: 3600
+                default_read:
+                  type: string
+                  enum:
+                    - all
+                    - mentions
+                    - off
+                conversations:
+                  maxItems: 5000
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        minLength: 1
+                        maxLength: 200
+                      name:
+                        type: string
+                        minLength: 1
+                        maxLength: 200
+                      kind:
+                        type: string
+                        enum:
+                          - direct
+                          - group
+                          - channel
+                      read:
+                        type: string
+                        enum:
+                          - all
+                          - mentions
+                          - off
+                      project:
+                        anyOf:
+                          - type: string
+                            maxLength: 63
+                            pattern: ^[a-z0-9]+(?:-[a-z0-9]+)*$
+                          - type: "null"
+                    required:
+                      - id
+                      - name
+                      - kind
+                      - read
+                triage:
+                  type: object
+                  properties:
+                    model:
+                      type: string
+                      minLength: 1
+                      maxLength: 100
+                    every_min:
+                      type: integer
+                      minimum: 1
+                      maximum: 1440
+                    days:
+                      maxItems: 7
+                      type: array
+                      items:
+                        type: integer
+                        minimum: 1
+                        maximum: 7
+                    from:
+                      type:
+                        - string
+                        - "null"
+                    to:
+                      type:
+                        - string
+                        - "null"
+                    instruction:
+                      type: string
+                      maxLength: 8000
+                    paused:
+                      type: boolean
+                removed:
+                  type: boolean
+              required:
+                - name
+                - server_url
+                - credential
+                - collector
+              additionalProperties: false
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+            maxLength: 128
+          in: path
+          name: ws
+          required: true
+          description: The workspace id or name. `-` selects the only workspace.
+        - schema:
+            type: string
+            maxLength: 63
+            pattern: ^[a-z0-9]+(?:[-_.][a-z0-9]+)*$
+          in: path
+          name: source
+          required: true
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InboxSource"
+        "400":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "401":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "403":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "409":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "503":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /v1/workspaces/{ws}/sources/{source}/conversations:
+    get:
+      operationId: listSourceConversations
+      summary: The conversations that the account of the source can read
+      tags:
+        - inbox
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+            maxLength: 128
+          in: path
+          name: ws
+          required: true
+          description: The workspace id or name. `-` selects the only workspace.
+        - schema:
+            type: string
+            maxLength: 63
+            pattern: ^[a-z0-9]+(?:[-_.][a-z0-9]+)*$
+          in: path
+          name: source
+          required: true
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InboxConversations"
+        "400":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "401":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "403":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "404":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "409":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "503":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /v1/workspaces/{ws}/sources/{source}/status:
+    get:
+      operationId: getSourceStatus
+      summary: The collecting device, its health of the source, and a connection test
+        here
+      tags:
+        - inbox
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+            maxLength: 128
+          in: path
+          name: ws
+          required: true
+          description: The workspace id or name. `-` selects the only workspace.
+        - schema:
+            type: string
+            maxLength: 63
+            pattern: ^[a-z0-9]+(?:[-_.][a-z0-9]+)*$
+          in: path
+          name: source
+          required: true
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InboxSourceStatus"
         "400":
           description: Default Response
           content:

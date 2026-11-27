@@ -336,6 +336,44 @@ class AppViewModel(
 
     fun unarchiveTask(task: String) = act("Unarchived", { it.actions.unarchiveTask(task) })
 
+    // ---- The Inbox (openspec inbox-mattermost) ----
+
+    fun setCard(
+        card: String,
+        read: Boolean? = null,
+        done: Boolean? = null,
+        category: String? = null,
+    ) = act(null, { it.actions.setCard(card, read, done, category) })
+
+    fun askCard(
+        card: String,
+        text: String,
+    ) = act("Question sent", { it.actions.askCard(card, text) })
+
+    fun replyCard(
+        card: String,
+        text: String,
+    ) = act("Reply sent to the collecting computer", { it.actions.replyCard(card, text) })
+
+    fun runInbox(source: String) = act("Run requested", { it.actions.runInbox(source) })
+
+    fun setCardProject(
+        card: String,
+        project: String?,
+    ) = act(null, { it.actions.setCardProject(card, project) })
+
+    /** One create at a time, as for a new task: a double tap makes one task. */
+    fun createTaskFromCard(
+        card: String,
+        draft: NewTaskDraft,
+    ) {
+        if (creating) return
+        creating = true
+        act("Task created", { it.actions.createTaskFromCard(card, draft) }, onEnd = { creating = false }) { done ->
+            openTask(done.task)
+        }
+    }
+
     /** True while a create runs: the button is off, so a double tap makes one task (android-ui M3). */
     var creating by mutableStateOf(false)
         private set

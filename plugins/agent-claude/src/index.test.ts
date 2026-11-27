@@ -37,6 +37,8 @@ import {
   toolGate,
   transcriptPath,
   trustWorktree,
+  UNTRUSTED_MCP_TOOLS,
+  untrustedMcpConfig,
 } from "./index.ts";
 import { capturedPayloads, payload } from "./testing/index.ts";
 
@@ -183,6 +185,41 @@ describe("Claude adapter", () => {
     for (const flag of argv.filter((a) => /^-{1,2}[a-zA-Z]/.test(a))) {
       expect(help, flag).toMatch(new RegExp(`(^|[ ,])${flag}[ ,]`, "m"));
     }
+  });
+
+  it("starts a session of untrusted input with no user settings, AW MCP only, and read-only tools", async () => {
+    // The triage session reads messages of other people (openspec inbox-mattermost, design 6).
+    const help = await fixture("help-2.1.332.txt");
+    const untrusted = {
+      mcpConfigFile: "/opt/aw/triage-mcp.json",
+      readDirs: ["/srv/aw/Personal/knowledge"],
+    };
+    const argv = launchArgv(
+      { ...launch, mode: "new", model: "haiku", untrusted },
+      "[AW triage batch b1]",
+    );
+    for (const flag of argv.filter((a) => /^-{1,2}[a-zA-Z]/.test(a))) {
+      expect(help, flag).toMatch(new RegExp(`(^|[ ,])${flag}[ ,]`, "m"));
+    }
+    const value = (flag: string) => argv[argv.indexOf(flag) + 1];
+    expect(value("--permission-mode")).toBe("dontAsk");
+    expect(help).toContain('"dontAsk"');
+    expect(value("--setting-sources")).toBe("project");
+    expect(argv).toContain("--strict-mcp-config");
+    expect(value("--mcp-config")).toBe("/opt/aw/triage-mcp.json");
+    expect(value("--tools")).toBe("Read,Glob,Grep,ToolSearch,WaitForMcpServers");
+    // No --add-dir: its trust prompt would wait for a person (seen with Claude Code 2.1.332).
+    expect(argv).not.toContain("--add-dir");
+    expect(value("--allowedTools")).toBe(UNTRUSTED_MCP_TOOLS);
+    // No AW plugin: no hooks, no skills, no MCP server of the plugin.
+    expect(argv).not.toContain("--plugin-dir");
+    expect(argv.filter((a) => a.startsWith("Bash"))).toEqual([]);
+    // The MCP configuration names only the AW server.
+    const config = JSON.parse(untrustedMcpConfig()) as { mcpServers: Record<string, unknown> };
+    expect(Object.keys(config.mcpServers)).toEqual(["aw"]);
+    // A resume keeps the flags.
+    const resume = launchArgv({ ...launch, mode: "resume", model: "haiku", untrusted }, "next");
+    expect(resume.slice(2, -2)).toEqual(argv.slice(2, -2));
   });
 
   it("keeps the flags on resume and puts the message last, after --", () => {

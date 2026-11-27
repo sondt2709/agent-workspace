@@ -147,57 +147,6 @@ fun SyncNowRow(
     }
 }
 
-/**
- * The Inbox of the desktop (openspec proposal-and-discussion): the tabs "Needs you" and "Updates".
- * "Needs you" has a row for each task in the lane (the reason, the title and the key) and each file to
- * fix, then the groups Working now, Paused and Queued. A tap on a task row opens its item screen.
- */
-@Composable
-fun InboxScreen(
-    snapshot: WorkspaceSnapshot,
-    updates: List<InboxNote>,
-    openItem: String?,
-    onOpenItem: (String) -> Unit,
-    onOpenTask: (String) -> Unit,
-) {
-    var tab by rememberSaveable { mutableIntStateOf(0) }
-    val state = InboxItems.of(snapshot)
-    val files = InboxItems.files(snapshot.issues)
-    val needs = state.rows.size + files.size
-    Column(Modifier.fillMaxSize()) {
-        PrimaryTabRow(selectedTabIndex = tab) {
-            Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text("Needs you · $needs") })
-            Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text("Updates · ${updates.size}") })
-        }
-        LazyColumn(Modifier.fillMaxSize().focusGroup()) {
-            if (tab == 0) {
-                if (needs == 0) item(key = "empty") { EmptyText("Nothing needs you.") }
-                items(state.rows, key = { "row-${it.task}" }) { row ->
-                    InboxRowView(row.reason, row.title, row.key, row.project, row.task == openItem) {
-                        onOpenItem(row.task)
-                    }
-                }
-                items(
-                    files,
-                    key = { it.id },
-                ) { note -> InboxRowView(note.reason, note.title, null, note.sub, false, null) }
-                for (group in state.groups) {
-                    item(key = "group-${group.id}") { SectionHeader("${group.label} · ${group.tasks.size}") }
-                    items(group.tasks, key = { "${group.id}-${it.id}" }) { task ->
-                        GroupRow(Texts.taskLabel(task.id, task.key), task.title) { onOpenTask(task.id) }
-                    }
-                }
-            } else {
-                if (updates.isEmpty()) item(key = "no-updates") { EmptyText("No updates.") }
-                items(
-                    updates,
-                    key = { it.id },
-                ) { note -> InboxRowView(note.reason, note.title, null, note.sub, false, null) }
-            }
-        }
-    }
-}
-
 /** One row of the Inbox: the reason in the accent, the title, and the key with the project. */
 @Composable
 private fun InboxRowView(
@@ -334,25 +283,42 @@ fun InboxItemScreen(
 /** The width of the key column of a group row. */
 private val KEY_WIDTH = 56.dp
 
-/** Tasks by stage, with the project filter and the Paused chip. */
+/**
+ * Tasks (openspec nav-tasks-needs-you, spec tasks-view "Phone Tasks"): the tabs "Needs you",
+ * "Working" and "All", and the project filter. "Needs you" has the rows of the old Inbox tab and
+ * the files to fix, then the section Updates; "Working" the groups Working now, Paused and Queued;
+ * "All" the tasks by stage.
+ */
 @Composable
 fun TasksScreen(
     snapshot: WorkspaceSnapshot,
+    updates: List<InboxNote>,
     openTask: String?,
+    openItem: String?,
     onOpen: (String) -> Unit,
+    onOpenItem: (String) -> Unit,
     onSyncNow: () -> Unit,
     nowMs: Long,
     /** The bar of the list pane while a task shows next to the list, else null. */
     header: (@Composable () -> Unit)? = null,
     onNewTask: () -> Unit,
 ) {
-    var project by rememberSaveable { mutableStateOf<String?>(null) }
+    var tab by rememberSaveable { mutableIntStateOf(0) }
+    // The project filter (openspec nav-tasks-needs-you): none selected keeps each project.
+    var projects by rememberSaveable { mutableStateOf(listOf<String>()) }
     // A tap on a group header closes or opens it; "Archived" is closed at the start (docs/design.md 8.4).
     var closed by rememberSaveable { mutableStateOf(setOf(ScreenStates.ARCHIVED_GROUP)) }
-    val groups = ScreenStates.tasksByStage(snapshot, project)
+    val inProjects = { project: String? -> projects.isEmpty() || project in projects }
+    val state = InboxItems.of(snapshot)
+    val rows = state.rows.filter { inProjects(it.project) }
+    val files = InboxItems.files(snapshot.issues)
+    val groups = state.groups.map { g -> g to g.tasks.filter { inProjects(snapshot.task(it.id)?.project) } }
+    val working = groups.sumOf { it.second.size }
+    val stages = ScreenStates.tasksByStage(snapshot, projects = projects)
+    val all = stages.sumOf { it.tasks.size }
     Column(Modifier.fillMaxSize()) {
         header?.invoke()
-        // "All tasks" and "New task" on one line, above the project tabs, so the button is never cut.
+        // "Tasks" and "New task" on one line, above the tabs, so the button is never cut.
         Row(
             Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -360,33 +326,78 @@ fun TasksScreen(
         ) {
             Text(
                 buildAnnotatedString {
-                    append("All tasks ")
-                    withStyle(SpanStyle(color = muted(), fontWeight = FontWeight.Normal)) {
-                        append("${groups.sumOf { it.tasks.size }}")
-                    }
+                    append("Tasks ")
+                    withStyle(SpanStyle(color = muted(), fontWeight = FontWeight.Normal)) { append("$all") }
                 },
                 style = AwType.title,
                 modifier = Modifier.weight(1f),
             )
             Button(onClick = onNewTask) { Text("New task", maxLines = 1, softWrap = false) }
         }
-        val projects = listOf<String?>(null) + snapshot.projects.map { it.slug }
         AwTabRow(
-            labels = projects.map { it ?: "All projects" },
-            selected = projects.indexOf(project).coerceAtLeast(0),
-            onSelect = { project = projects[it] },
+            labels = listOf("Needs you · ${rows.size + files.size}", "Working · $working", "All · $all"),
+            selected = tab,
+            onSelect = { tab = it },
         )
+        // The project filter is a filter, not a tab: several projects at once (decision of 2026-11-27).
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+        ) {
+            ProjectChips(snapshot, projects, allowNone = false) { projects = it }
+        }
         LazyColumn(Modifier.fillMaxSize().focusGroup()) {
-            for (group in groups) {
-                val open = group.stage !in closed
-                item(key = "stage-${group.stage}") {
-                    GroupHeader(group.label, group.tasks.size, open) {
-                        closed = if (open) closed + group.stage else closed - group.stage
+            when (tab) {
+                0 -> {
+                    if (rows.isEmpty() && files.isEmpty()) item(key = "empty") { EmptyText("Nothing needs you.") }
+                    items(rows, key = { "row-${it.task}" }) { row ->
+                        InboxRowView(row.reason, row.title, row.key, row.project, row.task == openItem) {
+                            onOpenItem(row.task)
+                        }
+                    }
+                    items(files, key = { it.id }) { note ->
+                        InboxRowView(note.reason, note.title, null, note.sub, false, null)
+                    }
+                    if (updates.isNotEmpty()) {
+                        item(key = "updates") { SectionHeader("Updates · ${updates.size}") }
+                        items(updates, key = { it.id }) { note ->
+                            InboxRowView(note.reason, note.title, null, note.sub, false, null)
+                        }
                     }
                 }
-                if (open) {
-                    items(group.tasks, key = { it.id }) { row ->
-                        TaskRow(row, row.id == openTask, { onOpen(row.id) }, onSyncNow, Texts.age(row.lastHlc, nowMs))
+
+                1 -> {
+                    if (working == 0) item(key = "none") { EmptyText("Nothing works now.") }
+                    for ((group, tasks) in groups) {
+                        if (tasks.isEmpty()) continue
+                        item(key = "group-${group.id}") { SectionHeader("${group.label} · ${tasks.size}") }
+                        items(tasks, key = { "${group.id}-${it.id}" }) { task ->
+                            GroupRow(Texts.taskLabel(task.id, task.key), task.title) { onOpen(task.id) }
+                        }
+                    }
+                }
+
+                else -> {
+                    for (group in stages) {
+                        val open = group.stage !in closed
+                        item(key = "stage-${group.stage}") {
+                            GroupHeader(group.label, group.tasks.size, open) {
+                                closed = if (open) closed + group.stage else closed - group.stage
+                            }
+                        }
+                        if (open) {
+                            items(group.tasks, key = { it.id }) { row ->
+                                TaskRow(
+                                    row,
+                                    row.id == openTask,
+                                    { onOpen(row.id) },
+                                    onSyncNow,
+                                    Texts.age(row.lastHlc, nowMs),
+                                )
+                            }
+                        }
                     }
                 }
             }
