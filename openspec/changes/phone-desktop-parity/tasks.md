@@ -42,6 +42,8 @@
 - [x] 6.4 Proposal card: the desktop radius 12 dp, "Approve proposal" with the width of its label, the hint next to it.
 - [x] 6.5 Message box: the label, the field, then the hint and Send at the right on one line.
 - [x] 6.6 Inline code in `MarkdownText.kt`: monospace 12.5 sp, a 6 % fill and a 4 dp radius, as on the desktop.
+- [x] 6.7 The reason of a task with no assignee is "Assign task", as on the desktop (`ScreenStates.reasonOf`).
+- [x] 6.8 The session option chips ("Skips permissions", "Agent teams") are state chips of 24 dp, not Material chips.
 
 ## 7. Screenshot tests
 
@@ -55,6 +57,6 @@
 
 ## 9. Checks and evidence
 
-- [ ] 9.1 Run `task check` and `task leakcheck`.
-- [ ] 9.2 Build the APK on the nuc. Take emulator screenshots at 412 and 840 dp, before and after, next to the desktop at 400 and 840 px.
-- [ ] 9.3 Run the test plan again on the last commit and write the SHA in each result.
+- [x] 9.1 Run `task check` and `task leakcheck`.
+- [x] 9.2 Build the APK on the nuc. Take emulator screenshots at 392 and 840 dp, before (main) and after (this branch).
+- [x] 9.3 Run the test plan again on the last commit and write the SHA in each result.
