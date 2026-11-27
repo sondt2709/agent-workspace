@@ -26,18 +26,19 @@ private val PATTERN_12 = Regex("^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\
 private val VALUES_13 = setOf("first", "typed", "answer", "phone", "notice")
 private val VALUES_14 = setOf("turn", "tool")
 private val VALUES_15 = setOf("nudge")
-private val VALUES_16 = setOf("question", "reply", "approve_proposal", "assign", "approve_command", "approve_result", "approve_knowledge", "approve_device", "continue_after_limit", "take_over_terminal", "fix_file", "custom")
-private val PATTERN_17 = Regex("^p-[0-9a-f-]{36}\\z")
-private val PATTERN_18 = Regex("^[0-9a-f]{64}\\z")
-private val VALUES_19 = setOf("tmux", "orca", "pty")
-private val VALUES_20 = setOf("done", "moved", "stopped", "crashed", "replaced")
-private val VALUES_21 = setOf("expired", "reboot", "human")
-private val PATTERN_22 = Regex("^[a-z][a-z0-9-]*\\z")
-private val PATTERN_23 = Regex("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z#\\d{4}\\z")
-private val VALUES_24 = setOf("learned", "edit", "undo", "replaced", "delete")
-private val VALUES_25 = setOf("learned", "edit", "undo", "delete")
-private val VALUES_26 = setOf("rule", "locked", "shared", "other_person")
-private val VALUES_27 = setOf("accepted", "rejected")
+private val VALUES_16 = setOf("start_failed")
+private val VALUES_17 = setOf("question", "reply", "approve_proposal", "assign", "approve_command", "approve_result", "approve_knowledge", "approve_device", "continue_after_limit", "take_over_terminal", "fix_file", "custom")
+private val PATTERN_18 = Regex("^p-[0-9a-f-]{36}\\z")
+private val PATTERN_19 = Regex("^[0-9a-f]{64}\\z")
+private val VALUES_20 = setOf("tmux", "orca", "pty")
+private val VALUES_21 = setOf("done", "moved", "stopped", "crashed", "replaced")
+private val VALUES_22 = setOf("expired", "reboot", "human")
+private val PATTERN_23 = Regex("^[a-z][a-z0-9-]*\\z")
+private val PATTERN_24 = Regex("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z#\\d{4}\\z")
+private val VALUES_25 = setOf("learned", "edit", "undo", "replaced", "delete")
+private val VALUES_26 = setOf("learned", "edit", "undo", "delete")
+private val VALUES_27 = setOf("rule", "locked", "shared", "other_person")
+private val VALUES_28 = setOf("accepted", "rejected")
 
 /** The data of an event of a known type: AW event (one JSON Lines line). */
 sealed interface EventDataV1
@@ -366,7 +367,14 @@ data class MessageSentV1(
 @Serializable
 data class CommentAddedV1(
     @SerialName("text") val text: String,
-) : EventDataV1
+    @AwOptional @EncodeDefault(EncodeDefault.Mode.NEVER) @SerialName("kind") val kind: String? = null,
+) : EventDataV1 {
+    init {
+        if (kind != null) {
+            AwChecks.oneOf(kind, VALUES_16, "kind")
+        }
+    }
+}
 
 /** The data of `gate.opened`. */
 @Serializable
@@ -384,14 +392,14 @@ data class GateOpenedV1(
 ) : EventDataV1 {
     init {
         AwChecks.pattern(gate, PATTERN_3, "gate")
-        AwChecks.oneOf(kind, VALUES_16, "kind")
+        AwChecks.oneOf(kind, VALUES_17, "kind")
         AwChecks.atLeast(version, 1L, "version")
         AwChecks.atMost(version, 9007199254740991L, "version")
         options.forEachIndexed { index, item ->
             AwChecks.minLength(item, 1, "options" + "." + index)
         }
         if (requestId != null) {
-            AwChecks.pattern(requestId, PATTERN_17, "request_id")
+            AwChecks.pattern(requestId, PATTERN_18, "request_id")
         }
         if (file != null) {
             AwChecks.minLength(file, 1, "file")
@@ -508,7 +516,7 @@ data class ArtifactAddedV1(
         AwChecks.relativePath(path, "path")
         AwChecks.atLeast(size, 0L, "size")
         AwChecks.atMost(size, 9007199254740991L, "size")
-        AwChecks.pattern(sha256, PATTERN_18, "sha256")
+        AwChecks.pattern(sha256, PATTERN_19, "sha256")
     }
 }
 
@@ -560,7 +568,7 @@ data class SessionStartedV1(
 ) : EventDataV1 {
     init {
         AwChecks.pattern(session, PATTERN_3, "session")
-        AwChecks.oneOf(host, VALUES_19, "host")
+        AwChecks.oneOf(host, VALUES_20, "host")
         AwChecks.minLength(cwd, 1, "cwd")
         if (pluginDir != null) {
             AwChecks.minLength(pluginDir, 1, "plugin_dir")
@@ -689,7 +697,7 @@ data class SessionEndedV1(
 ) : EventDataV1 {
     init {
         AwChecks.pattern(session, PATTERN_3, "session")
-        AwChecks.oneOf(reason, VALUES_20, "reason")
+        AwChecks.oneOf(reason, VALUES_21, "reason")
     }
 }
 
@@ -769,7 +777,7 @@ data class SlotRevokedV1(
         AwChecks.atMost(slot, 9007199254740991L, "slot")
         AwChecks.atLeast(fencingToken, 1L, "fencing_token")
         AwChecks.atMost(fencingToken, 9007199254740991L, "fencing_token")
-        AwChecks.oneOf(reason, VALUES_21, "reason")
+        AwChecks.oneOf(reason, VALUES_22, "reason")
     }
 }
 
@@ -869,7 +877,7 @@ data class ProjectRemovedV1(
                 AwChecks.pattern(item, PATTERN_1, "devices" + "." + index)
                 AwChecks.maxLength(item, 63, "devices" + "." + index)
             }
-            AwChecks.pattern(defaultAgent, PATTERN_22, "default_agent")
+            AwChecks.pattern(defaultAgent, PATTERN_23, "default_agent")
             testServers.forEachIndexed { index, item ->
                 AwChecks.pattern(item, PATTERN_4, "test_servers" + "." + index)
                 AwChecks.maxLength(item, 63, "test_servers" + "." + index)
@@ -881,7 +889,7 @@ data class ProjectRemovedV1(
                 AwChecks.minLength(mainRepo, 1, "main_repo")
             }
             if (addedAt != null) {
-                AwChecks.pattern(addedAt, PATTERN_23, "added_at")
+                AwChecks.pattern(addedAt, PATTERN_24, "added_at")
                 AwChecks.hlc(addedAt, "added_at")
             }
             AwChecks.oneOf(permissionMode, VALUES_6, "permission_mode")
@@ -910,17 +918,17 @@ data class KnowledgeChangedV1(
         AwChecks.maxLength(path, 1024, "path")
         AwChecks.relativePath(path, "path")
         if (hash != null) {
-            AwChecks.pattern(hash, PATTERN_18, "hash")
+            AwChecks.pattern(hash, PATTERN_19, "hash")
         }
         if (base != null) {
-            AwChecks.pattern(base, PATTERN_18, "base")
+            AwChecks.pattern(base, PATTERN_19, "base")
         }
         AwChecks.pattern(author, PATTERN_2, "author")
         AwChecks.maxLength(author, 127, "author")
         if (task != null) {
             AwChecks.pattern(task, PATTERN_3, "task")
         }
-        AwChecks.oneOf(kind, VALUES_24, "kind")
+        AwChecks.oneOf(kind, VALUES_25, "kind")
         if (suggestion != null) {
             AwChecks.pattern(suggestion, PATTERN_3, "suggestion")
         }
@@ -937,7 +945,7 @@ data class KnowledgeUndoRequestedV1(
         AwChecks.minLength(path, 1, "path")
         AwChecks.maxLength(path, 1024, "path")
         AwChecks.relativePath(path, "path")
-        AwChecks.pattern(hash, PATTERN_18, "hash")
+        AwChecks.pattern(hash, PATTERN_19, "hash")
     }
 }
 
@@ -960,19 +968,19 @@ data class KnowledgeSuggestedV1(
         AwChecks.maxLength(path, 1024, "path")
         AwChecks.relativePath(path, "path")
         if (hash != null) {
-            AwChecks.pattern(hash, PATTERN_18, "hash")
+            AwChecks.pattern(hash, PATTERN_19, "hash")
         }
         if (base != null) {
-            AwChecks.pattern(base, PATTERN_18, "base")
+            AwChecks.pattern(base, PATTERN_19, "base")
         }
         AwChecks.pattern(author, PATTERN_2, "author")
         AwChecks.maxLength(author, 127, "author")
         if (task != null) {
             AwChecks.pattern(task, PATTERN_3, "task")
         }
-        AwChecks.oneOf(kind, VALUES_25, "kind")
+        AwChecks.oneOf(kind, VALUES_26, "kind")
         reasons.forEachIndexed { index, item ->
-            AwChecks.oneOf(item, VALUES_26, "reasons" + "." + index)
+            AwChecks.oneOf(item, VALUES_27, "reasons" + "." + index)
         }
     }
 }
@@ -986,7 +994,7 @@ data class KnowledgeSuggestionResolvedV1(
 ) : EventDataV1 {
     init {
         AwChecks.pattern(suggestion, PATTERN_3, "suggestion")
-        AwChecks.oneOf(decision, VALUES_27, "decision")
+        AwChecks.oneOf(decision, VALUES_28, "decision")
     }
 }
 

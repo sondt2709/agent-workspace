@@ -597,6 +597,38 @@ describe.skipIf(!TEST_TMUX)("sessions with tmux and the fake agent", () => {
     expect(awd.worktree(task.id)).not.toBe(unborn);
   }, 60_000);
 
+  it("starts again at once after a person assignment, and comments each failure (restart-agent)", async () => {
+    // A start retry wait of 60 s: only the person assignment can give a new try in the test time.
+    awd = await startSessionDaemon({ startRetryMs: 60_000 });
+    const unborn = await tempDir("awr-");
+    await execa("git", ["-C", unborn, "init", "-q", "-b", "main"]);
+    await awd.server.daemon
+      .workspace()
+      .files.writeDocument("tasks/devices/macbook-pro/bindings.yaml", {
+        kind: "bindings",
+        schema: 1,
+        device: "macbook-pro",
+        may_run: true,
+        checkouts: [{ project: "billing-api", path: unborn }],
+      });
+    const task = await awd.createTask("reply never");
+    const failed = (r: { type: string; event: unknown }) =>
+      r.type === "comment.added" && text(r).startsWith("The session did not start");
+    const first = await awd.waitRow(task.id, failed);
+    expect((first.event as { data: { kind?: string } }).data.kind).toBe("start_failed");
+    expect((await awd.task(task.id)).start_failure).toMatchObject({
+      device: "macbook-pro",
+      retrying: false,
+    });
+    // "Restart agent": a person assignment to the same agent.
+    const assigned = await awd.aw(["task", "assign", task.id, "claude@macbook-pro"]);
+    expect(assigned.code, assigned.stderr).toBe(0);
+    await waitFor(async () => (await awd!.rows(task.id)).filter(failed).length === 2, 5000);
+    const view = await awd.task(task.id);
+    expect(view.start_failure).toMatchObject({ device: "macbook-pro", retrying: false });
+    expect(view.start_failure!.at > first.hlc).toBe(true);
+  }, 60_000);
+
   it("starts the sessions when the agent binary answers after the start, with no awd restart", async () => {
     const ready = join(await tempDir("awa-"), "ready");
     awd = await startSessionDaemon({ versionNeeds: ready, prepareRetryMs: 500 });

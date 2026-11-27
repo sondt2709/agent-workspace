@@ -14,6 +14,38 @@ data class ConfirmText(
  * The desktop has the same items and texts (`desktop/src/renderer/src/components/TaskActions.tsx`).
  */
 object TaskActions {
+    /**
+     * The start state of the task header (openspec restart-agent), shown in place of the queue chip:
+     * "Did not start on ubuntu-01: <cause>", or "Starting again on ubuntu-01…" after "Restart agent".
+     * Null when the task view has no start failure.
+     */
+    fun startText(task: TaskView): String? {
+        val failure = task.startFailure ?: return null
+        if (failure.retrying) return "Starting again on ${failure.device}…"
+        return "Did not start on ${failure.device}: ${startCause(failure.device, failure.text)}"
+    }
+
+    /**
+     * The cause of a start failure: the comment text after "The session did not start on <device>: ",
+     * with no sentence " AW tries again in 60 s." at the end. With no such start, the full text.
+     */
+    fun startCause(
+        device: String,
+        text: String,
+    ): String {
+        val cause = text.removePrefix("The session did not start on $device: ")
+        return cause.replace(RETRY_SENTENCE, "").trim()
+    }
+
+    /** "Restart agent" fits a task with an assignee and no running session (openspec restart-agent). */
+    fun canRestart(task: TaskView): Boolean = task.assignee != null && !ScreenStates.canMessage(task)
+
+    /** The header shows "Restart agent" after a start failure, until the person restarts the agent. */
+    fun showRestart(task: TaskView): Boolean {
+        val failure = task.startFailure ?: return false
+        return canRestart(task) && !failure.retrying
+    }
+
     /** The device of the running session, or null when no session runs. */
     fun runningDevice(task: TaskView): String? = task.session?.takeIf { ScreenStates.canMessage(task) }?.device
 
@@ -49,4 +81,7 @@ object TaskActions {
             action = "Stop and archive",
         )
     }
+
+    /** The last sentence of the start comment of awd: " AW tries again in 60 s." */
+    private val RETRY_SENTENCE = Regex("""\.?\s*AW tries again in \d+ s\.\s*$""")
 }

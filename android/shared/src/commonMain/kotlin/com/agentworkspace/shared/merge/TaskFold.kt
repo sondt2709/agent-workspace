@@ -165,6 +165,7 @@ class TaskFold(
         private set
     private var createdBy: String? = null
     private var sessionOptions: SessionOptionsView? = null
+    private var startFailure: StartFailureView? = null
     private var createdKey: String? = null
     private var key: String? = null
     private var project: String? = null
@@ -261,6 +262,7 @@ class TaskFold(
                     else -> {
                         claim = ClaimView(data.epoch, data.device, data.session, e.id)
                         owners.add(OrderKey(e.hlc, e.dev, e.id) to e.dev)
+                        startFailure = null
                         Decision.OK
                     }
                 }
@@ -271,6 +273,8 @@ class TaskFold(
                     Decision.reject("assignment_not_allowed")
                 } else {
                     assignee = data.assignee
+                    // "Restart agent": the device tries the start again (openspec restart-agent).
+                    if (isHuman(e.by)) startFailure = startFailure?.copy(retrying = true)
                     if (takeOptions(e, data.sessionOptions?.let(::optionsOf))) {
                         Decision.OK
                     } else {
@@ -388,6 +392,7 @@ class TaskFold(
                         )
                     if (!sessionStarted && branch == null) branch = data.branch
                     sessionStarted = true
+                    startFailure = null
                 }
             }
 
@@ -432,6 +437,9 @@ class TaskFold(
             }
 
             is CommentAddedV1 -> {
+                if (data.kind == "start_failed" && e.by == "aw@${e.dev}") {
+                    startFailure = StartFailureView(e.dev, data.text, e.hlc, retrying = false)
+                }
                 Decision.OK.also { comments.add(CommentView(e.id, e.dev, e.hlc, e.by, data.text, "comment", null)) }
             }
 
@@ -637,6 +645,7 @@ class TaskFold(
             created = created,
             createdBy = createdBy,
             sessionOptions = sessionOptions,
+            startFailure = startFailure,
             claim = claim,
             movingTo = movingTo,
             releasedEpoch = releasedEpoch,

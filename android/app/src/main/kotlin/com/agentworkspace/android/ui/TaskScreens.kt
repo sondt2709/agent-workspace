@@ -76,6 +76,7 @@ class TaskPageActions(
     val onSend: (text: String, sent: () -> Unit) -> Unit,
     val onStopSession: () -> Unit = {},
     val onNewSession: (assignee: String, options: SessionOptionsDraft?) -> Unit = { _, _ -> },
+    val onRestart: () -> Unit = {},
     val onArchive: () -> Unit = {},
     val onUnarchive: () -> Unit = {},
 )

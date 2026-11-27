@@ -14,6 +14,7 @@ import type {
   PauseView,
   SessionOptionsView,
   SessionView,
+  StartFailureView,
   TaskView,
 } from "./view.ts";
 
@@ -100,6 +101,7 @@ export class TaskFold {
   created: EventRef | null = null;
   createdBy: string | null = null;
   sessionOptions: SessionOptionsView | null = null;
+  startFailure: StartFailureView | null = null;
   createdKey: string | null = null;
   key: string | null = null;
   project: string | null = null;
@@ -186,11 +188,16 @@ export class TaskFold {
         if (this.claim !== null && data.epoch <= this.claim.epoch) return reject("stale_claim");
         this.claim = { epoch: data.epoch, device: data.device, session: data.session, event: e.id };
         this.owners.push({ key: e, device: e.dev });
+        this.startFailure = null;
         return ok;
       }
       case "task.assigned":
         if (!this.#mayAssign(e, context)) return reject("assignment_not_allowed");
         this.assignee = e.data.assignee;
+        // "Restart agent": the device tries the start again (openspec restart-agent).
+        if (this.startFailure && isHuman(e.by)) {
+          this.startFailure = { ...this.startFailure, retrying: true };
+        }
         return this.#options(e) ? ok : { applied: true, reason: "session_options_ignored" };
       case "task.edited": {
         const { field, value } = e.data;
@@ -284,6 +291,7 @@ export class TaskFold {
         };
         if (!this.sessionStarted) this.branch ??= e.data.branch;
         this.sessionStarted = true;
+        this.startFailure = null;
         return ok;
       case "session.resumed": {
         const same = this.session?.session === e.data.session ? this.session : null;
@@ -314,6 +322,9 @@ export class TaskFold {
         this.session = { ...this.session, state: "ended", reason: e.data.reason };
         return ok;
       case "comment.added":
+        if (e.data.kind === "start_failed" && e.by === `aw@${e.dev}`) {
+          this.startFailure = { device: e.dev, text: e.data.text, at: e.hlc, retrying: false };
+        }
         this.comments.push({
           ...ref(e),
           by: e.by ?? null,
@@ -537,6 +548,7 @@ export class TaskFold {
       created: this.created ? { ...this.created } : null,
       created_by: this.createdBy,
       session_options: this.sessionOptions ? { ...this.sessionOptions } : null,
+      start_failure: this.startFailure ? { ...this.startFailure } : null,
       claim: this.claim ? { ...this.claim } : null,
       moving_to: this.movingTo,
       released_epoch: this.releasedEpoch,

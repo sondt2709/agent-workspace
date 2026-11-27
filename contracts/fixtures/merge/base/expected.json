@@ -277,6 +277,7 @@
         },
         "session_options": null,
         "stage": "implement",
+        "start_failure": null,
         "subtasks": [],
         "test_server": "billing-k3d",
         "title": "Fix the flaky invoice test"

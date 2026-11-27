@@ -933,7 +933,10 @@
         },
         "data": {
           "type": "object",
-          "properties": { "text": { "type": "string" } },
+          "properties": {
+            "text": { "type": "string" },
+            "kind": { "type": "string", "enum": ["start_failed"] }
+          },
           "required": ["text"],
           "additionalProperties": {}
         }

@@ -53,6 +53,7 @@ import com.agentworkspace.control.QueueTexts
 import com.agentworkspace.control.ScreenStates
 import com.agentworkspace.control.SessionOptionRows
 import com.agentworkspace.control.StageProgress
+import com.agentworkspace.control.TaskActions
 import com.agentworkspace.control.TaskPage
 import com.agentworkspace.control.TaskPageLayout
 import com.agentworkspace.control.TaskRowState
@@ -202,7 +203,16 @@ internal fun TaskHeader(
                 PauseChipView(chip)
                 if (chip.canAssign) TextButton(onClick = onAssignElsewhere) { Text("Assign to another device…") }
             }
-            row.queue?.let { QueueChipView(it, row.queueCause) }
+            // The start state replaces the queue chip (openspec restart-agent).
+            val start = TaskActions.startText(task)
+            if (start != null) {
+                Text(start, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
+            } else {
+                row.queue?.let { QueueChipView(it, row.queueCause) }
+            }
+            if (TaskActions.showRestart(task)) {
+                OutlinedButton(onClick = actions.onRestart) { Text("Restart agent") }
+            }
             SessionOptionChips(task, SessionOptionRows.projectMode(task, snapshot.projects))
             SessionActions(task, snapshot, actions.onNewSession)
         }

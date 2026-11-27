@@ -143,6 +143,18 @@ export interface SessionOptionsView {
   switch_branch: boolean;
 }
 
+/**
+ * The last failed start of the session of a task (openspec restart-agent): the `start_failed`
+ * comment of awd. `retrying` is true after a newer person assignment ("Restart agent").
+ */
+export interface StartFailureView {
+  device: string;
+  text: string;
+  /** The HLC of the comment. */
+  at: string;
+  retrying: boolean;
+}
+
 export interface TaskView {
   id: string;
   /** The display key now: the last accepted rekey, else the key of `task.created`. */
@@ -171,6 +183,8 @@ export interface TaskView {
   created_by: string | null;
   /** The session options of the newest event of a person that set them, or null. */
   session_options: SessionOptionsView | null;
+  /** The last failed start, until a newer claim (openspec restart-agent). */
+  start_failure: StartFailureView | null;
   claim: ClaimView | null;
   /** The device of the assignee while the accepted claim is on another device (a move), or null. */
   moving_to: string | null;

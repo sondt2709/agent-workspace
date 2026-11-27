@@ -252,6 +252,17 @@ class PhoneActions(
     }
 
     /**
+     * "Restart agent" (openspec restart-agent): a person `task.assigned` with the same assignee. It has no
+     * `session_options` and no `session_host`, so the task keeps its options and its host choice.
+     */
+    suspend fun restartAgent(task: String): ActionResult {
+        val view = snapshot().task(task) ?: return ActionResult.Refused("The task is not on this phone.")
+        val assignee = view.assignee ?: return ActionResult.Refused("Assign the task first.")
+        if (!TaskActions.canRestart(view)) return ActionResult.Refused("A session of this task runs.")
+        return assign(task, assignee)
+    }
+
+    /**
      * Writes `task.rekeyed` for each duplicate task key that the phone must change (docs/architecture.md
      * 4.3.3 item 3): the same plan as awd (`rekeyPlan`). One write per task and old key in this process;
      * after a restart, the index has the merged event, so no duplicate is left.

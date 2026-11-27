@@ -132,7 +132,7 @@
         "task": "01a20400-0000-7001-8000-000000000001"
       }
     ],
-    "last_hlc": "2026-11-24T09:07:00.000Z#0000",
+    "last_hlc": "2026-11-24T09:09:00.000Z#0000",
     "projects": [
       {
         "added_at": null,
@@ -313,6 +313,7 @@
         },
         "session_options": null,
         "stage": "implement",
+        "start_failure": null,
         "subtasks": [],
         "test_server": "billing-k3d",
         "title": "Fix the flaky invoice test"
@@ -394,6 +395,7 @@
           "work_in": "folder"
         },
         "stage": "backlog",
+        "start_failure": null,
         "subtasks": ["01a20400-0000-7001-8000-000000000002"],
         "test_server": null,
         "title": "Task AW-30"
@@ -404,7 +406,17 @@
         "assignee": "claude@ubuntu-01",
         "branch": null,
         "claim": null,
-        "comments": [],
+        "comments": [
+          {
+            "by": "aw@ubuntu-01",
+            "dev": "ubuntu-01",
+            "event": "01a20400-0000-7002-8000-0000000000f1",
+            "gate": null,
+            "hlc": "2026-11-24T09:08:00.000Z#0000",
+            "source": "comment",
+            "text": "The session did not start on ubuntu-01: /work/billing-api has no commit yet."
+          }
+        ],
         "created": {
           "dev": "ubuntu-01",
           "event": "01a20400-0000-7002-8000-000000000008",
@@ -414,16 +426,17 @@
         "created_key": "AW-31",
         "credentials": [],
         "depends_on": [],
-        "event_count": 1,
+        "event_count": 3,
         "first_message": "/opsx:explore Task AW-31",
         "gates": [],
         "id": "01a20400-0000-7001-8000-000000000002",
         "includes": {
-          "ubuntu-01": 1
+          "pixel-9": 1,
+          "ubuntu-01": 2
         },
         "key": "AW-31",
         "key_state": "ok",
-        "last_hlc": "2026-11-24T09:05:00.000Z#0000",
+        "last_hlc": "2026-11-24T09:09:00.000Z#0000",
         "learned": false,
         "links": [],
         "moving_to": null,
@@ -448,6 +461,12 @@
         "session": null,
         "session_options": null,
         "stage": "backlog",
+        "start_failure": {
+          "at": "2026-11-24T09:08:00.000Z#0000",
+          "device": "ubuntu-01",
+          "retrying": true,
+          "text": "The session did not start on ubuntu-01: /work/billing-api has no commit yet."
+        },
         "subtasks": [],
         "test_server": null,
         "title": "Task AW-31"

@@ -1103,3 +1103,95 @@ describe("presence", () => {
     expect(fixture.needs_you_reasons).toEqual([]);
   });
 });
+
+describe("start failure (openspec restart-agent)", () => {
+  const aw = (dev: string) => ({ by: `aw@${dev}` });
+  const failure = (hlc: string, text = "The session did not start on ubuntu-01: no commit yet.") =>
+    event("ubuntu-01", "comment.added", hlc, { text, kind: "start_failed" }, aw("ubuntu-01"));
+
+  it("keeps the last failed start, marks a person assignment as a retry, and clears it at a claim", async () => {
+    const task = newTask();
+    const created = event(
+      "macbook-pro",
+      "task.created",
+      at("15:00:00"),
+      createdData("AW-40", { assignee: "claude@ubuntu-01" }),
+      human("macbook-pro"),
+    );
+    await ws.task(task, created, failure(at("15:01:00")));
+    expect((await taskOf(task)).start_failure).toEqual({
+      device: "ubuntu-01",
+      text: "The session did not start on ubuntu-01: no commit yet.",
+      at: at("15:01:00"),
+      retrying: false,
+    });
+    // An agent assignment is no restart; a person assignment ("Restart agent") is one.
+    await ws.task(
+      task,
+      event(
+        "ubuntu-01",
+        "task.assigned",
+        at("15:01:30"),
+        { assignee: "claude@ubuntu-01" },
+        { by: "claude@ubuntu-01" },
+      ),
+    );
+    expect((await taskOf(task)).start_failure?.retrying).toBe(false);
+    await ws.task(
+      task,
+      event(
+        "pixel-9",
+        "task.assigned",
+        at("15:02:00"),
+        { assignee: "claude@ubuntu-01" },
+        human("pixel-9"),
+      ),
+    );
+    expect((await taskOf(task)).start_failure?.retrying).toBe(true);
+    // A new failure after the restart: retrying is false again, with the new text.
+    await ws.task(task, failure(at("15:02:05"), "The session did not start on ubuntu-01: again."));
+    expect((await taskOf(task)).start_failure).toMatchObject({
+      text: "The session did not start on ubuntu-01: again.",
+      retrying: false,
+    });
+    await ws.task(
+      task,
+      event("ubuntu-01", "task.claimed", at("15:03:00"), {
+        epoch: 1,
+        device: "ubuntu-01",
+        session: session(),
+        based_on: null,
+      }),
+    );
+    expect((await taskOf(task)).start_failure).toBeNull();
+  });
+
+  it("takes a start_failed comment only from awd of its own device, and no plain comment", async () => {
+    const task = newTask();
+    await ws.task(
+      task,
+      event(
+        "macbook-pro",
+        "task.created",
+        at("15:00:00"),
+        createdData("AW-41"),
+        human("macbook-pro"),
+      ),
+      event(
+        "ubuntu-01",
+        "comment.added",
+        at("15:01:00"),
+        { text: "x", kind: "start_failed" },
+        { by: "claude@ubuntu-01" },
+      ),
+      event(
+        "ubuntu-01",
+        "comment.added",
+        at("15:01:01"),
+        { text: "The session did not start" },
+        aw("ubuntu-01"),
+      ),
+    );
+    expect((await taskOf(task)).start_failure).toBeNull();
+  });
+});

@@ -50,6 +50,7 @@ import {
 } from "../model.ts";
 import { useQueues, useTask, useTasks, useWorkEvents } from "../queries.ts";
 import { queueLine } from "../queue-model.ts";
+import { startFailureOf, startFailureText } from "../start-failure-model.ts";
 import { Empty, LoadingRows, MarkdownText, RawText, TaskChips } from "./common.tsx";
 import { useDialogs } from "./dialogs.tsx";
 import { FileText, TaskTree } from "./Files.tsx";
@@ -57,6 +58,7 @@ import { AssignCard, GateCard } from "./GateCard.tsx";
 import { GateNotice, ProposalVersions } from "./GateParts.tsx";
 import { MessageBoxFocus } from "./ProposalCard.tsx";
 import { SessionOptionChips, SessionOptionRows } from "./SessionOptions.tsx";
+import { StartFailureNotice } from "./StartFailure.tsx";
 import { TaskActionsMenu } from "./TaskActions.tsx";
 import { OpenTerminalButton, TerminalView } from "./TerminalView.tsx";
 import { Composer, Thread } from "./Thread.tsx";
@@ -217,10 +219,16 @@ function Properties({ ws, task }: { ws: string; task: Task }) {
           </Stack>
         )}
       </Field>
-      {queue && (
-        <Field label="Queue">
-          <Typography variant="body2">{queueLine(queue)}</Typography>
+      {startFailureOf(task) ? (
+        <Field label="Start">
+          <Typography variant="body2">{startFailureText(startFailureOf(task)!)}</Typography>
         </Field>
+      ) : (
+        queue && (
+          <Field label="Queue">
+            <Typography variant="body2">{queueLine(queue)}</Typography>
+          </Field>
+        )
       )}
       {(task.parent || task.subtasks.length > 0 || task.depends_on.length > 0) && (
         <Field label="Parent and subtasks">
@@ -666,7 +674,13 @@ export function TaskDetail({
             </Typography>
             {task.project && <Chip label={task.project} />}
             {task.archived && <Chip label="Archived" variant="outlined" />}
-            <TaskChips task={task} queue={queue} onShowNeed={showNeed} />
+            {/* A failed start replaces the queue chip: it names the cause (openspec restart-agent). */}
+            <TaskChips
+              task={task}
+              queue={startFailureOf(task) ? undefined : queue}
+              onShowNeed={showNeed}
+            />
+            <StartFailureNotice ws={ws} task={task} />
             <SessionOptionChips ws={ws} task={task} />
             <Box sx={{ flex: 1 }} />
             <NeedYouNavigation ws={ws} task={task.id} />

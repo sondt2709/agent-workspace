@@ -543,6 +543,18 @@ export const eventSamples: { name: string; value: unknown; invalidPath?: string 
     invalidPath: "data.session_options.switch_branch",
   },
   {
+    name: "comment.added of a failed start",
+    value: event("comment.added", {
+      text: "The session did not start on ubuntu-01: /work/notes has no commit yet.",
+      kind: "start_failed",
+    }),
+  },
+  {
+    name: "comment.added with an unknown kind",
+    value: event("comment.added", { text: "A note", kind: "note" }),
+    invalidPath: "data.kind",
+  },
+  {
     name: "task.created session options with a relative folder",
     value: event("task.created", {
       key: "AW-7",

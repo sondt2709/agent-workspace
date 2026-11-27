@@ -7,6 +7,7 @@ import {
   compareOrder,
   effectiveSessionOptions,
   hlcMs,
+  isHuman,
   type Clock,
   type EffectiveSessionOptions,
   type EventRow,
@@ -373,7 +374,15 @@ export class SessionManager {
   /** The last detect of Orca, at most once per ORCA_DETECT_MS. */
   #orcaInfo: { at: number; info: HostInfo } | null = null;
   /** Tasks whose session did not start: the last error, so AW tries again only after a wait. */
-  readonly #startErrors = new Map<string, { at: number; message: string }>();
+  readonly #startErrors = new Map<
+    string,
+    {
+      at: number;
+      message: string;
+      /** The newest applied person `task.assigned` at the failure: a newer one is a restart. */
+      assigned: string | null;
+    }
+  >();
   /** Failed tries of each spool file. */
   readonly #spoolFailures = new Map<string, number>();
   /** The written steps of each spool file that failed in a later step (see HookWrite). */
@@ -996,7 +1005,11 @@ export class SessionManager {
       }
       // One task that cannot start never blocks the other sessions of the workspace.
       const last = this.#startErrors.get(task.id);
-      if (last && this.#clock.now() - last.at < this.#startRetryMs) continue;
+      // "Restart agent": a newer person assignment drops the wait and the memory of the cause, so
+      // the start runs now and a new failure gets its comment again (openspec restart-agent).
+      if (last && last.assigned !== this.#personAssignment(task.id)) {
+        this.#startErrors.delete(task.id);
+      } else if (last && this.#clock.now() - last.at < this.#startRetryMs) continue;
       candidates.push(task);
     }
     if (candidates.length === 0) return;
@@ -1106,7 +1119,11 @@ export class SessionManager {
   async #startFailed(task: TaskView, error: unknown): Promise<void> {
     const message = (error as Error)?.message ?? String(error);
     const last = this.#startErrors.get(task.id);
-    this.#startErrors.set(task.id, { at: this.#clock.now(), message });
+    this.#startErrors.set(task.id, {
+      at: this.#clock.now(),
+      message,
+      assigned: this.#personAssignment(task.id),
+    });
     if (last?.message === message) return;
     this.#log.error({ err: error, task: task.id }, "The session did not start");
     try {
@@ -1115,12 +1132,22 @@ export class SessionManager {
         "comment.added",
         {
           text: `The session did not start on ${this.#me}: ${message.slice(0, 1000)}. AW tries again in ${Math.round(this.#startRetryMs / 1000)} s.`,
+          kind: "start_failed",
         },
         this.#aw,
       );
     } catch (second) {
       this.#log.error({ err: second, task: task.id }, "The start error was not written");
     }
+  }
+
+  /** The id of the newest applied `task.assigned` of a person for the task, or null. */
+  #personAssignment(task: string): string | null {
+    const row = this.#rows(task)
+      .filter((r) => r.type === "task.assigned" && r.applied)
+      .filter((r) => isHuman((r.event as { by?: string | null }).by ?? null))
+      .at(-1);
+    return row?.id ?? null;
   }
 
   #needsClaim(task: TaskView): boolean {

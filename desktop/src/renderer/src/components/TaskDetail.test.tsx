@@ -851,3 +851,66 @@ describe("Activity of a Discuss stage (proposal-and-discussion)", () => {
     });
   });
 });
+
+describe("Restart agent (restart-agent)", () => {
+  const FAILED =
+    'The session did not start on macbook-pro: /work/notes has no commit yet. AW makes the worktree of a session from a commit: make a first commit there, or start a session with "Project checkout". AW tries again in 60 s.';
+
+  it("shows the cause in place of the queue chip, and Restart agent assigns the same agent with no options", async () => {
+    stubWidth(1200);
+    const task: Task = {
+      ...AW8_TASK,
+      assignee: "claude@macbook-pro",
+      session: null,
+      start_failure: {
+        device: "macbook-pro",
+        text: FAILED,
+        at: "2026-11-27T10:00:00.000Z#0000",
+        retrying: false,
+      },
+    };
+    const call = installBridge({
+      task: () => task,
+      tasks: () => [task],
+      thread: () => AW8,
+      assignTask: () => ({ applied: true }),
+    });
+    renderApp(
+      <DialogsProvider ws="ws-1">
+        <TaskDetail ws="ws-1" taskId={task.id} />
+      </DialogsProvider>,
+    );
+    const cause =
+      'Did not start on macbook-pro: /work/notes has no commit yet. AW makes the worktree of a session from a commit: make a first commit there, or start a session with "Project checkout"';
+    expect((await screen.findAllByText(cause)).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/starts soon/)).toBeNull();
+    await userEvent.click(screen.getByRole("button", { name: "Restart agent" }));
+    await waitFor(() =>
+      expect(call.mock.calls.find(([m]) => m === "assignTask")?.[1]).toEqual({
+        ws: "ws-1",
+        task: task.id,
+        assignee: "claude@macbook-pro",
+      }),
+    );
+  });
+
+  it("shows Starting again after the restart, and no Restart agent while a session runs", async () => {
+    stubWidth(1200);
+    const retrying: Task = {
+      ...AW8_TASK,
+      assignee: "claude@macbook-pro",
+      session: null,
+      start_failure: { device: "macbook-pro", text: FAILED, at: "x", retrying: true },
+    };
+    installBridge({ task: () => retrying, tasks: () => [retrying], thread: () => AW8 });
+    renderApp(
+      <DialogsProvider ws="ws-1">
+        <TaskDetail ws="ws-1" taskId={retrying.id} />
+      </DialogsProvider>,
+    );
+    expect((await screen.findAllByText("Starting again on macbook-pro…")).length).toBeGreaterThan(
+      0,
+    );
+    expect(screen.queryByRole("button", { name: "Restart agent" })).toBeNull();
+  });
+});
