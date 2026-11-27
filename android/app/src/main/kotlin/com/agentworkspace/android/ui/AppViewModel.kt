@@ -224,10 +224,10 @@ class AppViewModel(
 
     fun select(tab: Tab) = navigator.select(tab)
 
-    /** Opens a task as the task page (openspec task-review-layout: one pane at each width). */
-    fun openTask(id: String) = navigator.open(Route.Task(id))
+    /** Opens a task: next to the Tasks list from the Tasks tab, else the full task page (phone-desktop-parity). */
+    fun openTask(id: String) = navigator.openTask(id)
 
-    /** A notification tap: the workspace of the push, then `[Inbox, Task(id)]`, or `[Inbox]` with no task. */
+    /** A notification tap: the workspace of the push, then `[Inbox, TaskPage(id)]`, or `[Inbox]` with no task. */
     fun openFromPush(
         workspace: String?,
         task: String?,

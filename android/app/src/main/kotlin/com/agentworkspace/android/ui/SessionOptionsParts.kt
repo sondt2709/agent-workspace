@@ -14,8 +14,6 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -158,19 +156,9 @@ fun SessionOptionChips(
     val teams = SessionOptionRows.agentTeams(task, projectMode)
     if (!skips && !teams) return
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (skips) {
-            AssistChip(
-                onClick = {},
-                label = { Text(SessionOptionTexts.SKIP_CHIP) },
-                colors =
-                    AssistChipDefaults.assistChipColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer,
-                        labelColor = MaterialTheme.colorScheme.onErrorContainer,
-                    ),
-                border = AssistChipDefaults.assistChipBorder(true, borderColor = MaterialTheme.colorScheme.error),
-            )
-        }
-        if (teams) AssistChip(onClick = {}, label = { Text(SessionOptionTexts.TEAMS_CHIP) })
+        // State chips of the desktop (24 dp), not Material chips: they are labels, not buttons.
+        if (skips) StateChip(SessionOptionTexts.SKIP_CHIP, ChipTone.ERR)
+        if (teams) StateChip(SessionOptionTexts.TEAMS_CHIP, ChipTone.NEUTRAL)
     }
 }
 

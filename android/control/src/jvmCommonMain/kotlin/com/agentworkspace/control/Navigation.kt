@@ -10,8 +10,16 @@ sealed interface Route {
 
     data object Devices : Route
 
-    /** The detail of a task. */
+    /**
+     * A task of the Tasks list: from medium width its task page shows next to the list; on a compact
+     * window it is the full task page (openspec phone-desktop-parity).
+     */
     data class Task(
+        val id: String,
+    ) : Route
+
+    /** The task page at the full width at each window size: "Open as page", Home, Inbox and a push. */
+    data class TaskPage(
         val id: String,
     ) : Route
 
@@ -64,7 +72,7 @@ class Navigator(
      */
     fun open(route: Route) {
         when (route) {
-            is Route.Task, is Route.InboxItem -> {
+            is Route.Task, is Route.TaskPage, is Route.InboxItem -> {
                 replace(listOf(stack.first(), route))
             }
 
@@ -78,8 +86,39 @@ class Navigator(
         }
     }
 
-    /** A push opens the stack `[Inbox, Task(id)]` (docs/phase-1.md 10.8), or `[Inbox]` with no task. */
-    fun openFromPush(task: String?) = replace(listOfNotNull(Route.Inbox, task?.let { Route.Task(it) }))
+    /**
+     * Opens a task (openspec phone-desktop-parity). From the Tasks list the task shows next to the list:
+     * `[Tasks, Task(id)]`. On a task page opened with "Open as page", the other task opens as a page and
+     * Back still returns to the list: `[Tasks, Task(id), TaskPage(id)]`. Elsewhere (Home, Inbox) the task
+     * page opens at the full width: `[root, TaskPage(id)]`.
+     */
+    fun openTask(id: String) {
+        val root = stack.first()
+        when {
+            root == Route.Tasks && stack.last() is Route.TaskPage -> {
+                replace(
+                    listOf(root, Route.Task(id), Route.TaskPage(id)),
+                )
+            }
+
+            root == Route.Tasks -> {
+                replace(listOf(root, Route.Task(id)))
+            }
+
+            else -> {
+                replace(listOf(root, Route.TaskPage(id)))
+            }
+        }
+    }
+
+    /** "Open as page": the task next to the list opens at the full width; Back returns to the list. */
+    fun openAsPage() {
+        val top = stack.last()
+        if (top is Route.Task) stack.add(Route.TaskPage(top.id))
+    }
+
+    /** A push opens the stack `[Inbox, TaskPage(id)]` (docs/phase-1.md 10.8), or `[Inbox]` with no task. */
+    fun openFromPush(task: String?) = replace(listOfNotNull(Route.Inbox, task?.let { Route.TaskPage(it) }))
 
     /**
      * Closes [route] when it is the top entry, for the end of a form action: the person can have left the
@@ -95,7 +134,13 @@ class Navigator(
     }
 
     /** The open task, or null. */
-    val openTask: String? get() = stack.filterIsInstance<Route.Task>().lastOrNull()?.id
+    val openTask: String?
+        get() =
+            when (val top = stack.lastOrNull { it is Route.Task || it is Route.TaskPage }) {
+                is Route.Task -> top.id
+                is Route.TaskPage -> top.id
+                else -> null
+            }
 
     /** The task of the open Inbox item, or null. */
     val openInboxItem: String? get() = stack.filterIsInstance<Route.InboxItem>().lastOrNull()?.task

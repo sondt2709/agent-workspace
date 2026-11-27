@@ -19,7 +19,7 @@
 
 ## 4. Orca host
 
-- [x] 4.1 Make the fake Orca CLI answer `selector_not_found` for an unknown path (the inbox2agent capture of 2026-10-28) and open a terminal in the main folder of a known repo.
+- [x] 4.1 Make the fake Orca CLI answer `selector_not_found` for an unknown path (the capture of 2026-10-28) and open a terminal in the main folder of a known repo.
 - [x] 4.2 In `open()` of `plugins/host-orca/src/orca.ts`, run `repo add --path <cwd>` once on `selector_not_found`, then `terminal create` again. Add unit tests for both answers of `repo add`.
 - [x] 4.3 Fix the terminal note of the local API for an Orca session in the checkout: name the folder, not `aw-<task>`.
 

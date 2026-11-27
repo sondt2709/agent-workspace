@@ -84,7 +84,7 @@ describe("@aw/host-orca", () => {
     for (const [file, schema] of pairs) {
       expect(() => parseReply(capturedReply(file), file, orcaReplies[schema])).not.toThrow();
     }
-    // orca 1.4.240 (the captures of inbox2agent): an unknown folder, and a folder that is no repo.
+    // orca 1.4.240 (the real captures of 2026-10-28): an unknown folder, and a folder that is no repo.
     expect(() =>
       parseReply(
         capturedReply("selector-not-found.json", "orca-1.4.240"),

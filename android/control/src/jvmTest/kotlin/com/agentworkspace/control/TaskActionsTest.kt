@@ -44,12 +44,11 @@ class TaskActionsTest {
                 )
                 var snapshot = model.reload()
                 assertTrue(snapshot.task(AW7)!!.archived)
-                // The Tasks list keeps the stage groups and adds the group Archived at the end.
+                // The Tasks list shows no empty stage group and adds the group Archived at the end.
                 val groups = ScreenStates.tasksByStage(snapshot)
-                assertEquals(Texts.STAGES + ScreenStates.ARCHIVED_GROUP, groups.map { it.stage })
+                assertEquals(listOf(ScreenStates.ARCHIVED_GROUP), groups.map { it.stage })
                 assertEquals("Archived", groups.last().label)
                 assertEquals(listOf("AW-7"), groups.last().tasks.map { it.label })
-                assertTrue(groups.first { it.stage == "implement" }.tasks.isEmpty())
                 assertEquals(ActionResult.Refused("The task is already archived."), actions.archiveTask(AW7))
                 assertEquals(null, TaskActions.runningDevice(snapshot.task(AW7)!!.copy(session = null)))
                 assertEquals(
@@ -62,7 +61,7 @@ class TaskActionsTest {
                 ws.refresh()
                 snapshot = model.reload()
                 assertEquals(false, snapshot.task(AW7)!!.archived)
-                assertEquals(Texts.STAGES, ScreenStates.tasksByStage(snapshot).map { it.stage })
+                assertEquals(listOf("implement"), ScreenStates.tasksByStage(snapshot).map { it.stage })
                 assertEquals(ActionResult.Refused("The task is not archived."), actions.unarchiveTask(AW7))
             }
         }

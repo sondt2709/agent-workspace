@@ -27,3 +27,15 @@ tasks:
     desc: Build the debug APK (needs the Android SDK; builds libawsync.so first when it is missing)
     cmds:
       - ./gradlew :app:assembleDebug
+
+  screenshots:
+    desc: Compare the Roborazzi screenshots and run the Compose tests of android/app on the JVM (needs the Android SDK; not in CI)
+    cmds:
+      - mkdir -p app/build/no-engine-libs
+      - ./gradlew :app:verifyRoborazziDebug -Paw.engineLibsDir={{.TASKFILE_DIR}}/app/build/no-engine-libs
+
+  screenshots:record:
+    desc: Record the golden Roborazzi screenshots of android/app (app/src/test/screenshots)
+    cmds:
+      - mkdir -p app/build/no-engine-libs
+      - ./gradlew :app:recordRoborazziDebug -Paw.engineLibsDir={{.TASKFILE_DIR}}/app/build/no-engine-libs

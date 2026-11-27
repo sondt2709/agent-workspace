@@ -1,6 +1,6 @@
 # Orca CLI replies (orca 1.4.240)
 
-Source: real replies of the `orca` CLI 1.4.240, captured on 2026-10-28 for the Orca driver of inbox2agent (`internal/agent/testdata/`). Local paths are replaced with `/home/user`.
+Source: real replies of the `orca` CLI 1.4.240, captured on 2026-10-28 from a real Orca install. Local paths are replaced with `/home/user`.
 
 | File                      | Command                                                                             |
 | ------------------------- | ----------------------------------------------------------------------------------- |

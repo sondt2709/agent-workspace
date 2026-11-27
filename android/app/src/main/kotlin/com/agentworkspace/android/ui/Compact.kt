@@ -24,19 +24,24 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 
-// The compact components of the phone (openspec polish-prototype-style and task-review-layout,
-// docs/design.md 8.20). They have the names of the Material 3 components, so a screen in this package
-// gets the compact one when it does not import the Material 3 one. One control height of 48 dp for
-// buttons, option buttons, decision rows, one-line text fields and select fields; chips stay 32 dp.
+// The compact components of the phone (openspec polish-prototype-style, task-review-layout and
+// phone-desktop-parity, docs/design.md 8.20). They have the names of the Material 3 components, so a
+// screen in this package gets the compact one; detekt forbids the Material 3 buttons in the screens.
+// One visible control height of 36 dp, as on the desktop, for buttons, one-line text fields and select
+// fields; chips stay 32 dp. Material 3 keeps a touch target of 48 dp around each of them
+// (minimumInteractiveComponentSize), so the control looks small and stays easy to tap.
 
-/** The height of each control of a form or a card: buttons, option rows and one-line text fields. */
-val ControlHeight = 48.dp
+/** The visible height of a button, a one-line text field and a select field (the desktop control height). */
+val ControlHeight = 36.dp
+
+/** The smallest height of a tappable row and of a question option button (the touch target). */
+val TouchHeight = 48.dp
 
 private val ButtonPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
 private val TextButtonPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
 
-/** The padding of a field: 12 dp above and below the 24 dp minimum line of Material 3 give 48 dp. */
-private val FieldPadding = PaddingValues(horizontal = 12.dp, vertical = 12.dp)
+/** The padding of a field: 6 dp above and below the 24 dp minimum line of Material 3 give 36 dp. */
+private val FieldPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
 
 /** The corner of buttons and text fields: 6 dp, as on the desktop (docs/design.md 5). */
 val CompactShape = RoundedCornerShape(6.dp)
@@ -98,7 +103,7 @@ fun TextButton(
 )
 
 /**
- * An outlined text field of 48 dp with one line. The [label] shows above the field and the
+ * An outlined text field of 36 dp with one line. The [label] shows above the field and the
  * [placeholder] inside it: a floating label needs 56 dp (openspec task-review-layout, design decision
  * 8). It is value-based, so the typing of the screens stays as it was (a state-based field with a
  * value bridge dropped fast input on an emulator).
@@ -146,7 +151,7 @@ fun OutlinedTextField(
 }
 
 /**
- * The field of [OutlinedTextField] with no label: 48 dp high with one line. Compose 1.13 deprecates
+ * The field of [OutlinedTextField] with no label: 36 dp high with one line. Compose 1.13 deprecates
  * the value-based BasicTextField, and the value-based Material 3 field uses it too. A state-based
  * field with a value bridge dropped fast input on an emulator (polish-prototype-style), so the field
  * stays value-based until the screens keep a TextFieldState.
@@ -197,7 +202,7 @@ fun ControlField(
             visualTransformation = VisualTransformation.None,
             interactionSource = interaction,
             isError = isError,
-            // The placeholder has the body text of the field, so the field stays 48 dp.
+            // The placeholder has the body text of the field, so the field stays 36 dp.
             placeholder = placeholder?.let { p -> { ProvideTextStyle(MaterialTheme.typography.bodyMedium) { p() } } },
             trailingIcon = trailingIcon,
             supportingText = supportingText,

@@ -111,7 +111,10 @@ class PhoneActionsTest {
                 assertEquals("Add a rate limit\n\nPer client.", task.firstMessage)
                 assertEquals("backlog", task.stage)
                 assertTrue(ScreenStates.needsAssign(task))
-                assertEquals("Needs you: assign", ScreenStates.inbox(snapshot).single { it.id == done.task }.reason)
+                assertEquals(
+                    "Needs you: Assign task",
+                    ScreenStates.inbox(snapshot).single { it.id == done.task }.reason,
+                )
 
                 // Assign from the Assign card: a human task.assigned.
                 ws.clock.time += 1_000

@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -74,11 +75,14 @@ fun ProposalCard(
         modifier = Modifier.listCard(),
         shape = ProposalShape,
         color = MaterialTheme.colorScheme.surfaceContainer,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
-        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(
+            Modifier.padding(start = 16.dp, end = 4.dp, top = 4.dp, bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Proposal v${row.version}", style = MaterialTheme.typography.titleMedium)
+                Text("Proposal v${row.version}", style = AwType.titleSm)
                 if (row.state == ProposalState.OPEN && view.card?.status == CardStatus.Open) {
                     NeedChip("Waits for your approval")
                 }
@@ -87,18 +91,21 @@ fun ProposalCard(
                     onClick = onFullScreen,
                 ) { AwIcon(R.drawable.ic_fullscreen, "Open the proposal in full screen") }
             }
-            Text(
-                listOfNotNull(row.item.who, shownTime(row.item)).joinToString(" · "),
-                style = MaterialTheme.typography.labelSmall,
-                color = muted(),
-            )
-            val text = view.text
-            if (text == null) {
-                Text(notHere(row), style = MaterialTheme.typography.bodyMedium, color = muted())
-            } else {
-                GateText(text, "${row.event}:proposal", ProposalCardHeight, view.textSize)
+            Column(Modifier.padding(end = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    listOfNotNull(row.item.who, shownTime(row.item)).joinToString(" · "),
+                    style = AwType.meta,
+                    color = muted(),
+                )
+                val text = view.text
+                if (text == null) {
+                    Text(notHere(row), style = AwType.body, color = muted())
+                } else {
+                    GateText(text, "${row.event}:proposal", ProposalCardHeight, view.textSize)
+                }
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                ProposalActions(view, hint = true)
             }
-            ProposalActions(view, fullWidth = true)
         }
     }
 }
@@ -107,7 +114,8 @@ fun ProposalCard(
 @Composable
 private fun ProposalActions(
     view: ProposalView,
-    fullWidth: Boolean,
+    /** "To change it, write a message." next to the button: the card has it, the full screen view not. */
+    hint: Boolean,
 ) {
     val row = view.row
     val status = view.card?.status
@@ -125,11 +133,15 @@ private fun ProposalActions(
         }
 
         status == CardStatus.Open && view.onApprove != null -> {
-            Button(
-                onClick = view.onApprove,
-                modifier = if (fullWidth) Modifier.fillMaxWidth() else Modifier,
-            ) { Text("Approve proposal") }
-            if (fullWidth) Text(TO_CHANGE, style = MaterialTheme.typography.labelSmall, color = muted())
+            // The button has the width of its label, with the hint next to it (as on the desktop).
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                itemVerticalAlignment = Alignment.CenterVertically,
+            ) {
+                Button(onClick = view.onApprove) { Text("Approve proposal") }
+                if (hint) Text(TO_CHANGE, style = AwType.meta, color = muted())
+            }
         }
     }
 }
@@ -188,7 +200,7 @@ fun ProposalFullScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    ProposalActions(view, fullWidth = false)
+                    ProposalActions(view, hint = false)
                     OutlinedButton(onClick = onDiscuss) { Text("Discuss") }
                 }
             }
@@ -245,8 +257,12 @@ internal fun rememberProposalView(
     onAnswer: GateAnswer,
 ): ProposalView {
     val version = row.version ?: 0L
-    val text by produceState<String?>(null, task.id, version, row.file, task.lastHlc) {
-        value = parts.loadProposal(task.id, version, row.file)
+    // The text of an earlier load first: a row that scrolls back keeps its height (no jump).
+    val kept = "${task.id}|$version|${row.file}"
+    val text by produceState(KeptTexts.proposal(kept), task.id, version, row.file, task.lastHlc) {
+        val loaded = parts.loadProposal(task.id, version, row.file)
+        KeptTexts.keepProposal(kept, loaded)
+        value = loaded ?: value
     }
     val approve =
         card?.takeIf { row.state == ProposalState.OPEN }?.let { open ->

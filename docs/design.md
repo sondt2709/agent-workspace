@@ -68,6 +68,7 @@ Each status color has a tint for chips and banners: the color at 12 % to 14 % op
 ## 3. Typography
 1. Font: Inter (variable) for all text, Geist Mono (variable) for task keys, paths, commands and the terminal. Both are bundled in the app from maintained npm packages. The app loads no font from the network (CSP `font-src 'self'`).
 1a. Fallback font: JetBrains Mono 2.304 (variable, OFL 1.1, `THIRD_PARTY_NOTICES`) is the font after Inter and Geist Mono on the desktop (`desktop/src/renderer/src/fonts/`), and the monospace font of the phone (`res/font/jetbrains_mono.ttf`). It has each box drawing character (U+2500 to U+257F), so a tree or a table of an agent shows with no missing glyph. The npm package of JetBrains Mono has no box drawing range, so the app bundles the release file.
+1b. Phone (openspec phone-desktop-parity): Inter 4.1 (`res/font/inter.ttf`, the variable font of the `rsms/inter` release, with `cv11` and `ss01`) for all text except code. The roles of the table below map to `AwType` of `Theme.kt`, with 14 sp `body` and `body-strong`.
 2. Turn on the Inter features `cv11` (single-story a) and `ss01` (open digits), and `tnum` for counts and times.
 3. Use sentence case for all labels. Do not use uppercase section labels.
 
@@ -163,6 +164,8 @@ Each status color has a tint for chips and banners: the color at 12 % to 14 % op
 2. A group header is 32 px with a collapse arrow, the group name and the count, on the `canvas` color. A click collapses or opens the group. The last group "Archived" holds the archived tasks; it is closed at the start, and each row has "Unarchive" at the right. The Board shows no archived task.
 3. Hover uses `hover`. The selected row uses `selected` and a 2 px accent mark at the left.
 4. Up and Down arrows move the focus between the rows. Enter opens. Esc closes the detail, except in a text field.
+5. Phone (openspec phone-desktop-parity): the same row in two lines, at each width. Line 1 has the status icon of the stage, the key (mono, `text3`) and the title (`body-strong`, one line). Line 2 wraps as whole items: the chips (the reason, "Running", a pause), the queue text "Queued · 1st for claude@ubuntu-01 · starts soon" and "<assignee> · <age>". The list shows no empty stage group. The title line "All tasks <n>" has "New task" at its end, above the project tabs.
+6. Phone from 600 dp: the Tasks list is a 320 dp pane, and a tap opens the task page next to it with "Open as page" (decision `2026-11-27-phone-desktop-parity`). "Open as page" shows the task page at the full width; Back returns to the list with the task selected. Home, an Inbox item and a push open the full-width task page.
 
 ### 8.5 Board
 1. One column per stage with the stage name, the count and a short description (`STAGE_HINT`). The columns share the width with a minimum of 160 px, so all 6 show at 1280 px with the 240 px sidebar; below that the board scrolls sideways.
@@ -186,7 +189,7 @@ Each status color has a tint for chips and banners: the color at 12 % to 14 % op
 7. Files: the read-only folder of the task.
 8. Properties (from 1,000 px of the task page's own width without the task list, a 280 px right panel; else a Properties tab): stage, assignee, project, proposal versions, test server, credentials, queue, parent and subtasks, dependencies, progress. Read-only in phase 1; editable values come later.
 9. The message box is at the bottom of the Activity and Session tabs, outside the scroll area.
-10. Phone (openspec phone-task-focus, task-review-layout): the same task page, header, width rules and Activity rows as the desktop. The phone has no Files tab yet (a separate change); Properties has the artifacts. The description is Markdown, with "Show raw" on the desktop. "New session" stays below the chips. The Tasks list ends with the group "Archived". The header scrolls with the list and the tab row stays at the top, so a short window (landscape, the keyboard open) keeps the list. The keyboard never covers the message box; the bottom bar hides while the keyboard is open. A task uses one pane at each width: there is no Session pane.
+10. Phone (openspec phone-task-focus, task-review-layout, phone-desktop-parity): the same task page, header, width rules, tab colors, relative times and Activity rows as the desktop. The header has Back, the key, the project and "Show list"; then the state chips, the session option chips and the need-you navigation; then the title and the stage bar. Activity gets the height: the header scrolls away and only the tab row stays at the top, with "Open as page" (next to the Tasks list) and the actions menu at its end; the description shows about 3 lines and "Show more"; the message box is one row (a field that grows to 5 lines, and Send) and one line "To <agent> · <hint>". Next to the Tasks list no app bar spans both panes: the list pane has its own bar with the workspace switcher and Sync now. The phone has no Files tab yet (a separate change); Properties has the artifacts. The description is Markdown, with "Show raw" on the desktop. "New session" stays below the chips. The Tasks list ends with the group "Archived". The header scrolls with the list and the tab row stays at the top, so a short window (landscape, the keyboard open) keeps the list. The keyboard never covers the message box; the bottom bar hides while the keyboard is open. A task uses one pane at each width: there is no Session pane.
 
 ### 8.7 Gate card
 1. `raised` fill, a 1 px `you` line at 40 %, `r-md`, 16 px padding.
@@ -276,9 +279,10 @@ All buttons have `r-sm`, a 13 px label (510), no uppercase and no elevation.
 4. No raw HTML, no script, no remote image. A link opens in the system browser only when it starts with `https://`.
 
 ### 8.20 Phone sizes
-1. The phone uses one control height of 48 dp (`Compact.kt`): buttons, option buttons, decision rows, one-line text fields and select fields. A text field has its label above the field and its placeholder inside. Chips stay 32 dp. The type scale has 14 sp body text (`CompactTypography` of `Theme.kt`).
-2. Each control keeps a touch target of at least 48 dp.
-3. The phone uses the same tokens as the desktop, as a fixed Material 3 color scheme (`DarkScheme`, `LightScheme`), with no dynamic color.
+1. The phone uses one visible control height of 36 dp, as on the desktop (`ControlHeight` of `Compact.kt`, openspec phone-desktop-parity): buttons, one-line text fields and select fields. A text field has its label above the field and its placeholder inside. Chips stay 32 dp; a state chip is 24 dp. A question option button and a tappable row are at least 48 dp (`TouchHeight`). The type scale has 14 sp body text (`CompactTypography` and `AwType` of `Theme.kt`).
+2. Each control keeps a touch target of at least 48 dp (Material 3 `minimumInteractiveComponentSize`).
+3. The screens use the buttons of `Compact.kt`; the detekt rule `ForbiddenImport` refuses the Material 3 buttons.
+4. The phone uses the same tokens as the desktop, as a fixed Material 3 color scheme (`DarkScheme`, `LightScheme`), with no dynamic color. `AwTokens.kt` is generated from `@aw/ui/tokens` (`pnpm tokens:generate`); a test of `@aw/scripts` fails when it differs.
 
 ### 8.21 App icon
 1. The AW mark: a rounded square with a square opening, split on the diagonal into a light half (`text`) and a gray half (`text3`). It is an AW drawing of the logo of the prototype. The one source is `shared/ui/icons/aw-mark.svg`.

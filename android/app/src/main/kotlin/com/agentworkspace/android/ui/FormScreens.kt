@@ -53,7 +53,7 @@ import com.agentworkspace.control.WorktreeRule
  * polish-skip-default): the first message, the title, the project, the assignee and "Start the
  * agent now", the test server, the parent task, the credential names and the session options
  * ("Skip permissions" and "Agent teams" preselected). "Start the agent now" is on when the project
- * has a device (openspec session-options). With no assignee the task opens "Needs you: assign".
+ * has a device (openspec session-options). With no assignee the task opens "Needs you: Assign task".
  */
 @Composable
 fun NewTaskScreen(
@@ -143,7 +143,7 @@ fun NewTaskScreen(
                 when {
                     start == null -> "The project has no device. Add a device in the project settings on a computer."
                     assignee != null -> "Assigns $assignee. It starts when its device gets the task."
-                    else -> "Off: the task waits in \u201cNeeds you: assign\u201d. AW never assigns a task alone."
+                    else -> "Off: the task waits in \u201cNeeds you: Assign task\u201d. AW never assigns a task alone."
                 },
                 style = MaterialTheme.typography.bodySmall,
                 color = muted(),

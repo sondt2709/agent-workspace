@@ -726,6 +726,9 @@ importers:
       '@aw/config':
         specifier: workspace:*
         version: link:../shared/config
+      '@aw/ui':
+        specifier: workspace:*
+        version: link:../shared/ui
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.6

@@ -77,12 +77,20 @@ internal fun GateText(
     textSize: Dp? = null,
 ) {
     var all by rememberSaveable(key) { mutableStateOf(false) }
-    var full by remember(text, textSize) { mutableIntStateOf(0) }
+    // The height of an earlier layout first: "Show more" shows in the first frame of a row that
+    // scrolls back, so the list does not jump (openspec phone-desktop-parity).
+    val kept = "$key|${text.hashCode()}|$textSize"
+    var full by remember(text, textSize) { mutableIntStateOf(KeptTexts.height(kept)) }
     val limit = with(LocalDensity.current) { height.roundToPx() }
     val over = full > limit
     val fade = MaterialTheme.colorScheme.surfaceContainer
     Box(if (all) Modifier.fillMaxWidth() else Modifier.fillMaxWidth().heightIn(max = height).clipToBounds()) {
-        Box(Modifier.wrapContentHeight(Alignment.Top, unbounded = true).onSizeChanged { full = it.height }) {
+        Box(
+            Modifier.wrapContentHeight(Alignment.Top, unbounded = true).onSizeChanged {
+                full = it.height
+                KeptTexts.keepHeight(kept, it.height)
+            },
+        ) {
             MarkdownText(text, textSize = textSize)
         }
         if (over && !all) {
@@ -142,12 +150,14 @@ internal fun OptionButton(
         }
     val padding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
     if (filled) {
-        Button(onClick = onClick, modifier = modifier, contentPadding = padding) { OptionText(label, description) }
+        Button(onClick = onClick, modifier = modifier.heightIn(min = TouchHeight), contentPadding = padding) {
+            OptionText(label, description)
+        }
     } else {
         val on = checked == true
         androidx.compose.material3.OutlinedButton(
             onClick = onClick,
-            modifier = modifier.heightIn(min = ControlHeight),
+            modifier = modifier.heightIn(min = TouchHeight),
             shape = CompactShape,
             contentPadding = padding,
             border =

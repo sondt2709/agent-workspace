@@ -25,10 +25,9 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
@@ -51,6 +50,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import com.agentworkspace.android.R
 import com.agentworkspace.control.ActivityContent
 import com.agentworkspace.control.MessageBox
 import com.agentworkspace.control.RowStyle
@@ -87,6 +87,11 @@ class TaskPageNavigation(
     val onOpen: (String) -> Unit,
     val listOn: Boolean,
     val onList: (Boolean) -> Unit,
+    /**
+     * "Open as page" while the task page shows next to the Tasks list (openspec phone-desktop-parity),
+     * else null. Next to the list the page has no Back and no "Show list".
+     */
+    val onOpenAsPage: (() -> Unit)? = null,
 )
 
 /**
@@ -107,7 +112,7 @@ fun TaskScreen(
     actions: TaskPageActions,
 ) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        val layout = TaskPageLayout.of(maxWidth.value.toInt(), nav.listOn)
+        val layout = TaskPageLayout.of(maxWidth.value.toInt(), nav.listOn && nav.onOpenAsPage == null)
         Row(Modifier.fillMaxSize()) {
             if (layout.list) {
                 val width = TaskPageLayout.TASK_LIST_DP.dp
@@ -116,7 +121,17 @@ fun TaskScreen(
             }
             // Each task opens on Activity: the state belongs to the task (the desktop `key={task}`).
             key(task.id) {
-                TaskMain(task, snapshot, layout, nav, loadThread, loadTerminal, parts, actions, Modifier.weight(1f))
+                TaskMain(
+                    task,
+                    snapshot,
+                    layout,
+                    nav,
+                    loadThread,
+                    loadTerminal,
+                    parts,
+                    actions,
+                    Modifier.weight(1f),
+                )
             }
             if (layout.propertiesPanel) {
                 VerticalDivider()
@@ -174,9 +189,34 @@ private fun TaskMain(
         }
     }
     Column(modifier.fillMaxHeight()) {
-        // The header scrolls with the list and the tab row stays at the top, so a short window (a phone
-        // in landscape, the keyboard open) keeps the list. Each tab opens at the top with its own
-        // scroll state, so the needs-you line shows. The content is 840 dp wide at most and centred.
+        // Activity gets the height (openspec phone-desktop-parity): the header scrolls with the list,
+        // and only one row stays at the top: the tabs with "Open as page" and the actions menu at its
+        // end. Each tab opens at the top with its own scroll state, so the needs-you line shows. The
+        // content is 840 dp wide at most and centred.
+        val header: @Composable () -> Unit = {
+            TaskHeader(
+                task,
+                snapshot,
+                row,
+                layout,
+                nav,
+                actions,
+                onStateChip = {
+                    selected = TaskTab.ACTIVITY
+                    scrollTo = activity.needsYouIndex(thread.hasOlder)
+                },
+            ) {
+                assigning = true
+                selected = TaskTab.ACTIVITY
+            }
+        }
+        val tabRow: @Composable () -> Unit = {
+            AwTabRow(tabs.map { it.label }, tabs.indexOf(tab), { selected = tabs[it] }) {
+                val open = nav.onOpenAsPage
+                if (open != null) IconButton(onClick = open) { AwIcon(R.drawable.ic_open_page, "Open as page") }
+                TaskActionsMenu(task, actions.onStopSession, actions.onArchive, actions.onUnarchive)
+            }
+        }
         key(tab) {
             val listState = rememberLazyListState()
             LaunchedEffect(scrollTo, tab) {
@@ -191,32 +231,8 @@ private fun TaskMain(
                 state = listState,
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                item(key = "header") {
-                    TaskHeader(
-                        task,
-                        snapshot,
-                        row,
-                        layout,
-                        nav,
-                        actions,
-                        onStateChip = {
-                            selected = TaskTab.ACTIVITY
-                            scrollTo = activity.needsYouIndex(thread.hasOlder)
-                        },
-                    ) {
-                        assigning = true
-                        selected = TaskTab.ACTIVITY
-                    }
-                }
-                stickyHeader(key = "tabs") {
-                    Surface(Modifier.fillMaxWidth()) {
-                        PrimaryScrollableTabRow(selectedTabIndex = tabs.indexOf(tab), edgePadding = 8.dp) {
-                            tabs.forEach { t ->
-                                Tab(selected = t == tab, onClick = { selected = t }, text = { Text(t.label) })
-                            }
-                        }
-                    }
-                }
+                item(key = "header") { header() }
+                stickyHeader(key = "tabs") { tabRow() }
                 if (tab != TaskTab.ACTIVITY) {
                     TaskDetail.needsYouLine(task)?.let { line ->
                         item(key = "needs-you") { NeedsYouLine(line) { selected = TaskTab.ACTIVITY } }
@@ -256,7 +272,7 @@ private fun TaskMain(
                 MessageField(
                     value = draft,
                     onValueChange = { draft = it },
-                    label = "Message to ${task.assignee ?: "the agent"}",
+                    label = "To ${task.assignee ?: "the agent"}",
                     placeholder = box.placeholder,
                     enabled = box.enabled,
                     onSend = {
@@ -353,10 +369,15 @@ private fun Description(text: String?) {
         if (body == null) {
             Text("No description.", style = MaterialTheme.typography.bodyLarge, color = muted())
         } else {
-            SelectionContainer { MarkdownText(body) }
+            // About 3 lines and "Show more": Activity starts near the top (openspec phone-desktop-parity).
+            // One Column: SelectionContainer stacks its children, and "Show more" would cover the text.
+            SelectionContainer { Column { GateText(body, "description", DescriptionHeight) } }
         }
     }
 }
+
+/** The height of the description before "Show more": about 3 lines of body text. */
+private val DescriptionHeight = 68.dp
 
 /** The newest terminal snapshot: the caption, the screen in a monospace block, or the note. */
 @Composable
@@ -479,7 +500,7 @@ private fun ThreadLine(item: ThreadItem) {
                     withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, color = scheme.onSurface)) {
                         append(item.who)
                     }
-                    for (part in listOfNotNull(item.note, shownTime(item))) append(" · $part")
+                    for (part in listOfNotNull(item.note, exactTime(item))) append(" · $part")
                 },
                 style = MaterialTheme.typography.labelSmall,
                 color = muted(),
@@ -491,8 +512,9 @@ private fun ThreadLine(item: ThreadItem) {
 
 /**
  * The index in the Activity list of the row that needs the person (the header chip scrolls to it):
- * the header and the tab row, the top cards, the late answers, the Assign card, the description, the
- * "Activity" heading and "Show older", then the rows. With no such row, the first top card.
+ * the header and the tab row, the top cards, the late answers, the
+ * Assign card, the description, the "Activity" heading and "Show older", then the rows. With no such
+ * row, the first top card.
  */
 private fun ActivityContent.needsYouIndex(hasOlder: Boolean): Int {
     val top = 2

@@ -32,7 +32,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.agentworkspace.control.ActivityContent
 import com.agentworkspace.control.DeviceRowState
@@ -210,7 +214,7 @@ private fun InboxRowView(
             .fillMaxWidth()
             .background(if (selected) scheme.surfaceContainerHigh else Color.Transparent)
             .then(if (onClick == null) Modifier else Modifier.clickable(role = Role.Button, onClick = onClick))
-            .heightIn(min = ControlHeight)
+            .heightIn(min = TouchHeight)
             .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
@@ -238,7 +242,7 @@ private fun GroupRow(
         Modifier
             .fillMaxWidth()
             .clickable(role = Role.Button, onClick = onClick)
-            .heightIn(min = ControlHeight)
+            .heightIn(min = TouchHeight)
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -337,34 +341,53 @@ fun TasksScreen(
     openTask: String?,
     onOpen: (String) -> Unit,
     onSyncNow: () -> Unit,
+    nowMs: Long,
+    /** The bar of the list pane while a task shows next to the list, else null. */
+    header: (@Composable () -> Unit)? = null,
     onNewTask: () -> Unit,
 ) {
     var project by rememberSaveable { mutableStateOf<String?>(null) }
+    // A tap on a group header closes or opens it; "Archived" is closed at the start (docs/design.md 8.4).
+    var closed by rememberSaveable { mutableStateOf(setOf(ScreenStates.ARCHIVED_GROUP)) }
     val groups = ScreenStates.tasksByStage(snapshot, project)
     Column(Modifier.fillMaxSize()) {
-        // The chips scroll; "New task" stays outside them at the end, so it is never cut (so-4).
+        header?.invoke()
+        // "All tasks" and "New task" on one line, above the project tabs, so the button is never cut.
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(
-                Modifier.weight(1f).horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                FilterChip(selected = project == null, onClick = { project = null }, label = { Text("All projects") })
-                for (p in snapshot.projects) {
-                    FilterChip(selected = project == p.slug, onClick = { project = p.slug }, label = { Text(p.slug) })
-                }
-            }
+            Text(
+                buildAnnotatedString {
+                    append("All tasks ")
+                    withStyle(SpanStyle(color = muted(), fontWeight = FontWeight.Normal)) {
+                        append("${groups.sumOf { it.tasks.size }}")
+                    }
+                },
+                style = AwType.title,
+                modifier = Modifier.weight(1f),
+            )
             Button(onClick = onNewTask) { Text("New task", maxLines = 1, softWrap = false) }
         }
+        val projects = listOf<String?>(null) + snapshot.projects.map { it.slug }
+        AwTabRow(
+            labels = projects.map { it ?: "All projects" },
+            selected = projects.indexOf(project).coerceAtLeast(0),
+            onSelect = { project = projects[it] },
+        )
         LazyColumn(Modifier.fillMaxSize().focusGroup()) {
             for (group in groups) {
-                item(key = "stage-${group.stage}") { SectionHeader("${group.label} · ${group.tasks.size}") }
-                items(group.tasks, key = { it.id }) { row ->
-                    TaskRow(row, row.id == openTask, { onOpen(row.id) }, onSyncNow)
+                val open = group.stage !in closed
+                item(key = "stage-${group.stage}") {
+                    GroupHeader(group.label, group.tasks.size, open) {
+                        closed = if (open) closed + group.stage else closed - group.stage
+                    }
+                }
+                if (open) {
+                    items(group.tasks, key = { it.id }) { row ->
+                        TaskRow(row, row.id == openTask, { onOpen(row.id) }, onSyncNow, Texts.age(row.lastHlc, nowMs))
+                    }
                 }
             }
         }

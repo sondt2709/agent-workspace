@@ -32,6 +32,7 @@ import com.agentworkspace.control.GateCard
 import com.agentworkspace.control.GateTexts
 import com.agentworkspace.control.MessageKind
 import com.agentworkspace.control.RowStyle
+import com.agentworkspace.control.Texts
 import com.agentworkspace.control.ThreadItem
 import com.agentworkspace.shared.merge.TaskView
 
@@ -80,7 +81,7 @@ fun MessageRowView(
     }
 }
 
-/** "claude@ubuntu-01 · question · 2026-11-26 10:02:00" and the chip "Waits for your reply". */
+/** "claude@ubuntu-01 · question · 2 min ago" and the chip "Waits for your reply" on the same line. */
 @Composable
 private fun MessageMeta(
     row: ActivityRow,
@@ -105,7 +106,7 @@ private fun MessageMeta(
                 }
                 for (text in listOfNotNull(part, shownTime(item))) append(" · $text")
             },
-            style = MaterialTheme.typography.labelSmall,
+            style = AwType.meta,
             color = muted(),
         )
         if (waits) NeedChip("Waits for your reply")
@@ -127,11 +128,7 @@ private fun QuestionBody(
     val title = row.title.orEmpty()
     if (title.isNotBlank()) {
         SelectionContainer {
-            Text(
-                title,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.SemiBold,
-            )
+            Text(title, style = AwType.body.copy(fontWeight = FontWeight(TITLE_WEIGHT)))
         }
     }
     if (card != null) {
@@ -159,46 +156,42 @@ private fun AnswerBody(row: ActivityRow) {
     ClampedText(row.text, row.event)
 }
 
-/** A task line: one muted line with a dot, for example "Proposal v1 · replaced by v2 · 10:05". */
+/** A task line: one muted line with no dot, for example "Proposal v1 · replaced by v2 · 5 min ago". */
 @Composable
 fun TaskLineView(row: ActivityRow) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .widthIn(max = MaxContentWidth)
-            .padding(horizontal = 16.dp, vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Box(Modifier.size(6.dp).background(MaterialTheme.colorScheme.outlineVariant, CircleShape))
-        val note = row.item.note?.takeIf { !row.item.applied }
-        Text(
-            listOfNotNull(row.text, note, shownTime(row.item)).joinToString(" · "),
-            style = MaterialTheme.typography.labelMedium,
-            color = muted(),
-        )
-    }
+    val note = row.item.note?.takeIf { !row.item.applied }
+    Text(
+        listOfNotNull(row.text, note, shownTime(row.item)).joinToString(" · "),
+        style = AwType.meta,
+        color = muted(),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .widthIn(max = MaxContentWidth)
+                .padding(horizontal = 16.dp, vertical = 6.dp),
+    )
 }
 
 /** The chip of a row that waits for the person, in the accent: "Waits for your reply". */
 @Composable
-internal fun NeedChip(text: String) =
-    Text(
-        text,
-        style = MaterialTheme.typography.labelMedium,
-        color = MaterialTheme.colorScheme.primary,
-        modifier =
-            Modifier
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = CHIP_ALPHA), CircleShape)
-                .padding(horizontal = 10.dp, vertical = 3.dp),
-    )
+internal fun NeedChip(text: String) = StateChip(text, ChipTone.YOU)
 
-/** "2026-11-22 14:21:00": the time part of an HLC, to the second. */
-internal fun shownTime(item: ThreadItem): String =
+/**
+ * The time of an Activity row as the desktop shows it: "2 min ago" (openspec phone-desktop-parity,
+ * `contracts/fixtures/time/ago.json`), from the clock of [LocalNowMs].
+ */
+@Composable
+internal fun shownTime(item: ThreadItem): String = Texts.age(item.hlc, LocalNowMs.current) ?: exactTime(item)
+
+/** "2026-11-22 14:21:00": the time part of an HLC, to the second. The Session view keeps it. */
+internal fun exactTime(item: ThreadItem): String =
     item.hlc
         .substringBefore('#')
         .replace('T', ' ')
         .take(SHOWN_TIME)
+
+/** The weight of a question title (`title-sm` of docs/design.md 3). */
+private const val TITLE_WEIGHT = 590
 
 /** The width of the colored edge of a message (2 dp, as on the desktop). */
 private val EDGE = 2.dp
@@ -206,7 +199,6 @@ private val EDGE = 2.dp
 private const val OR_WRITE = "Or write your answer"
 private const val IN_THE_BOX = "Or write your answer in the message box."
 private const val SHOWN_TIME = 19
-private const val CHIP_ALPHA = 0.14f
 
 /** What a row of Activity needs from the task page: the task, the loaders, the answer and the full screen view. */
 class ActivityRowParts(

@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -155,17 +156,39 @@ internal fun TaskHeader(
         Modifier.fillMaxWidth().padding(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 8.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
+        // Line 1 (as on the desktop): Back, the key, the project, then "Show list" at the end.
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            if (nav.onOpenAsPage == null) {
+                TextButton(
+                    onClick = nav.onBack,
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
+                ) {
+                    AwIcon(R.drawable.ic_back, null)
+                    Text("Back", modifier = Modifier.padding(start = 6.dp))
+                }
+            }
+            val scheme = MaterialTheme.colorScheme
+            Text(
+                row.label,
+                style = AwType.meta.copy(fontFamily = MONO),
+                color = muted(),
+                modifier = Modifier.padding(start = if (nav.onOpenAsPage == null) 0.dp else 8.dp),
+            )
+            task.project?.let { HeaderChip(it, scheme.surfaceContainerHigh, scheme.onSurface) }
+            Spacer(Modifier.weight(1f))
+            // "Open as page" and the actions menu are at the end of the tab row, which stays at the top.
+            if (nav.onOpenAsPage == null && layout.canList) {
+                OutlinedButton(onClick = { nav.onList(!layout.list) }) {
+                    Text(if (layout.list) "Hide list" else "Show list")
+                }
+            }
+        }
+        // Line 2: the state chips, then the need-you navigation at the end.
         FlowRow(
+            Modifier.padding(start = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             itemVerticalAlignment = Alignment.CenterVertically,
         ) {
-            TextButton(onClick = nav.onBack) {
-                AwIcon(R.drawable.ic_back, null)
-                Text("Back", modifier = Modifier.padding(start = 6.dp))
-            }
-            val scheme = MaterialTheme.colorScheme
-            Text(row.label, style = MaterialTheme.typography.labelLarge.copy(fontFamily = MONO), color = muted())
-            task.project?.let { HeaderChip(it, scheme.surfaceContainerHigh, scheme.onSurface) }
             TaskPage.stateChip(task)?.let {
                 HeaderChip(
                     if (it.startsWith("Needs you")) it else "Needs you: $it",
@@ -176,11 +199,13 @@ internal fun TaskHeader(
                     },
                 )
             }
-            if (task.archived) Text("Archived", style = MaterialTheme.typography.labelMedium, color = muted())
+            if (task.archived) StateChip("Archived", ChipTone.NEUTRAL)
+            // "Skips permissions" and "Agent teams" on the chip line: one line less above Activity.
+            SessionOptionChips(task, SessionOptionRows.projectMode(task, snapshot.projects))
             Spacer(Modifier.weight(1f))
             need.text?.let { text ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text, style = MaterialTheme.typography.labelMedium, color = muted())
+                    Text(text, style = AwType.meta, color = muted())
                     IconButton(enabled = need.previous != null, onClick = { need.previous?.let(nav.onOpen) }) {
                         AwIcon(R.drawable.ic_chevron_left, "Previous task that needs you")
                     }
@@ -189,15 +214,9 @@ internal fun TaskHeader(
                     }
                 }
             }
-            if (layout.canList) {
-                OutlinedButton(onClick = { nav.onList(!layout.list) }) {
-                    Text(if (layout.list) "Hide list" else "Show list")
-                }
-            }
-            TaskActionsMenu(task, actions.onStopSession, actions.onArchive, actions.onUnarchive)
         }
         Column(Modifier.padding(horizontal = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            SelectionContainer { Text(row.title, style = MaterialTheme.typography.headlineSmall) }
+            SelectionContainer { Text(row.title, style = AwType.titleLg) }
             StageBar(task.stage)
             row.pause?.let { chip ->
                 PauseChipView(chip)
@@ -213,7 +232,6 @@ internal fun TaskHeader(
             if (TaskActions.showRestart(task)) {
                 OutlinedButton(onClick = actions.onRestart) { Text("Restart agent") }
             }
-            SessionOptionChips(task, SessionOptionRows.projectMode(task, snapshot.projects))
             SessionActions(task, snapshot, actions.onNewSession)
         }
     }
@@ -289,7 +307,7 @@ internal fun TaskListPane(
                         .background(if (on) MaterialTheme.colorScheme.surfaceContainerHigh else Color.Transparent)
                         .border(1.dp, if (on) MaterialTheme.colorScheme.primary else Color.Transparent, CompactShape)
                         .clickable(role = Role.Button) { onOpen(r.id) }
-                        .heightIn(min = ControlHeight)
+                        .heightIn(min = TouchHeight)
                         .padding(horizontal = 12.dp, vertical = 8.dp),
                 ) {
                     val state = r.reason?.removePrefix("Needs you: ") ?: r.stageLabel

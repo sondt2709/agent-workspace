@@ -128,7 +128,12 @@ data class TaskRowState(
     val queue: String? = null,
     /** The cause that blocks a queued task, for example "2 sessions working". */
     val queueCause: String? = null,
-)
+    /** The agent works: the session runs, and the task neither waits for the person nor is paused. */
+    val running: Boolean = false,
+) {
+    /** The queue text of a row as one text that wraps at word boundaries: "Queued · 1st for … · starts soon". */
+    val queueLine: String? get() = queue?.let { q -> listOfNotNull(q, queueCause).joinToString(" · ") }
+}
 
 /** One device row of Home and Devices. */
 data class DeviceRowState(
@@ -190,7 +195,7 @@ object ScreenStates {
         task.needsYouReasons.firstOrNull()?.let { reason ->
             when (reason) {
                 is NeedsYouReason.Gate -> "Needs you: ${Texts.gateLabel(reason.kind)}"
-                NeedsYouReason.Assign -> "Needs you: assign"
+                NeedsYouReason.Assign -> "Needs you: Assign task"
                 is NeedsYouReason.Paused -> "Needs you: ${Texts.pauseText(reason.cause)}"
             }
         }
@@ -211,6 +216,9 @@ object ScreenStates {
         lastHlc = task.lastHlc,
         queue = snapshot.queueEntries[task.id]?.text,
         queueCause = snapshot.queueEntries[task.id]?.cause?.text,
+        // As the desktop "working" rule: a task that waits for the person or is paused is not running,
+        // even while its session waits in the terminal.
+        running = task.session?.state == SESSION_RUNNING && !task.needsYouLane && pauseChip(task, snapshot) == null,
     )
 
     private fun active(snapshot: WorkspaceSnapshot) = snapshot.tasks.filter { !it.archived }
@@ -225,8 +233,8 @@ object ScreenStates {
     const val ARCHIVED_GROUP = "archived"
 
     /**
-     * Tasks: one group per stage in the stage order; empty stages stay, so the order never jumps. The
-     * archived tasks are the last group "Archived" (openspec task-actions), only when there is one.
+     * Tasks: one group per stage in the stage order, with no empty group (openspec phone-desktop-parity).
+     * The archived tasks are the last group "Archived" (openspec task-actions), only when there is one.
      */
     fun tasksByStage(
         snapshot: WorkspaceSnapshot,
@@ -235,9 +243,10 @@ object ScreenStates {
         val own = snapshot.tasks.filter { project == null || it.project == project }
         val rows = own.filter { !it.archived }.map { row(it, snapshot) }
         val stages =
-            Texts.STAGES.map { stage ->
-                StageGroup(stage, Texts.stageLabel(stage), newestFirst(rows.filter { it.stage == stage }))
-            }
+            Texts.STAGES
+                .map { stage ->
+                    StageGroup(stage, Texts.stageLabel(stage), newestFirst(rows.filter { it.stage == stage }))
+                }.filter { it.tasks.isNotEmpty() }
         val archived = own.filter { it.archived }.map { row(it, snapshot) }
         if (archived.isEmpty()) return stages
         return stages + StageGroup(ARCHIVED_GROUP, "Archived", newestFirst(archived))

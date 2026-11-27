@@ -342,7 +342,7 @@ export class OrcaHost implements SessionHost {
       reply = await create();
     } catch (error) {
       // A project checkout that Orca does not know yet: add it, then open the terminal in its main
-      // folder (openspec project-checkout-no-worktree, the pattern of the inbox2agent Orca driver).
+      // folder (openspec project-checkout-no-worktree, the pattern of an earlier Orca driver).
       if (!(error instanceof OrcaError) || error.code !== "selector_not_found") throw error;
       await this.#json(["repo", "add", "--path", options.cwd], orcaReplies.repoAdd);
       reply = await create();

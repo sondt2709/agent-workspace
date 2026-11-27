@@ -8,7 +8,7 @@ A person created AW-5 in a project whose checkout is a git repository with no co
 - New task, New session and "Assign to another device…" disable "Separate worktree" for a checkout with no commit, show the cause, and select "Project checkout".
 - awd refuses a worktree for a checkout with no commit before it calls git or Orca. The comment names the checkout and the 2 fixes. After a first commit, the next start try (60 s) starts the session.
 - "Project checkout" gets the option "Switch to the task branch" (on by default). Off: AW makes no branch and changes no branch, as with "Other folder". New session option `switch_branch`.
-- A session in the project checkout runs in Orca when the host choice is Orca. The Orca host opens the terminal in the main folder and adds the checkout to Orca with `repo add` when Orca does not know it (the pattern of inbox2agent).
+- A session in the project checkout runs in Orca when the host choice is Orca. The Orca host opens the terminal in the main folder and adds the checkout to Orca with `repo add` when Orca does not know it (the pattern of an earlier Orca driver).
 - New task and New session preselect "Agent teams". The label "experimental" goes away.
 - New task preselects "Start the agent now" when the project has a device.
 

@@ -79,14 +79,14 @@ class NavigationTest {
         assertEquals(listOf<Route>(Route.Tasks), stack)
         assertFalse(nav.back())
         assertNull(nav.openTask)
-        // A push opens [Inbox, Task(id)].
+        // A push opens [Inbox, TaskPage(id)]: the task page at the full width.
         nav.openFromPush("c")
-        assertEquals(listOf<Route>(Route.Inbox, Route.Task("c")), stack)
+        assertEquals(listOf<Route>(Route.Inbox, Route.TaskPage("c")), stack)
         assertEquals(Tab.INBOX, nav.tab)
         // New task goes on top once.
         nav.open(Route.NewTask)
         nav.open(Route.NewTask)
-        assertEquals(listOf<Route>(Route.Inbox, Route.Task("c"), Route.NewTask), stack)
+        assertEquals(listOf<Route>(Route.Inbox, Route.TaskPage("c"), Route.NewTask), stack)
         // A tab select replaces the stack.
         nav.open(Route.Devices)
         assertEquals(listOf<Route>(Route.Devices), stack)
@@ -98,6 +98,41 @@ class NavigationTest {
         // A task opens on top of the root of the tab, at each width.
         nav.open(Route.Task("d"))
         assertEquals(listOf<Route>(Route.Devices, Route.Task("d")), stack)
+    }
+
+    @Test
+    fun aTaskOfTheTasksListOpensNextToTheListAndAsAPage() {
+        val stack = mutableListOf<Route>(Route.Tasks)
+        val nav = Navigator(stack)
+        // From the Tasks list: next to the list.
+        nav.openTask("a")
+        assertEquals(listOf<Route>(Route.Tasks, Route.Task("a")), stack)
+        // "Open as page" goes on top; Back returns to the list with the same task.
+        nav.openAsPage()
+        assertEquals(listOf<Route>(Route.Tasks, Route.Task("a"), Route.TaskPage("a")), stack)
+        assertEquals("a", nav.openTask)
+        // Next on the page: the other task as a page, and Back still returns to the list.
+        nav.openTask("b")
+        assertEquals(listOf<Route>(Route.Tasks, Route.Task("b"), Route.TaskPage("b")), stack)
+        assertTrue(nav.back())
+        assertEquals(listOf<Route>(Route.Tasks, Route.Task("b")), stack)
+        assertEquals("b", nav.openTask)
+        // "Open as page" does nothing when no task shows next to the list.
+        nav.select(Tab.TASKS)
+        nav.openAsPage()
+        assertEquals(listOf<Route>(Route.Tasks), stack)
+    }
+
+    @Test
+    fun homeAndInboxOpenTheTaskPage() {
+        val stack = mutableListOf<Route>(Route.Home)
+        val nav = Navigator(stack)
+        nav.openTask("a")
+        assertEquals(listOf<Route>(Route.Home, Route.TaskPage("a")), stack)
+        nav.select(Tab.INBOX)
+        nav.open(Route.InboxItem("b"))
+        nav.openTask("b")
+        assertEquals(listOf<Route>(Route.Inbox, Route.TaskPage("b")), stack)
     }
 
     @Test

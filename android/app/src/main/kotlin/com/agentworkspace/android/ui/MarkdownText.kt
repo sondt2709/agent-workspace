@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.agentworkspace.control.LinkRule
 import com.mikepenz.markdown.m3.Markdown
+import com.mikepenz.markdown.m3.markdownColor
 import com.mikepenz.markdown.m3.markdownTypography
 import com.mikepenz.markdown.model.State
 import com.mikepenz.markdown.model.markdownAnimations
@@ -47,7 +48,10 @@ fun MarkdownText(
     val context = LocalContext.current
     val links = remember(context) { BrowserLinks(context) }
     val type = scaled(MaterialTheme.typography, textSize)
-    val body = type.bodyMedium
+    // Body text of 14 sp, as the desktop `body` role on the phone (openspec phone-desktop-parity).
+    val body = type.bodyLarge
+    // Inline code of the desktop: monospace 1.5 sp smaller than the body on a 6 % fill.
+    val inlineCode = body.copy(fontFamily = MonoFont, fontSize = body.fontSize * INLINE_CODE_SCALE)
     val state = remember(text) { ParsedTexts.of(text) }
     CompositionLocalProvider(LocalUriHandler provides links) {
         Markdown(
@@ -55,6 +59,10 @@ fun MarkdownText(
             modifier = modifier.fillMaxWidth(),
             // No size animation: the text has its full height at once.
             animations = markdownAnimations(animateTextSize = { this }),
+            colors =
+                markdownColor(
+                    inlineCodeBackground = MaterialTheme.colorScheme.onSurface.copy(alpha = INLINE_CODE_FILL),
+                ),
             // Headings stay small inside a card or a message, as on the desktop (docs/design.md 3).
             typography =
                 markdownTypography(
@@ -66,6 +74,7 @@ fun MarkdownText(
                     h6 = type.titleSmall,
                     text = body,
                     code = type.bodySmall.copy(fontFamily = MonoFont),
+                    inlineCode = inlineCode,
                     quote = body,
                     paragraph = body,
                     ordered = body,
@@ -101,12 +110,19 @@ private fun scaled(
         with(density) { copy(fontSize = dp.dp.toSp(), lineHeight = (dp * LINE_HEIGHT).dp.toSp()) }
     val body = size.value
     return type.copy(
+        bodyLarge = type.bodyLarge.at(body),
         bodyMedium = type.bodyMedium.at(body),
         bodySmall = type.bodySmall.at(body - 1),
         titleMedium = type.titleMedium.at(body + 2),
         titleSmall = type.titleSmall.at(body + 2),
     )
 }
+
+/** The size of inline code, as a factor of the body size (12.5 of 14, as on the desktop). */
+private const val INLINE_CODE_SCALE = 0.9f
+
+/** The fill of inline code: 6 % of the text color (docs/design.md, the desktop `code`). */
+private const val INLINE_CODE_FILL = 0.06f
 
 /** The line height of a proposal text, as a factor of the size. */
 private const val LINE_HEIGHT = 1.5f

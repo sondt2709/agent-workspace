@@ -97,7 +97,6 @@ data class SyncResult(
 object SyncRules {
     private const val SECONDS_PER_MINUTE = 60
     private const val MINUTES_PER_HOUR = 60
-    private const val HOURS_SHOWN = 48
     private const val HOURS_PER_DAY = 24
     private const val MS_PER_SECOND = 1000.0
     private const val HALF = 0.5
@@ -172,7 +171,7 @@ object SyncRules {
             else -> null
         }
 
-    /** "12 s ago", "5 min ago", "3 h ago", "2 d ago". */
+    /** "12 s ago", "5 min ago", "3 h ago", "2 days ago" (contracts/fixtures/time/ago.json, as on the desktop). */
     fun ago(
         fromMs: Long,
         nowMs: Long,
@@ -183,8 +182,9 @@ object SyncRules {
         val minutes = seconds / SECONDS_PER_MINUTE
         if (minutes < MINUTES_PER_HOUR) return "$minutes min ago"
         val hours = minutes / MINUTES_PER_HOUR
-        if (hours < HOURS_SHOWN) return "$hours h ago"
-        return "${hours / HOURS_PER_DAY} d ago"
+        if (hours < HOURS_PER_DAY) return "$hours h ago"
+        val days = hours / HOURS_PER_DAY
+        return if (days == 1L) "1 day ago" else "$days days ago"
     }
 
     private fun changes(count: Long): String = if (count == 1L) "1 change" else "$count changes"
