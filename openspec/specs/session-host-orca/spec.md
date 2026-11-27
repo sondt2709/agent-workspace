@@ -97,7 +97,7 @@ The Orca CLI adapter SHALL parse each reply into a declared zod schema: the enve
 - **THEN** a session starts in a fake Orca terminal, gets an answer through `terminal send`, and stops by its process group
 
 ### Requirement: Open in the project checkout
-`open()` SHALL open the terminal in any folder that Orca knows, also the main folder of a repo. When `terminal create` gives the error `selector_not_found` for `path:<cwd>`, the host SHALL run `repo add --path <cwd>` one time and then `terminal create` again. When `repo add` fails, `open()` SHALL fail with the Orca message. The host SHALL never remove the main folder of a repo, and `list()` SHALL keep only the terminals of `aw-` folders. The fake Orca CLI SHALL answer `selector_not_found` for an unknown path, as the real Orca does (capture of inbox2agent, 2026-10-28), and SHALL open a terminal in the main folder of a known repo.
+`open()` SHALL open the terminal in any folder that Orca knows, also the main folder of a repo. When `terminal create` gives the error `selector_not_found` for `path:<cwd>`, the host SHALL run `repo add --path <cwd>` one time and then `terminal create` again. When `repo add` fails, `open()` SHALL fail with the Orca message. The host SHALL never remove the main folder of a repo, and `list()` SHALL keep only the terminals of `aw-` folders. The fake Orca CLI SHALL answer `selector_not_found` for an unknown path, as the real Orca does (capture of 2026-10-28), and SHALL open a terminal in the main folder of a known repo.
 
 #### Scenario: Unknown checkout
 - **WHEN** Orca does not know the checkout `/work/billing-api` and AW opens a session there
