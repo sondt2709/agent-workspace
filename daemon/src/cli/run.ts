@@ -97,12 +97,14 @@ function sessionOptionsOf(options: {
   agentTeams?: true;
   workIn?: "worktree" | "checkout" | "folder";
   folder?: string;
+  keepBranch?: true;
 }): SessionOptionsInput | null {
   if (
     options.permissionMode === undefined &&
     options.agentTeams === undefined &&
     options.workIn === undefined &&
-    options.folder === undefined
+    options.folder === undefined &&
+    options.keepBranch === undefined
   ) {
     return null;
   }
@@ -118,6 +120,7 @@ function sessionOptionsOf(options: {
         ? { work_in: "folder" as const }
         : {}),
     ...(folder ? { folder } : {}),
+    ...(options.keepBranch ? { switch_branch: false } : {}),
   };
 }
 
@@ -355,9 +358,10 @@ export async function run(argv: string[], io: CliIo, deps: CliDeps = {}): Promis
       new Option("--host <host>", "the session host of the session").choices(["tmux", "orca"]),
     )
     .addOption(permissionModeOption())
-    .option("--agent-teams", "turn on Claude Code agent teams (experimental)")
+    .option("--agent-teams", "turn on Claude Code agent teams")
     .addOption(workInOption())
     .option("--folder <path>", "the folder of --work-in folder (an absolute path on the device)")
+    .option("--keep-branch", "with --work-in checkout: keep the branch of the checkout")
     .action(async (options) => {
       if ((options.firstMessageFile === undefined) === (options.firstMessage === undefined)) {
         throw new InputError(
@@ -379,7 +383,7 @@ export async function run(argv: string[], io: CliIo, deps: CliDeps = {}): Promis
         }
         if (sessionOptionsOf(options) !== null) {
           throw new RefusedError(
-            "An agent does not set the session options: only a person does. Leave out --permission-mode, --agent-teams, --work-in and --folder.",
+            "An agent does not set the session options: only a person does. Leave out --permission-mode, --agent-teams, --work-in, --folder and --keep-branch.",
           );
         }
         const reply = await client.createSubtask(session, {
@@ -494,9 +498,10 @@ export async function run(argv: string[], io: CliIo, deps: CliDeps = {}): Promis
       new Option("--host <host>", "the session host of the new session").choices(["tmux", "orca"]),
     )
     .addOption(permissionModeOption())
-    .option("--agent-teams", "turn on Claude Code agent teams (experimental)")
+    .option("--agent-teams", "turn on Claude Code agent teams")
     .addOption(workInOption())
     .option("--folder <path>", "the folder of --work-in folder (an absolute path on the device)")
+    .option("--keep-branch", "with --work-in checkout: keep the branch of the checkout")
     .action(async (ref, assignee, options) => {
       const reply = await client.assignTask(
         wsName(),

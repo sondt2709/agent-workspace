@@ -175,6 +175,7 @@ export interface SessionOptionsInput {
   agent_teams?: boolean | undefined;
   work_in?: WorkIn | undefined;
   folder?: string | null | undefined;
+  switch_branch?: boolean | undefined;
 }
 
 /**
@@ -199,6 +200,7 @@ export function sessionOptionsOf(input: SessionOptionsInput): SessionOptions {
     agent_teams: input.agent_teams ?? false,
     work_in: workIn,
     folder,
+    switch_branch: input.switch_branch ?? true,
   };
 }
 

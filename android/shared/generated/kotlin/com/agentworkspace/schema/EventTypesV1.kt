@@ -96,6 +96,7 @@ data class TaskCreatedV1(
         @SerialName("agent_teams") val agentTeams: Boolean = false,
         @SerialName("work_in") val workIn: String = "worktree",
         @SerialName("folder") val folder: String? = null,
+        @SerialName("switch_branch") val switchBranch: Boolean = true,
     ) {
         init {
             if (permissionMode != null) {
@@ -131,6 +132,7 @@ data class TaskAssignedV1(
         @SerialName("agent_teams") val agentTeams: Boolean = false,
         @SerialName("work_in") val workIn: String = "worktree",
         @SerialName("folder") val folder: String? = null,
+        @SerialName("switch_branch") val switchBranch: Boolean = true,
     ) {
         init {
             if (permissionMode != null) {

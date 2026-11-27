@@ -205,6 +205,12 @@ export const healthV1 = z.looseObject({
     .default([]),
   disk: z.looseObject({ used_percentage: z.number().min(0).max(100) }),
   /**
+   * The checkouts of this device in its bindings (openspec project-checkout-no-worktree):
+   * `has_commit` is false when the checkout is not a git repository or has no commit, so the
+   * forms disable "Separate worktree". Absent in files of an older awd.
+   */
+  checkouts: z.array(z.looseObject({ project: projectSlug, has_commit: z.boolean() })).optional(),
+  /**
    * The limits of the agent queue of this device (openspec queue-and-assign): `AW_MAX_WORKING`,
    * `AW_DISK_FULL_PERCENT` and the sign-in state (null when not known). Other devices and the
    * phone read them for the cause of a queued task. Absent in files of an older awd.

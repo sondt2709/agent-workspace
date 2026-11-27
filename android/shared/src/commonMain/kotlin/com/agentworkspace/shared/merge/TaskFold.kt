@@ -671,10 +671,11 @@ class TaskFold(
     }
 }
 
-private fun optionsOf(o: TaskCreatedV1.SessionOptions) = optionsView(o.permissionMode, o.agentTeams, o.workIn, o.folder)
+private fun optionsOf(o: TaskCreatedV1.SessionOptions) =
+    optionsView(o.permissionMode, o.agentTeams, o.workIn, o.folder, o.switchBranch)
 
 private fun optionsOf(o: TaskAssignedV1.SessionOptions) =
-    optionsView(o.permissionMode, o.agentTeams, o.workIn, o.folder)
+    optionsView(o.permissionMode, o.agentTeams, o.workIn, o.folder, o.switchBranch)
 
 /** The folder counts only for `work_in: folder`. */
 private fun optionsView(
@@ -682,4 +683,5 @@ private fun optionsView(
     agentTeams: Boolean,
     workIn: String,
     folder: String?,
-) = SessionOptionsView(permissionMode, agentTeams, workIn, if (workIn == "folder") folder else null)
+    switchBranch: Boolean,
+) = SessionOptionsView(permissionMode, agentTeams, workIn, if (workIn == "folder") folder else null, switchBranch)

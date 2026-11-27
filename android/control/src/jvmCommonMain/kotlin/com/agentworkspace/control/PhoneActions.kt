@@ -52,9 +52,10 @@ data class NewTaskDraft(
     companion object {
         /**
          * The session options that New task starts with: "Skip permissions", the product default
-         * (openspec polish-skip-default). Only a person fills New task, so no agent task gets it.
+         * (openspec polish-skip-default), and "Agent teams" (openspec session-options). Only a person
+         * fills New task, so no agent task gets them.
          */
-        val START_OPTIONS = SessionOptionsDraft(permissionMode = SessionOptions.SKIP)
+        val START_OPTIONS = SessionOptionsDraft(permissionMode = SessionOptions.SKIP, agentTeams = true)
 
         /**
          * "Create task" of New task is enabled with a project, a first message that is not blank,

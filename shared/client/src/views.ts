@@ -92,7 +92,12 @@ export interface SessionHostsEntry {
   device: string;
   may_run: boolean;
   use_orca: boolean;
-  checkouts: { project: string; session_host: "tmux" | "orca" | null }[];
+  /** `has_commit` from the health of the device; null when not known (an older awd). */
+  checkouts: {
+    project: string;
+    session_host: "tmux" | "orca" | null;
+    has_commit?: boolean | null;
+  }[];
   /** Null for another device: AW cannot detect Orca there. */
   orca: OrcaStateView | null;
 }

@@ -399,6 +399,7 @@ export class TaskFold {
       agent_teams: options.agent_teams,
       work_in: options.work_in,
       folder: options.work_in === "folder" ? options.folder : null,
+      switch_branch: options.switch_branch,
     };
     return true;
   }

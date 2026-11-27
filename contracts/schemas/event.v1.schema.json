@@ -115,7 +115,8 @@
                     { "type": "string", "maxLength": 4096, "pattern": "^\\/" },
                     { "type": "null" }
                   ]
-                }
+                },
+                "switch_branch": { "default": true, "type": "boolean" }
               },
               "additionalProperties": {}
             }
@@ -184,7 +185,8 @@
                     { "type": "string", "maxLength": 4096, "pattern": "^\\/" },
                     { "type": "null" }
                   ]
-                }
+                },
+                "switch_branch": { "default": true, "type": "boolean" }
               },
               "additionalProperties": {}
             }

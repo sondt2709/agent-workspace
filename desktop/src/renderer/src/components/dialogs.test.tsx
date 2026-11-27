@@ -68,7 +68,7 @@ describe("NewTaskDialog first message (desktop-shell review 10)", () => {
 });
 
 describe("NewTaskDialog", () => {
-  it("creates the task with the title from the first message and no assignee", async () => {
+  it("creates the task with the title from the first message and starts the default agent", async () => {
     const call = installBridge({
       createTask: () => ({ applied: true, task: makeTask({ id: "new-id" }) }),
     });
@@ -87,18 +87,40 @@ describe("NewTaskDialog", () => {
           project: "billing-api",
           title: "/my-team:implement Add a CSV export",
           first_message: "/my-team:implement Add a CSV export",
-          assignee: null,
-          // New task preselects Skip permissions (openspec polish-skip-default).
+          // "Start the agent now" is on: the default agent on the first device of the project.
+          assignee: "claude@macbook-pro",
+          // New task preselects Skip permissions (openspec polish-skip-default) and Agent teams.
           session_options: {
             permission_mode: "skip",
-            agent_teams: false,
+            agent_teams: true,
             work_in: "worktree",
             folder: null,
+            switch_branch: true,
           },
         },
       }),
     );
     await waitFor(() => expect(router.state.location.pathname).toBe("/w/ws-1/tasks/new-id"));
+  });
+
+  it("creates the task with no assignee when the person turns off Start the agent now", async () => {
+    const call = installBridge({
+      createTask: () => ({ applied: true, task: makeTask({ id: "new-id" }) }),
+    });
+    renderApp(<NewTaskDialog ws="ws-1" project="billing-api" onClose={() => undefined} />);
+    const start = await screen.findByRole<HTMLInputElement>("checkbox", {
+      name: "Start the agent now",
+    });
+    await waitFor(() => expect(start.checked).toBe(true));
+    await userEvent.click(start);
+    expect(start.checked).toBe(false);
+    await userEvent.type(screen.getByLabelText("First message"), "Add a CSV export");
+    await userEvent.click(screen.getByRole("button", { name: "Create task" }));
+    await waitFor(() =>
+      expect(call.mock.calls.find(([m]) => m === "createTask")?.[1]).toMatchObject({
+        body: { assignee: null },
+      }),
+    );
   });
 
   it("lists no archived project (gap-setup M3)", async () => {
@@ -145,6 +167,14 @@ describe("NewSessionDialog", () => {
         task: task.id,
         assignee: "claude@ubuntu-01",
         session_host: "tmux",
+        // A task with no options: New session preselects Agent teams, so it sends the options.
+        session_options: {
+          permission_mode: null,
+          agent_teams: true,
+          work_in: "worktree",
+          folder: null,
+          switch_branch: true,
+        },
       }),
     );
   });
@@ -177,6 +207,13 @@ describe("NewSessionDialog", () => {
         ws: "ws-1",
         task: task.id,
         assignee: "claude@ubuntu-01",
+        session_options: {
+          permission_mode: null,
+          agent_teams: true,
+          work_in: "worktree",
+          folder: null,
+          switch_branch: true,
+        },
       }),
     );
     expect(call.mock.calls.some(([m]) => m === "assignTask")).toBe(false);
@@ -240,6 +277,13 @@ describe("NewSessionDialog", () => {
         task: task.id,
         assignee: "claude@ubuntu-01",
         session_host: "orca",
+        session_options: {
+          permission_mode: null,
+          agent_teams: true,
+          work_in: "worktree",
+          folder: null,
+          switch_branch: true,
+        },
       }),
     );
   });
@@ -265,7 +309,7 @@ describe("NewSessionDialog", () => {
 });
 
 describe("session options (session-options)", () => {
-  it("New task preselects Skip permissions; Project default sends no options (polish-skip-default)", async () => {
+  it("New task preselects Skip permissions and Agent teams; the defaults send no options (polish-skip-default)", async () => {
     const call = installBridge({
       createTask: () => ({ applied: true, task: makeTask({ id: "new-id" }) }),
     });
@@ -276,6 +320,9 @@ describe("session options (session-options)", () => {
     await userEvent.type(screen.getByLabelText("First message"), "Add a CSV export");
     await userEvent.click(permissions);
     await userEvent.click(await screen.findByRole("option", { name: /^Project default/ }));
+    const teams = screen.getByLabelText<HTMLInputElement>("Agent teams");
+    expect(teams.checked).toBe(true);
+    await userEvent.click(teams);
     await userEvent.click(screen.getByRole("button", { name: "Create task" }));
     await waitFor(() =>
       expect(call.mock.calls.find(([m]) => m === "createTask")?.[1]).toBeTruthy(),
@@ -299,7 +346,8 @@ describe("session options (session-options)", () => {
     ).toBeTruthy();
     await userEvent.click(screen.getByLabelText("Project checkout"));
     expect(screen.getByText(/This changes the branch and the files of your checkout/)).toBeTruthy();
-    await userEvent.click(screen.getByLabelText("Agent teams · experimental"));
+    // Agent teams is on already (openspec project-checkout-no-worktree).
+    expect(screen.getByLabelText<HTMLInputElement>("Agent teams").checked).toBe(true);
     await userEvent.click(screen.getByRole("button", { name: "Create task" }));
     await waitFor(() =>
       expect(call.mock.calls.find(([m]) => m === "createTask")?.[1]).toMatchObject({
@@ -309,8 +357,58 @@ describe("session options (session-options)", () => {
             agent_teams: true,
             work_in: "checkout",
             folder: null,
+            switch_branch: true,
           },
         },
+      }),
+    );
+  });
+
+  it("New task keeps the branch of the checkout when the person turns off Switch to the task branch", async () => {
+    const call = installBridge({
+      createTask: () => ({ applied: true, task: makeTask({ id: "new-id" }) }),
+    });
+    renderApp(<NewTaskDialog ws="ws-1" project="billing-api" onClose={() => undefined} />);
+    await userEvent.type(screen.getByLabelText("First message"), "Check the cloud cost");
+    await userEvent.click(screen.getByLabelText("Project checkout"));
+    const keep = screen.getByLabelText<HTMLInputElement>("Switch to the task branch");
+    expect(keep.checked).toBe(true);
+    await userEvent.click(keep);
+    expect(screen.getByText(/works on the branch that is checked out/)).toBeTruthy();
+    await userEvent.click(screen.getByRole("button", { name: "Create task" }));
+    await waitFor(() =>
+      expect(call.mock.calls.find(([m]) => m === "createTask")?.[1]).toMatchObject({
+        body: { session_options: { work_in: "checkout", switch_branch: false } },
+      }),
+    );
+  });
+
+  it("New task disables Separate worktree for a checkout with no commit, and selects Project checkout", async () => {
+    const call = installBridge({
+      createTask: () => ({ applied: true, task: makeTask({ id: "new-id" }) }),
+      sessionHosts: () => ({
+        device: "macbook-pro",
+        devices: [
+          {
+            device: "macbook-pro",
+            may_run: true,
+            use_orca: true,
+            checkouts: [{ project: "billing-api", session_host: null, has_commit: false }],
+            orca: null,
+          },
+        ],
+      }),
+    });
+    renderApp(<NewTaskDialog ws="ws-1" project="billing-api" onClose={() => undefined} />);
+    expect(await screen.findByText(/This checkout has no commit yet/)).toBeTruthy();
+    const worktree = screen.getByLabelText<HTMLInputElement>("Separate worktree");
+    expect(worktree.disabled).toBe(true);
+    expect(screen.getByLabelText<HTMLInputElement>("Project checkout").checked).toBe(true);
+    await userEvent.type(screen.getByLabelText("First message"), "Check the cloud cost");
+    await userEvent.click(screen.getByRole("button", { name: "Create task" }));
+    await waitFor(() =>
+      expect(call.mock.calls.find(([m]) => m === "createTask")?.[1]).toMatchObject({
+        body: { session_options: { work_in: "checkout" } },
       }),
     );
   });
@@ -324,7 +422,7 @@ describe("session options (session-options)", () => {
     expect(row(permissions)).toBe(row(assignee));
     const session = screen.getByRole("group", { name: "Session" });
     expect(within(session).queryByLabelText("Permissions")).toBeNull();
-    expect(within(session).getByLabelText("Agent teams · experimental")).toBeTruthy();
+    expect(within(session).getByLabelText("Agent teams")).toBeTruthy();
     // The menu is above "Start the agent now" in the dialog.
     const start = screen.getByLabelText("Start the agent now");
     expect(permissions.compareDocumentPosition(start) & Node.DOCUMENT_POSITION_FOLLOWING).toBe(

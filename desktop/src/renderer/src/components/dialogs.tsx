@@ -45,12 +45,14 @@ import {
 } from "../queries.ts";
 import {
   changedOptionsBody,
-  formOf,
   formProblem,
   NEW_TASK_FORM,
+  newSessionForm,
   optionsBody,
   optionsField,
   projectMode,
+  withWorktreeRule,
+  worktreeBlocked,
   type OptionsForm,
 } from "../session-options-model.ts";
 import { useBindings } from "../setup-queries.ts";
@@ -267,8 +269,11 @@ export function NewTaskDialog(props: { ws: string; project: string | null; onClo
     (projects.data ?? []).filter((p) => p.archived === true).map((p) => p.slug),
   );
   // A person's new task preselects "Skip permissions", the product default (openspec
-  // polish-skip-default); the person can still select another mode.
-  const [options, setOptions] = useState<OptionsForm>(NEW_TASK_FORM);
+  // polish-skip-default), and "Agent teams"; the person can still change them.
+  const [chosen, setOptions] = useState<OptionsForm>(NEW_TASK_FORM);
+  // "Start the agent now" is on until the person changes the assignee (openspec
+  // project-checkout-no-worktree).
+  const [assigneeTouched, setAssigneeTouched] = useState(false);
   const { control, handleSubmit, watch, formState, getValues, setValue } = useForm<NewTaskForm>({
     resolver: zodResolver(newTaskForm),
     defaultValues: {
@@ -300,7 +305,11 @@ export function NewTaskDialog(props: { ws: string; project: string | null; onClo
   useEffect(() => {
     const now = getValues("assignee");
     if (now && !choiceKey.split(" ").includes(now)) setValue("assignee", start ?? "");
-  }, [choiceKey, start, getValues, setValue]);
+    else if (!now && !assigneeTouched && start) setValue("assignee", start);
+  }, [choiceKey, start, assigneeTouched, getValues, setValue]);
+  // A checkout with no commit has no separate worktree: the form shows "Project checkout".
+  const blocked = worktreeBlocked(hosts.data, assignee.split("@")[1] ?? "", project || null);
+  const options = withWorktreeRule(chosen, blocked);
   const folder = sessionFolder(
     {
       self: bindings.data,
@@ -403,6 +412,10 @@ export function NewTaskDialog(props: { ws: string; project: string | null; onClo
               render={({ field }) => (
                 <TextField
                   {...field}
+                  onChange={(e) => {
+                    setAssigneeTouched(true);
+                    field.onChange(e);
+                  }}
                   select
                   label="Assignee"
                   fullWidth
@@ -432,11 +445,12 @@ export function NewTaskDialog(props: { ws: string; project: string | null; onClo
                 <Checkbox
                   checked={assignee !== ""}
                   disabled={start === null}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    setAssigneeTouched(true);
                     setValue("assignee", e.target.checked ? (start ?? "") : "", {
                       shouldDirty: true,
-                    })
-                  }
+                    });
+                  }}
                 />
               }
               label="Start the agent now"
@@ -512,6 +526,7 @@ export function NewTaskDialog(props: { ws: string; project: string | null; onClo
             device={assignee.split("@")[1] ?? ""}
             here={!!assignee && assignee.split("@")[1] === bindings.data?.device}
             permissions={false}
+            worktreeBlocked={blocked}
           />
           {create.isError && <Alert severity="error">{errorText(create.error)}</Alert>}
         </Stack>
@@ -556,8 +571,11 @@ export function NewSessionDialog(props: { ws: string; task: string | null; onClo
   const hostsLoading = hosts.isPending && picked === null;
   // The options start as the options of the task; another task starts again (openspec session-options).
   const [optionsFor, setOptionsFor] = useState<{ task: string; form: OptionsForm } | null>(null);
-  const sessionForm =
-    optionsFor && optionsFor.task === selected?.id ? optionsFor.form : formOf(selected);
+  const blocked = worktreeBlocked(hosts.data, device, selected?.project ?? null);
+  const sessionForm = withWorktreeRule(
+    optionsFor && optionsFor.task === selected?.id ? optionsFor.form : newSessionForm(selected),
+    blocked,
+  );
   const optionsProblem = formProblem(sessionForm);
   const folder = sessionFolder(
     { self: bindings.data, devices: hosts.data?.devices },
@@ -647,13 +665,14 @@ export function NewSessionDialog(props: { ws: string; task: string | null; onClo
               )}
               device={device}
               here={device !== "" && device === bindings.data?.device}
+              worktreeBlocked={blocked}
             />
           )}
           <SessionHostPicker
             choice={hostChoice}
             value={host}
             onChange={setPicked}
-            disabled={!selected || sessionForm.workIn !== "worktree"}
+            disabled={!selected || sessionForm.workIn === "folder"}
           />
           {orcaOff && selected && (
             <Link

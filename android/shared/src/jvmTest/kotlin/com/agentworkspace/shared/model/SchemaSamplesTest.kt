@@ -37,7 +37,7 @@ class SchemaSamplesTest {
     @Test
     fun documentSamples() {
         val documents = samples.getValue("documents").jsonArray.map { it.jsonObject }
-        assertEquals(42, documents.size)
+        assertEquals(44, documents.size)
         for (sample in documents) {
             val name = sample.getValue("name").jsonPrimitive.content
             val kind =
@@ -85,7 +85,7 @@ class SchemaSamplesTest {
     @Test
     fun eventSamples() {
         val events = samples.getValue("events").jsonArray.map { it.jsonObject }
-        assertEquals(25, events.size)
+        assertEquals(27, events.size)
         for (sample in events) {
             val name = sample.getValue("name").jsonPrimitive.content
             val invalid = sample["invalid_path"]?.takeIf { it != JsonNull }?.jsonPrimitive?.content

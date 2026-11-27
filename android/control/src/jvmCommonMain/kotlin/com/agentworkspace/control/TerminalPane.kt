@@ -167,7 +167,14 @@ object TerminalPane {
         val note =
             when {
                 session?.host == "orca" -> {
-                    "AW does not read the screen of an Orca session. Open the Orca worktree aw-${task.id} on ${session.device}."
+                    // A session in the project checkout runs in its main folder in Orca, not in an aw- worktree.
+                    val place =
+                        if (session.workIn == "checkout") {
+                            "the ${task.project ?: "project"} checkout in Orca"
+                        } else {
+                            "the Orca worktree aw-${task.id}"
+                        }
+                    "AW does not read the screen of an Orca session. Open $place on ${session.device}."
                 }
 
                 newest == null -> {

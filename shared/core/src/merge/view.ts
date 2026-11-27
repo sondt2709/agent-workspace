@@ -139,6 +139,8 @@ export interface SessionOptionsView {
   work_in: WorkIn;
   /** The absolute folder of `work_in: folder`, else null. */
   folder: string | null;
+  /** `work_in: checkout`: false keeps the branch of the checkout. */
+  switch_branch: boolean;
 }
 
 export interface TaskView {

@@ -72,12 +72,15 @@ export function sessionFolder(
   device: string,
   project: string | null,
   key: string | null,
-  where: { workIn: "worktree" | "checkout" | "folder"; folder: string } = {
+  where: { workIn: "worktree" | "checkout" | "folder"; folder: string; switchBranch?: boolean } = {
     workIn: "worktree",
     folder: "",
   },
 ): { text: string; missing: boolean } | null {
   if (!device || !project) return null;
+  // "Switch to the task branch" off: the checkout keeps its branch (openspec
+  // project-checkout-no-worktree).
+  const keep = where.workIn === "checkout" && where.switchBranch === false;
   const branch = `aw/${key ?? "<key>"}`;
   // Another folder needs no checkout (openspec session-options).
   if (where.workIn === "folder") {
@@ -91,7 +94,12 @@ export function sessionFolder(
   if (info.self && info.self.device === device) {
     const path = info.self.checkouts.find((c) => c.project === project)?.path;
     if (path && where.workIn === "checkout") {
-      return { text: `Works in the checkout ${path} on the branch ${branch}.`, missing: false };
+      return {
+        text: keep
+          ? `Works in the checkout ${path} on the branch that is checked out.`
+          : `Works in the checkout ${path} on the branch ${branch}.`,
+        missing: false,
+      };
     }
     return path
       ? {
@@ -109,7 +117,9 @@ export function sessionFolder(
     ? {
         text:
           where.workIn === "checkout"
-            ? `Works in the ${project} checkout on ${device}, on the branch ${branch}.`
+            ? keep
+              ? `Works in the ${project} checkout on ${device}, on the branch that is checked out.`
+              : `Works in the ${project} checkout on ${device}, on the branch ${branch}.`
             : `Works in a git worktree of the ${project} checkout on ${device}, on the branch ${branch}.`,
         missing: false,
       }

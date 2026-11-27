@@ -390,6 +390,7 @@
           "agent_teams": false,
           "folder": "/work/billing-api/services/api",
           "permission_mode": "accept_edits",
+          "switch_branch": true,
           "work_in": "folder"
         },
         "stage": "backlog",

@@ -122,6 +122,18 @@
       "required": ["used_percentage"],
       "additionalProperties": {}
     },
+    "checkouts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "project": { "type": "string", "maxLength": 63, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+          "has_commit": { "type": "boolean" }
+        },
+        "required": ["project", "has_commit"],
+        "additionalProperties": {}
+      }
+    },
     "queue": {
       "type": "object",
       "properties": {

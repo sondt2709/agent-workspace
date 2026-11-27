@@ -36,6 +36,7 @@ import com.agentworkspace.control.SessionOptionRows
 import com.agentworkspace.control.SessionOptionTexts
 import com.agentworkspace.control.SessionOptionsDraft
 import com.agentworkspace.control.WorkspaceSnapshot
+import com.agentworkspace.control.WorktreeRule
 import com.agentworkspace.shared.merge.SessionOptions
 import com.agentworkspace.shared.merge.TaskView
 
@@ -44,8 +45,10 @@ import com.agentworkspace.shared.merge.TaskView
 
 private val draftSaver =
     listSaver<SessionOptionsDraft, Any?>(
-        save = { listOf(it.permissionMode, it.agentTeams, it.workIn, it.folder) },
-        restore = { SessionOptionsDraft(it[0] as String?, it[1] as Boolean, it[2] as String, it[3] as String) },
+        save = { listOf(it.permissionMode, it.agentTeams, it.workIn, it.folder, it.switchBranch) },
+        restore = {
+            SessionOptionsDraft(it[0] as String?, it[1] as Boolean, it[2] as String, it[3] as String, it[4] as Boolean)
+        },
     )
 
 /** A draft that survives a rotation; [key] starts a new draft (another project or task). */
@@ -58,7 +61,8 @@ fun rememberSessionOptionsDraft(
 /**
  * The Session section: the permission mode, agent teams and where the session works. The chip
  * "Project default" stands for no mode of the task, as on the desktop. [assignee] names the device of the
- * folder field.
+ * folder field. [worktreeAvailable] false disables "Separate worktree" with the hint ([WorktreeRule]);
+ * the caller gives the fitting draft ([SessionOptionsDraft.fitting]).
  */
 @Composable
 fun SessionOptionsFields(
@@ -66,6 +70,7 @@ fun SessionOptionsFields(
     onChange: (SessionOptionsDraft) -> Unit,
     projectMode: String?,
     assignee: String?,
+    worktreeAvailable: Boolean = true,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Session", style = MaterialTheme.typography.titleSmall)
@@ -85,19 +90,7 @@ fun SessionOptionsFields(
                 )
             }
         }
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .toggleable(
-                    value = draft.agentTeams,
-                    role = Role.Switch,
-                    onValueChange = { onChange(draft.copy(agentTeams = it)) },
-                ),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(SessionOptionTexts.TEAMS, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-            Switch(checked = draft.agentTeams, onCheckedChange = null)
-        }
+        OptionSwitch(SessionOptionTexts.TEAMS, draft.agentTeams) { onChange(draft.copy(agentTeams = it)) }
         Text("Works in", style = MaterialTheme.typography.labelLarge)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             for (w in SessionOptionTexts.WORK_IN) {
@@ -105,7 +98,19 @@ fun SessionOptionsFields(
                     selected = w == draft.workIn,
                     onClick = { onChange(draft.copy(workIn = w)) },
                     label = { Text(SessionOptionTexts.workInLabel(w)) },
+                    enabled = w != SessionOptions.WORKTREE || worktreeAvailable,
                 )
+            }
+        }
+        if (!worktreeAvailable) {
+            Text(SessionOptionTexts.NO_COMMIT_HINT, style = MaterialTheme.typography.bodySmall, color = muted())
+        }
+        if (draft.workIn == SessionOptions.CHECKOUT) {
+            OptionSwitch(SessionOptionTexts.SWITCH_BRANCH, draft.switchBranch) {
+                onChange(draft.copy(switchBranch = it))
+            }
+            if (!draft.switchBranch) {
+                Text(SessionOptionTexts.NO_SWITCH_HELP, style = MaterialTheme.typography.bodySmall, color = muted())
             }
         }
         if (draft.workIn == SessionOptions.FOLDER) {
@@ -122,6 +127,24 @@ fun SessionOptionsFields(
         for (warning in SessionOptionTexts.warnings(draft, projectMode)) {
             Text(warning, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
         }
+    }
+}
+
+/** A row with a label and a switch; the whole row toggles. */
+@Composable
+private fun OptionSwitch(
+    label: String,
+    checked: Boolean,
+    onChange: (Boolean) -> Unit,
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .toggleable(value = checked, role = Role.Switch, onValueChange = onChange),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+        Switch(checked = checked, onCheckedChange = null)
     }
 }
 
@@ -189,7 +212,11 @@ fun SessionActions(
     }
 }
 
-/** New session: the agent (the assignee is selected) and the Session section with the task values. */
+/**
+ * New session: the agent (the assignee is selected) and the Session section with the task values
+ * ("Agent teams" on for a task with no options). "Separate worktree" follows [WorktreeRule] for the
+ * device of the selected agent.
+ */
 @Composable
 private fun NewSessionDialog(
     task: TaskView,
@@ -200,8 +227,10 @@ private fun NewSessionDialog(
     val choices = ScreenStates.agentChoices(snapshot, task.project, task.assignee)
     var assignee by rememberSaveable(task.id) { mutableStateOf(task.assignee ?: choices.firstOrNull()) }
     val initial = SessionOptionsDraft.of(task)
-    var draft by rememberSessionOptionsDraft(task.id) { initial }
+    var draft by rememberSessionOptionsDraft(task.id) { SessionOptionsDraft.forNewSession(task) }
     val projectMode = SessionOptionRows.projectMode(task, snapshot.projects)
+    val worktreeAvailable = WorktreeRule.available(snapshot, assignee, task.project)
+    val shown = draft.fitting(worktreeAvailable)
     AlertDialog(
         onDismissRequest = onClose,
         title = { Text("New session") },
@@ -218,13 +247,13 @@ private fun NewSessionDialog(
                         )
                     }
                 }
-                SessionOptionsFields(draft, { draft = it }, projectMode, assignee)
+                SessionOptionsFields(shown, { draft = it }, projectMode, assignee, worktreeAvailable)
             }
         },
         confirmButton = {
             TextButton(
                 enabled = assignee != null,
-                onClick = { assignee?.let { onStart(it, draft.changedFrom(initial)) } },
+                onClick = { assignee?.let { onStart(it, shown.changedFrom(initial)) } },
             ) { Text("Start session") }
         },
         dismissButton = { TextButton(onClick = onClose) { Text("Cancel") } },

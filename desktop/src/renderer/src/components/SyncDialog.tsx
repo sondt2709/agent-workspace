@@ -36,6 +36,8 @@ import {
   formProblem,
   optionsField,
   projectMode,
+  withWorktreeRule,
+  worktreeBlocked,
   type OptionsForm,
 } from "../session-options-model.ts";
 import { chosenHost, sentHost, SessionHostPicker } from "./SessionHostPicker.tsx";
@@ -108,7 +110,11 @@ export function AssignDeviceDialog(props: { ws: string; task: Task; onClose: () 
   const host = chosenHost(hostChoice, picked);
   const paused = details(props.task).paused;
   // The options of the task, for the new session on the other device (openspec session-options).
-  const [options, setOptions] = useState<OptionsForm>(() => formOf(props.task));
+  const [chosen, setOptions] = useState<OptionsForm>(() => formOf(props.task));
+  // A checkout with no commit on that device has no separate worktree (openspec
+  // project-checkout-no-worktree).
+  const blocked = worktreeBlocked(hosts.data, choice.split("@")[1] ?? "", props.task.project);
+  const options = withWorktreeRule(chosen, blocked);
   const optionsProblem = formProblem(options);
   const project = (projects.data ?? []).find((p) => p.slug === props.task.project);
   return (
@@ -147,6 +153,7 @@ export function AssignDeviceDialog(props: { ws: string; task: Task; onClose: () 
               projectDefault={projectMode(project)}
               device={choice.split("@")[1] ?? ""}
               here={false}
+              worktreeBlocked={blocked}
             />
           )}
           {choice && <SessionHostPicker choice={hostChoice} value={host} onChange={setPicked} />}

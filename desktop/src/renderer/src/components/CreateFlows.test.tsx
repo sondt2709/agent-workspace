@@ -70,7 +70,7 @@ describe("New task (review F-5)", () => {
     );
   });
 
-  it("assigns the default agent on the first device with Start the agent now", async () => {
+  it("assigns the default agent on the first device with Start the agent now, on by default", async () => {
     const call = installBridge({
       createTask: () => ({ applied: true, task: makeTask({ id: "new-id" }) }),
       bindings: () => BINDINGS,
@@ -78,8 +78,8 @@ describe("New task (review F-5)", () => {
     renderApp(<NewTaskDialog ws="ws-1" project="billing-api" onClose={() => undefined} />);
     await userEvent.type(screen.getByLabelText("First message"), "Add a CSV export");
     const start = await screen.findByRole("checkbox", { name: "Start the agent now" });
-    expect((start as HTMLInputElement).checked).toBe(false);
-    await userEvent.click(start);
+    // On by default (openspec project-checkout-no-worktree).
+    await waitFor(() => expect((start as HTMLInputElement).checked).toBe(true));
     expect(screen.getByLabelText("Assignee").textContent).toBe("claude@macbook-pro");
     expect(
       await screen.findByText(
@@ -94,11 +94,13 @@ describe("New task (review F-5)", () => {
     );
   });
 
-  it("keeps None as the default and shows it in the empty selects (dsc-11)", async () => {
+  it("shows None in the empty selects, and the default agent in Assignee (dsc-11)", async () => {
     installBridge({});
     renderApp(<NewTaskDialog ws="ws-1" project="billing-api" onClose={() => undefined} />);
     await screen.findByRole("checkbox", { name: "Start the agent now" });
-    expect(screen.getByLabelText("Assignee").textContent).toBe("None · Needs you: assign");
+    await waitFor(() =>
+      expect(screen.getByLabelText("Assignee").textContent).toBe("claude@macbook-pro"),
+    );
     expect(screen.getByLabelText("Test server").textContent).toBe("None");
     expect(screen.getByLabelText("Parent task").textContent).toBe("None");
   });

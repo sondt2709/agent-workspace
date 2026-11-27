@@ -38,12 +38,18 @@ async function session(
   task: string,
   host: "tmux" | "orca",
   snapshot?: { at: string; screen: string; socket: string },
+  workIn?: "worktree" | "checkout",
 ) {
   const id = files.newId();
   const meta = { task, by: `aw@${device}` };
   const log = `tasks/${task}/log/${device}.jsonl`;
   await files.writeEvent(log, "task.claimed", { epoch: 1, device, session: id }, meta);
-  await files.writeEvent(log, "session.started", { session: id, host, cwd: "/w" }, meta);
+  await files.writeEvent(
+    log,
+    "session.started",
+    { session: id, host, cwd: "/w", ...(workIn ? { work_in: workIn } : {}) },
+    meta,
+  );
   if (snapshot) {
     const text = snapshotText(
       {
@@ -171,6 +177,22 @@ describe("terminal route", () => {
       `AW does not read the screen of an Orca session. Open the Orca worktree aw-${task.id} on ubuntu-01.`,
     );
     expect(reply.open).toMatchObject({ kind: "copy", command: null });
+  });
+
+  it("names the project checkout for an Orca session in the checkout", async () => {
+    d = await startTestDaemon({ workspace: true });
+    const ubuntu = otherDevice(d.folder, "ubuntu-01");
+    const task = await create("claude@ubuntu-01");
+    await session(ubuntu, "ubuntu-01", task.id, "orca", undefined, "checkout");
+    await d.server.daemon.workspace().refresh();
+    const reply = await new DesktopClient(d.client).terminal("-", task.id);
+    expect(reply.note).toBe(
+      "AW does not read the screen of an Orca session. Open the billing-api checkout in Orca on ubuntu-01.",
+    );
+    expect(reply.open).toMatchObject({
+      kind: "copy",
+      text: "Open the billing-api checkout in Orca on ubuntu-01.",
+    });
   });
 
   it("gives an argv for a local tmux session, a local Orca session and the sign-in", async () => {

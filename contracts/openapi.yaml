@@ -24,7 +24,7 @@ components:
                 - skip
             - type: "null"
         agent_teams:
-          description: Turn on the agent team setting (experimental)
+          description: Turn on Claude Code agent teams
           type: boolean
         work_in:
           description: worktree (default), checkout or folder
@@ -40,6 +40,10 @@ components:
               maxLength: 4096
               pattern: ^\/
             - type: "null"
+        switch_branch:
+          description: "With work_in checkout: true (default) checks out aw/<key>; false
+            keeps the branch"
+          type: boolean
     EditWorkspaceInputInput:
       type: object
       properties:
@@ -1786,9 +1790,17 @@ components:
                             - tmux
                             - orca
                         - type: "null"
+                    has_commit:
+                      description:
+                        "From health.yaml of the device: false disables Separate worktree;
+                        null: not known"
+                      type:
+                        - boolean
+                        - "null"
                   required:
                     - project
                     - session_host
+                    - has_commit
                   additionalProperties: {}
               orca:
                 anyOf:

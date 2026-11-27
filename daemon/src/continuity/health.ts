@@ -2,6 +2,7 @@
 // `tasks/devices/<device>/health.yaml`, written at most once per 60 s.
 import type { TaskView } from "@aw/core";
 import type { SessionRecord } from "../sessions/records.ts";
+import { commitOf } from "./git-branch.ts";
 import type { UsageState } from "./usage.ts";
 
 export const HEALTH_MIN_MS = 60_000;
@@ -37,8 +38,28 @@ export interface HealthInput {
   usage: UsageState | null;
   loginExpiresAt: string | null;
   disk: number | null;
+  /**
+   * The checkouts of this device and whether each has a commit (openspec
+   * project-checkout-no-worktree); absent in older tests.
+   */
+  checkouts?: { project: string; has_commit: boolean }[];
   /** The limits of the agent queue (openspec queue-and-assign); absent in older tests. */
   queue?: { maxWorking: number; diskFullPercent: number; loginValid: boolean | null };
+}
+
+/**
+ * Whether the `HEAD` of each checkout names a commit (openspec project-checkout-no-worktree). A
+ * folder that is missing or not a git repository has no commit.
+ */
+export async function checkoutCommits(
+  checkouts: { project: string; path: string }[],
+): Promise<{ project: string; has_commit: boolean }[]> {
+  return Promise.all(
+    checkouts.map(async (c) => ({
+      project: c.project,
+      has_commit: (await commitOf(c.path, "HEAD")) !== null,
+    })),
+  );
 }
 
 /** The health document (the body without `updated` decides whether it changed). */
@@ -60,6 +81,7 @@ export function healthDocument(input: HealthInput) {
       },
     ],
     disk: { used_percentage: Math.max(0, Math.min(100, Math.round((input.disk ?? 0) * 10) / 10)) },
+    ...(input.checkouts ? { checkouts: input.checkouts } : {}),
     ...(input.queue
       ? {
           queue: {

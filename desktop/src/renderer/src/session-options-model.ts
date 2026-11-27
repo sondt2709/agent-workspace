@@ -12,20 +12,25 @@ export interface OptionsForm {
   workIn: WorkIn;
   /** The absolute folder of "Other folder", else "". */
   folder: string;
+  /** "Project checkout": true checks out the task branch, false keeps the branch. */
+  switchBranch: boolean;
 }
 
+/** The values of a task with no session options. */
 export const DEFAULT_FORM: OptionsForm = {
   mode: "project",
   teams: false,
   workIn: "worktree",
   folder: "",
+  switchBranch: true,
 };
 
 /**
  * The start values of New task: "Skip permissions", the product default (openspec
- * polish-skip-default). Only a person fills New task, so no agent task gets skip from it.
+ * polish-skip-default), and "Agent teams" (openspec project-checkout-no-worktree). Only a person
+ * fills New task, so no agent task gets skip or teams from it.
  */
-export const NEW_TASK_FORM: OptionsForm = { ...DEFAULT_FORM, mode: "skip" };
+export const NEW_TASK_FORM: OptionsForm = { ...DEFAULT_FORM, mode: "skip", teams: true };
 
 export const MODE_LABEL: Record<PermissionMode, string> = {
   default: "Default",
@@ -47,6 +52,38 @@ export const WORK_IN_LABEL: Record<WorkIn, string> = {
 
 export const CHECKOUT_WARNING =
   "This changes the branch and the files of your checkout. One session at a time works there.";
+/** "Project checkout" with "Switch to the task branch" off. */
+export const KEEP_BRANCH_WARNING =
+  "The session works on the branch that is checked out, and changes the files of your checkout. AW makes no branch. One session at a time works there.";
+/** The hint of a disabled "Separate worktree". */
+export const NO_COMMIT_HINT =
+  "This checkout has no commit yet. Make a first commit to use a separate worktree.";
+
+/**
+ * True when the health of `device` says that its checkout of `project` has no commit: then
+ * "Separate worktree" is disabled. False when not known (openspec project-checkout-no-worktree).
+ */
+export function worktreeBlocked(
+  hosts:
+    | {
+        devices: {
+          device: string;
+          checkouts: { project: string; has_commit?: boolean | null }[];
+        }[];
+      }
+    | undefined,
+  device: string,
+  project: string | null,
+): boolean {
+  if (!device || !project) return false;
+  const entry = hosts?.devices.find((d) => d.device === device);
+  return entry?.checkouts.find((c) => c.project === project)?.has_commit === false;
+}
+
+/** The form with "Project checkout" in place of a blocked "Separate worktree". */
+export function withWorktreeRule(form: OptionsForm, blocked: boolean): OptionsForm {
+  return blocked && form.workIn === "worktree" ? { ...form, workIn: "checkout" } : form;
+}
 /**
  * The warning of "Skip permissions" (check soc-1): the AW guard blocks the plain person commands,
  * but an agent that hides a command can still act as the person in AW (SECURITY.md).
@@ -60,6 +97,7 @@ export interface TaskOptions {
   agent_teams: boolean;
   work_in: WorkIn;
   folder: string | null;
+  switch_branch?: boolean;
 }
 
 /** The session of the task view with the fields of `session.started` (openspec session-options). */
@@ -109,6 +147,7 @@ export function nextOptions(task: Task, project: PermissionMode) {
     agent_teams: options?.agent_teams ?? false,
     work_in: options?.work_in ?? "worktree",
     folder: options?.work_in === "folder" ? options.folder : null,
+    switch_branch: options?.switch_branch ?? true,
   };
 }
 
@@ -121,7 +160,17 @@ export function formOf(task: Task | undefined): OptionsForm {
     teams: options.agent_teams,
     workIn: options.work_in,
     folder: options.folder ?? "",
+    switchBranch: options.switch_branch ?? true,
   };
+}
+
+/**
+ * The start values of New session: the options of the task, else the defaults with "Agent teams"
+ * on (openspec project-checkout-no-worktree). A task with options keeps its own teams value.
+ */
+export function newSessionForm(task: Task | undefined): OptionsForm {
+  const options = task ? fields(task).options : null;
+  return options ? formOf(task) : { ...DEFAULT_FORM, teams: true };
 }
 
 /** The problem that blocks the dialog, or null. */
@@ -139,6 +188,7 @@ export function fullOptionsBody(form: OptionsForm) {
     agent_teams: form.teams,
     work_in: form.workIn,
     folder: form.workIn === "folder" ? form.folder.trim() : null,
+    switch_branch: form.workIn === "checkout" ? form.switchBranch : true,
   };
 }
 
@@ -152,14 +202,19 @@ export function changedOptionsBody(form: OptionsForm, task: Task | undefined) {
     form.mode === before.mode &&
     form.teams === before.teams &&
     form.workIn === before.workIn &&
-    form.folder.trim() === before.folder;
+    form.folder.trim() === before.folder &&
+    form.switchBranch === before.switchBranch;
   return same ? undefined : fullOptionsBody(form);
 }
 
 /** The `session_options` of New task; null when the form has only the defaults. */
 export function optionsBody(form: OptionsForm) {
   const same =
-    form.mode === "project" && !form.teams && form.workIn === "worktree" && form.folder === "";
+    form.mode === "project" &&
+    !form.teams &&
+    form.workIn === "worktree" &&
+    form.folder === "" &&
+    form.switchBranch;
   return same ? null : fullOptionsBody(form);
 }
 
@@ -177,6 +232,8 @@ export interface ShownOptions {
   workIn: WorkIn;
   /** The folder of `work_in: folder` of the next session. */
   nextFolder: string | null;
+  /** "Switch to the task branch" of the next session in the checkout. */
+  nextSwitchBranch: boolean;
 }
 
 export function shownOptions(task: Task, project: PermissionMode): ShownOptions {
@@ -192,6 +249,7 @@ export function shownOptions(task: Task, project: PermissionMode): ShownOptions 
     device: session?.device ?? null,
     workIn: running ? (session.work_in ?? "worktree") : next.work_in,
     nextFolder: next.folder,
+    nextSwitchBranch: next.switch_branch,
   };
 }
 
@@ -202,9 +260,12 @@ export function worksInText(shown: ShownOptions, key: string | null): string {
     return shown.running ? where : `${where} (last session)`;
   }
   if (shown.workIn === "folder") return shown.nextFolder ?? "Other folder";
-  return shown.workIn === "checkout"
-    ? "The project checkout (next session)"
-    : `A separate worktree aw-${key ?? "<key>"} (next session)`;
+  if (shown.workIn === "checkout") {
+    return shown.nextSwitchBranch
+      ? "The project checkout (next session)"
+      : "The project checkout on its own branch (next session)";
+  }
+  return `A separate worktree aw-${key ?? "<key>"} (next session)`;
 }
 
 /** `{ session_options }` for a request, or nothing. */

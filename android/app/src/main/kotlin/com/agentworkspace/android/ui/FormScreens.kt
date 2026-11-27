@@ -46,12 +46,14 @@ import com.agentworkspace.control.NewTaskChoices
 import com.agentworkspace.control.NewTaskDraft
 import com.agentworkspace.control.ScreenStates
 import com.agentworkspace.control.WorkspaceSnapshot
+import com.agentworkspace.control.WorktreeRule
 
 /**
  * New task (docs/workflow.md 4.1) with each field of the desktop New task (openspec
  * polish-skip-default): the first message, the title, the project, the assignee and "Start the
  * agent now", the test server, the parent task, the credential names and the session options
- * ("Skip permissions" preselected). With no assignee the task opens "Needs you: assign".
+ * ("Skip permissions" and "Agent teams" preselected). "Start the agent now" is on when the project
+ * has a device (openspec session-options). With no assignee the task opens "Needs you: assign".
  */
 @Composable
 fun NewTaskScreen(
@@ -63,15 +65,27 @@ fun NewTaskScreen(
     var project by rememberSaveable { mutableStateOf(snapshot.openProjects.firstOrNull()?.slug) }
     var message by rememberSaveable { mutableStateOf("") }
     var title by rememberSaveable { mutableStateOf("") }
-    // The choices of one project: another project starts with none, so the form never sends an
-    // assignee, a test server or a parent that it does not show (android-ui M4).
-    var assignee by rememberSaveable(project) { mutableStateOf<String?>(null) }
+    // The assignee follows "Start the agent now" of the project until the person changes it; it is
+    // never an agent that the project does not show (android-ui M4, openspec session-options).
+    var assigneeChanged by rememberSaveable { mutableStateOf(false) }
+    var assigneePicked by rememberSaveable { mutableStateOf<String?>(null) }
+    val assignee = NewTaskChoices.assignee(snapshot, project, assigneeChanged, assigneePicked)
+
+    fun pick(choice: String?) {
+        assigneeChanged = true
+        assigneePicked = choice
+    }
+    // The choices of one project: another project starts with none, so the form never sends a test
+    // server or a parent that it does not show (android-ui M4).
     var testServer by rememberSaveable(project) { mutableStateOf<String?>(null) }
     var parent by rememberSaveable(project) { mutableStateOf<String?>(null) }
     var credentials by rememberSaveable { mutableStateOf(listOf<String>()) }
     // The session options (openspec session-options), "Skip permissions" first (polish-skip-default).
     var options by rememberSessionOptionsDraft(Unit) { NewTaskDraft.START_OPTIONS }
     val projectMode = snapshot.projects.firstOrNull { it.slug == project }?.permissionMode
+    // "Separate worktree" needs a commit in the checkout on the device of the assignee.
+    val worktreeAvailable = WorktreeRule.available(snapshot, assignee, project)
+    val shownOptions = options.fitting(worktreeAvailable)
     val servers = ScreenStates.testServers(snapshot, project)
     val start = NewTaskChoices.startAgent(snapshot, project)
     // The form scrolls above a pinned action bar, so "Create task" shows with no scroll (prc-16). The
@@ -114,16 +128,16 @@ fun NewTaskScreen(
             if (snapshot.openProjects.isEmpty()) Text("The workspace has no project yet. Create one on a computer.")
             Text("Assignee (optional)", style = MaterialTheme.typography.labelLarge)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(selected = assignee == null, onClick = { assignee = null }, label = { Text("None") })
+                FilterChip(selected = assignee == null, onClick = { pick(null) }, label = { Text("None") })
                 for (choice in ScreenStates.agentChoices(snapshot, project)) {
-                    FilterChip(selected = assignee == choice, onClick = { assignee = choice }, label = { Text(choice) })
+                    FilterChip(selected = assignee == choice, onClick = { pick(choice) }, label = { Text(choice) })
                 }
             }
             SwitchRow(
                 label = "Start the agent now",
                 checked = assignee != null,
                 enabled = start != null,
-                onChange = { on -> assignee = if (on) start else null },
+                onChange = { on -> pick(if (on) start else null) },
             )
             Text(
                 when {
@@ -152,7 +166,7 @@ fun NewTaskScreen(
                 onSelect = { parent = it },
             )
             CredentialChips(NewTaskChoices.credentialNames(snapshot), credentials) { credentials = it }
-            SessionOptionsFields(options, { options = it }, projectMode, assignee)
+            SessionOptionsFields(shownOptions, { options = it }, projectMode, assignee, worktreeAvailable)
         }
         HorizontalDivider()
         Surface(tonalElevation = 3.dp, modifier = Modifier.fillMaxWidth()) {
@@ -176,7 +190,7 @@ fun NewTaskScreen(
                                 testServer = testServer,
                                 credentials = credentials,
                                 parent = parent,
-                                sessionOptions = options,
+                                sessionOptions = shownOptions,
                                 title = title,
                             ),
                         )

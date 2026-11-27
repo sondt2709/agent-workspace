@@ -162,6 +162,8 @@ data class SessionOptionsView(
     @SerialName("work_in") val workIn: String,
     /** The absolute folder of `work_in: folder`, else null. */
     val folder: String?,
+    /** `work_in: checkout`: false keeps the branch of the checkout. */
+    @SerialName("switch_branch") val switchBranch: Boolean = true,
 )
 
 @Serializable

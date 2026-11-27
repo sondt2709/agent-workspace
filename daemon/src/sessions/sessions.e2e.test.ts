@@ -551,6 +551,52 @@ describe.skipIf(!TEST_TMUX)("sessions with tmux and the fake agent", () => {
     expect(existsSync(join(awd.userHome, ".claude.json"))).toBe(false);
   }, 60_000);
 
+  it("refuses a worktree for a checkout with no commit, then starts after the first commit", async () => {
+    awd = await startSessionDaemon({ startRetryMs: 500 });
+    const unborn = await tempDir("awu-");
+    await execa("git", ["-C", unborn, "init", "-q", "-b", "main"]);
+    await writeFile(join(unborn, "notes.md"), "notes\n");
+    await awd.server.daemon
+      .workspace()
+      .files.writeDocument("tasks/devices/macbook-pro/bindings.yaml", {
+        kind: "bindings",
+        schema: 1,
+        device: "macbook-pro",
+        may_run: true,
+        checkouts: [{ project: "billing-api", path: unborn }],
+      });
+    const task = await awd.createTask("reply never");
+    const comment = await awd.waitRow(
+      task.id,
+      (r) => r.type === "comment.added" && text(r).startsWith("The session did not start"),
+    );
+    expect(text(comment)).toContain(`${unborn} has no commit yet`);
+    expect(text(comment)).toContain('"Project checkout"');
+    expect(await awd.host.list()).toEqual([]);
+    expect(awd.server.daemon.sessions!.list()).toEqual([]);
+    // The retries of the same cause write no second comment.
+    await new Promise((r) => setTimeout(r, 1500));
+    const starts = (await awd.rows(task.id)).filter(
+      (r) => r.type === "comment.added" && text(r).startsWith("The session did not start"),
+    );
+    expect(starts).toHaveLength(1);
+    // The first commit: the next retry starts the session, with no new assignment.
+    await execa("git", ["-C", unborn, "add", "."]);
+    await execa("git", [
+      "-C",
+      unborn,
+      "-c",
+      "user.name=AW Test",
+      "-c",
+      "user.email=test@example.com",
+      "commit",
+      "-qm",
+      "init",
+    ]);
+    await awd.waitRow(task.id, (r) => r.type === "session.started");
+    expect(awd.worktree(task.id)).not.toBe(unborn);
+  }, 60_000);
+
   it("starts the sessions when the agent binary answers after the start, with no awd restart", async () => {
     const ready = join(await tempDir("awa-"), "ready");
     awd = await startSessionDaemon({ versionNeeds: ready, prepareRetryMs: 500 });

@@ -575,7 +575,7 @@ describe("session options (session-options)", () => {
     expect(screen.getAllByText("Agent teams").length).toBe(2);
     const properties = screen.getByRole("region", { name: "Properties" });
     expect(within(properties).getByText("Skip permissions")).toBeTruthy();
-    expect(within(properties).getByText("On · experimental")).toBeTruthy();
+    expect(within(properties).getByText("On")).toBeTruthy();
     expect(
       within(properties).getByText("/Users/example/.aw/worktrees/aw-AW-8 · branch aw/AW-8"),
     ).toBeTruthy();

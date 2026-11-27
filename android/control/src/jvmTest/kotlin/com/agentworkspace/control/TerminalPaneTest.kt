@@ -106,6 +106,14 @@ class TerminalPaneTest {
                     "AW does not read the screen of an Orca session. Open the Orca worktree aw-$TASK on ubuntu-01.",
                     TerminalPane.read(files, orca, now, ZoneOffset.UTC).note,
                 )
+                // An Orca session in the project checkout: the main folder, not an aw- worktree.
+                val inCheckout =
+                    task.copy(project = "billing-api", session = orca.session!!.copy(workIn = "checkout"))
+                assertEquals(
+                    "AW does not read the screen of an Orca session. " +
+                        "Open the billing-api checkout in Orca on ubuntu-01.",
+                    TerminalPane.read(files, inCheckout, now, ZoneOffset.UTC).note,
+                )
             }
         }
 

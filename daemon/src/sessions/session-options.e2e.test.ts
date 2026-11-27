@@ -157,6 +157,23 @@ describe.skipIf(!TEST_TMUX)("session options with tmux and the fake agent", () =
     expect((await awd.rows(b)).some((r) => r.type === "session.started")).toBe(false);
   }, 90_000);
 
+  it("works in the project checkout with its own branch when the task keeps the branch", async () => {
+    awd = await startSessionDaemon();
+    const a = await create(awd, "reply as it is", ["--work-in", "checkout", "--keep-branch"]);
+    const started = await awd.waitRow(a, (r) => r.type === "session.started");
+    expect(data(started)).toMatchObject({ cwd: awd.checkout, work_in: "checkout", branch: null });
+    const head = await execa("git", ["-C", awd.checkout, "symbolic-ref", "--short", "HEAD"]);
+    expect(head.stdout).toBe("main");
+    const branches = await execa("git", ["-C", awd.checkout, "branch", "--list", "aw/*"]);
+    expect(branches.stdout).toBe("");
+    // One session at a time in the checkout, also with no branch.
+    const b = await create(awd, "reply second", ["--work-in", "checkout", "--keep-branch"]);
+    await awd.waitRow(
+      b,
+      (r) => r.type === "comment.added" && text(r).includes("has the session of AW-1"),
+    );
+  }, 90_000);
+
   it("works in another folder as it is, and refuses a folder in the AW state folder", async () => {
     awd = await startSessionDaemon();
     const folder = join(await tempDir("aw-so-folder-"), "service");

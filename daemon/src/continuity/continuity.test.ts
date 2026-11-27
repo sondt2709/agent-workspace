@@ -20,7 +20,14 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { SessionRecord } from "../sessions/records.ts";
 import { authState, loginEndsSoon } from "./auth.ts";
-import { HEALTH_MIN_MS, healthDocument, healthDue, healthKey, sessionState } from "./health.ts";
+import {
+  checkoutCommits,
+  HEALTH_MIN_MS,
+  healthDocument,
+  healthDue,
+  healthKey,
+  sessionState,
+} from "./health.ts";
 import { launcherScript } from "./launcher.ts";
 import { pauseChanged, pauseData } from "./pause.ts";
 import { parseProcessLine, runsSession } from "./processes.ts";
@@ -447,6 +454,56 @@ describe("device health", () => {
       false,
     );
     expect(healthDue({ now: T0 + 10 * MIN, lastWrite: T0, lastKey: "a", key: "a" })).toBe(true);
+  });
+});
+
+describe("checkout commits in health (openspec project-checkout-no-worktree)", () => {
+  it("gives has_commit false for a repository with no commit, a plain folder and a missing folder", async () => {
+    const root = await mkdtemp(join(tmpdir(), "awhc-"));
+    const made = join(root, "made");
+    const unborn = join(root, "unborn");
+    const plain = join(root, "plain");
+    for (const dir of [made, unborn, plain]) await mkdir(dir);
+    await execa("git", ["-C", unborn, "init", "-q", "-b", "main"]);
+    await execa("git", ["-C", made, "init", "-q", "-b", "main"]);
+    await writeFile(join(made, "README.md"), "x\n");
+    await execa("git", ["-C", made, "add", "."]);
+    await execa("git", [
+      "-C",
+      made,
+      "-c",
+      "user.name=AW Test",
+      "-c",
+      "user.email=test@example.com",
+      "commit",
+      "-qm",
+      "init",
+    ]);
+    const list = await checkoutCommits([
+      { project: "billing-api", path: made },
+      { project: "my-notes", path: unborn },
+      { project: "docs", path: plain },
+      { project: "gone", path: join(root, "missing") },
+    ]);
+    expect(list).toEqual([
+      { project: "billing-api", has_commit: true },
+      { project: "my-notes", has_commit: false },
+      { project: "docs", has_commit: false },
+      { project: "gone", has_commit: false },
+    ]);
+    const doc = healthDocument({
+      device: "macbook-pro",
+      updated: "2026-11-27T08:00:00.000Z#0000",
+      bootTime: "2026-11-27T07:00:00.000Z",
+      versions: {},
+      sessions: [],
+      usage: null,
+      loginExpiresAt: null,
+      disk: 10,
+      checkouts: list,
+    });
+    expect(healthV1.parse(doc).checkouts).toEqual(list);
+    await rm(root, { recursive: true, force: true });
   });
 });
 

@@ -25,8 +25,10 @@ import { call, errorText } from "../bridge.ts";
 import { useProjects, useStatus } from "../queries.ts";
 import {
   CHECKOUT_WARNING,
+  KEEP_BRANCH_WARNING,
   MODE_HELP,
   MODE_LABEL,
+  NO_COMMIT_HINT,
   projectMode,
   shownOptions,
   SKIP_WARNING,
@@ -100,6 +102,8 @@ export function SessionOptionsFields(props: {
   disabled?: boolean;
   /** Show the Permissions menu in this block (default true). */
   permissions?: boolean;
+  /** The checkout has no commit: "Separate worktree" is disabled (openspec project-checkout-no-worktree). */
+  worktreeBlocked?: boolean;
 }) {
   const { value, onChange } = props;
   const set = (patch: Partial<OptionsForm>) => onChange({ ...value, ...patch });
@@ -128,7 +132,7 @@ export function SessionOptionsFields(props: {
               onChange={(e) => set({ teams: e.target.checked })}
             />
           }
-          label="Agent teams · experimental"
+          label="Agent teams"
         />
         <Typography variant="caption" color="text.secondary">
           Claude Code can start teammates. They run in the same terminal and get the same
@@ -150,17 +154,38 @@ export function SessionOptionsFields(props: {
               key={w}
               value={w}
               control={<Radio />}
-              disabled={props.disabled}
+              disabled={props.disabled || (w === "worktree" && props.worktreeBlocked === true)}
               label={WORK_IN_LABEL[w]}
             />
           ))}
         </RadioGroup>
+        {props.worktreeBlocked && (
+          <Typography variant="caption" color="text.secondary">
+            {NO_COMMIT_HINT}
+          </Typography>
+        )}
         {value.workIn === "worktree" && (
           <Typography variant="caption" color="text.secondary">
             AW makes a git worktree aw-&lt;key&gt; of the checkout. Your checkout does not change.
           </Typography>
         )}
-        {value.workIn === "checkout" && <Alert severity="warning">{CHECKOUT_WARNING}</Alert>}
+        {value.workIn === "checkout" && (
+          <>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={value.switchBranch}
+                  disabled={props.disabled}
+                  onChange={(e) => set({ switchBranch: e.target.checked })}
+                />
+              }
+              label="Switch to the task branch"
+            />
+            <Alert severity="warning">
+              {value.switchBranch ? CHECKOUT_WARNING : KEEP_BRANCH_WARNING}
+            </Alert>
+          </>
+        )}
         {value.workIn === "folder" && (
           <FolderField
             label={props.device ? `Folder on ${props.device}` : "Folder"}
@@ -227,7 +252,7 @@ export function SessionOptionRows({ ws, task }: { ws: string; task: Task }) {
       </Row>
       <Row label="Agent teams">
         <Typography variant="body2">
-          {shown.teams ? "On · experimental" : "Off"}
+          {shown.teams ? "On" : "Off"}
           {when}
         </Typography>
       </Row>
