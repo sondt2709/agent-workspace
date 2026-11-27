@@ -149,7 +149,7 @@ The schemas SHALL have: `vapid_public_key` (an uncompressed P-256 point, base64u
 - **THEN** the value has `archived: false` and `main_repo: null`
 
 ### Requirement: Session option fields
-`project.yaml` SHALL have `permission_mode` (`default` | `accept_edits` | `skip`, default `default`). `task.created` and `task.assigned` SHALL have an optional `session_options {permission_mode: <mode> | null, agent_teams: boolean, work_in: "worktree" | "checkout" | "folder", folder: <absolute path> | null}`; `folder` SHALL be set only with `work_in: "folder"`. `session.started` SHALL have optional `permission_mode`, `agent_teams` and `work_in`. The event `session.stop_requested {session}` SHALL exist. `pnpm schema:generate` SHALL write the JSON Schemas, the samples and the Kotlin classes.
+`project.yaml` SHALL have `permission_mode` (`default` | `accept_edits` | `skip`, default `default`). `task.created` and `task.assigned` SHALL have an optional `session_options {permission_mode: <mode> | null, agent_teams: boolean, work_in: "worktree" | "checkout" | "folder", folder: <absolute path> | null, switch_branch: boolean}`; `folder` SHALL be set only with `work_in: "folder"`. `switch_branch` SHALL default to `true`, and SHALL count only with `work_in: "checkout"`. `session.started` SHALL have optional `permission_mode`, `agent_teams` and `work_in`. The event `session.stop_requested {session}` SHALL exist. `pnpm schema:generate` SHALL write the JSON Schemas, the samples and the Kotlin classes.
 
 #### Scenario: Folder with a relative path
 - **WHEN** `session_options` has `work_in: "folder"` and `folder: "work/api"`
@@ -158,6 +158,10 @@ The schemas SHALL have: `vapid_public_key` (an uncompressed P-256 point, base64u
 #### Scenario: Old event
 - **WHEN** a `task.created` has no `session_options`
 - **THEN** it is valid
+
+#### Scenario: Old session options
+- **WHEN** a `task.created` has `session_options` with no `switch_branch`
+- **THEN** the parsed value has `switch_branch: true`
 
 ### Requirement: Questions of a gate
 `gate.opened` SHALL have the optional field `questions` (default `[]`): at most 10 items `{question, header, multi_select, options}`, where `question` has 1 to 2,000 characters, `header` is null or at most 100 characters, `multi_select` is a boolean (default false), and `options` has at most 20 items `{label, description}` (`label` 1 to 500 characters, `description` at most 2,000 characters, default ""). The event writer SHALL redact each string of `questions`. The generated JSON Schema, samples and Kotlin classes SHALL have the field.
@@ -180,4 +184,11 @@ The schemas SHALL have: `vapid_public_key` (an uncompressed P-256 point, base64u
 #### Scenario: Turn message
 - **WHEN** the schema parses `message.agent` with the source `turn`
 - **THEN** the event is valid, and the source `other` is not valid
+
+### Requirement: Checkout state in health
+`health.v1` SHALL have an optional `checkouts` list of `{project, has_commit}`: one entry for each checkout of the device in its bindings. `has_commit` SHALL be true only when the checkout is a git repository whose `HEAD` names a commit. A health file of an older awd with no `checkouts` SHALL stay valid.
+
+#### Scenario: Checkout with no commit
+- **WHEN** the checkout of `billing-api` on macbook-pro is a git repository with no commit
+- **THEN** `tasks/devices/macbook-pro/health.yaml` has `checkouts: [{project: billing-api, has_commit: false}]`
 

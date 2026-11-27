@@ -37,6 +37,6 @@
 ## 7. Checks and evidence
 
 - [x] 7.1 Break the commit check once, see the test of 1.1 fail, then restore it.
-- [ ] 7.2 Run `task check` on the last commit and keep the output with the SHA.
+- [x] 7.2 Run `task check` on the last commit and keep the output with the SHA.
 - [x] 7.3 Take screenshots of New task on `local-desktop-seed` with a checkout with no commit, before and after.
 - [x] 7.4 Update `README.md` "Status" and `docs/` text that says Project checkout always runs in tmux or always switches the branch.
