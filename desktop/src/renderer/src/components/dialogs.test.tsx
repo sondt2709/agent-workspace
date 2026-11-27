@@ -288,6 +288,36 @@ describe("NewSessionDialog", () => {
     );
   });
 
+  it("disables Separate worktree for a checkout with no commit on the device of the agent", async () => {
+    const task = makeTask({ assignee: "claude@ubuntu-01" });
+    const call = installBridge({
+      tasks: () => [task],
+      assignTask: () => ({ applied: true }),
+      sessionHosts: () => ({
+        device: "macbook-pro",
+        devices: [
+          {
+            device: "ubuntu-01",
+            may_run: true,
+            use_orca: false,
+            checkouts: [{ project: "billing-api", session_host: null, has_commit: false }],
+            orca: null,
+          },
+        ],
+      }),
+    });
+    renderApp(<NewSessionDialog ws="ws-1" task={task.id} onClose={() => undefined} />);
+    expect(await screen.findByText(/This checkout has no commit yet/)).toBeTruthy();
+    expect(screen.getByLabelText<HTMLInputElement>("Separate worktree").disabled).toBe(true);
+    expect(screen.getByLabelText<HTMLInputElement>("Project checkout").checked).toBe(true);
+    await userEvent.click(screen.getByRole("button", { name: "Start session" }));
+    await waitFor(() =>
+      expect(call.mock.calls.find(([m]) => m === "assignTask")?.[1]).toMatchObject({
+        session_options: { work_in: "checkout", switch_branch: true },
+      }),
+    );
+  });
+
   it("keeps Orca off on a device with no use_orca", async () => {
     const task = makeTask({ assignee: "claude@ubuntu-01" });
     installBridge({

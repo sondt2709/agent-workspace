@@ -97,6 +97,17 @@ describe("event samples", () => {
     if (parsed.type === "gate.answered") expect(parsed.data.answer).toBe("1000/min");
   });
 
+  it("gives switch_branch true to the session options of an older event", () => {
+    const parsed = eventV1.parse(
+      event("task.assigned", {
+        assignee: "claude@ubuntu-01",
+        session_options: { work_in: "checkout" },
+      }),
+    );
+    if (parsed.type !== "task.assigned") throw new Error(parsed.type);
+    expect(parsed.data.session_options?.switch_branch).toBe(true);
+  });
+
   it("heartbeat.v1 accepts a heartbeat and rejects another type", () => {
     expect(
       check("heartbeat.v1", event("device.heartbeat", validData["device.heartbeat"])).zod,
