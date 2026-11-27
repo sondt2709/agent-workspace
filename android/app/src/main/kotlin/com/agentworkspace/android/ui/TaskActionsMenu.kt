@@ -36,9 +36,11 @@ fun TaskActionsMenu(
     var confirm by rememberSaveable(task.id) { mutableStateOf<TaskConfirm?>(null) }
     val canStop = TaskActions.canStop(task)
     Box {
+        // A grey icon button, as on the desktop: the accent is only for the next action of the person.
         TextButton(
             onClick = { open = true },
             modifier = Modifier.semantics { contentDescription = "Task actions" },
+            colors = ButtonDefaults.textButtonColors(contentColor = muted()),
         ) { Text("⋯", style = MaterialTheme.typography.titleLarge) }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             if (canStop) {

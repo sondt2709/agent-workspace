@@ -11,3 +11,19 @@ complexity:
     ignoreAnnotated: ["Composable"]
   CyclomaticComplexMethod:
     ignoreAnnotated: ["Composable"]
+# One button style (openspec phone-desktop-parity): the screens use the buttons of Compact.kt (36 dp
+# visible, a 48 dp touch target), never the Material 3 buttons directly.
+style:
+  ForbiddenImport:
+    active: true
+    forbiddenImports:
+      - value: "androidx.compose.material3.Button"
+        reason: "Use Button of Compact.kt: one button style of 36 dp."
+      - value: "androidx.compose.material3.OutlinedButton"
+        reason: "Use OutlinedButton of Compact.kt: one button style of 36 dp."
+      - value: "androidx.compose.material3.TextButton"
+        reason: "Use TextButton of Compact.kt: one button style of 36 dp."
+      - value: "androidx.compose.material3.FilledTonalButton"
+        reason: "Use a button of Compact.kt: one button style of 36 dp."
+      - value: "androidx.compose.material3.ElevatedButton"
+        reason: "Use a button of Compact.kt: one button style of 36 dp."

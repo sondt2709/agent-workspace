@@ -11,6 +11,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.detekt)
+    alias(libs.plugins.roborazzi)
 }
 
 /** The Syncthing tag of the engine, for the license and source link of the app (docs/phase-1.md 6.7.2). */
@@ -76,6 +77,11 @@ android {
         warningsAsErrors = true
     }
 
+    testOptions {
+        // Compose tests and Roborazzi screenshots on the JVM with Robolectric (openspec phone-desktop-parity).
+        unitTests.isIncludeAndroidResources = true
+    }
+
     buildFeatures {
         compose = true
         resValues = true
@@ -96,6 +102,18 @@ kotlin {
     compilerOptions {
         allWarningsAsErrors.set(true)
     }
+}
+
+// The golden screenshots of `task android:screenshots` (openspec phone-desktop-parity).
+roborazzi {
+    outputDir.set(file("src/test/screenshots"))
+}
+
+// The JVM tests of the screens read the shared fixtures (contracts/fixtures/merge).
+val contractsDir: File = rootDir.resolve("../contracts").canonicalFile
+tasks.withType<Test>().configureEach {
+    systemProperty("aw.schema.dir", contractsDir.path)
+    inputs.dir(contractsDir.resolve("fixtures"))
 }
 
 dependencies {
@@ -125,6 +143,15 @@ dependencies {
     implementation(libs.code.scanner)
     // Markdown of Claude output (openspec polish-prototype-style, docs/tech-stack.md 2.5).
     implementation(libs.markdown.renderer.m3)
+
+    testImplementation(platform(libs.compose.bom))
+    testImplementation(libs.compose.ui.test.junit4)
+    testImplementation(libs.junit4)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.roborazzi)
+    testImplementation(libs.roborazzi.compose)
+    testImplementation(libs.roborazzi.junit.rule)
+    debugImplementation(libs.compose.ui.test.manifest)
 }
 
 if (engineLibsDir == null) {

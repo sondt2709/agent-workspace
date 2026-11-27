@@ -25,6 +25,7 @@ import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneSt
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -34,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
@@ -41,12 +43,17 @@ import androidx.navigation3.ui.NavDisplay
 import com.agentworkspace.android.R
 import com.agentworkspace.control.InboxItems
 import com.agentworkspace.control.NavKind
+import com.agentworkspace.control.Pane
 import com.agentworkspace.control.Route
 import com.agentworkspace.control.ScreenStates
 import com.agentworkspace.control.Tab
 import com.agentworkspace.control.WidthClass
 import com.agentworkspace.control.WorkspaceSnapshot
+import com.agentworkspace.control.pane
 import com.agentworkspace.engine.EngineState
+
+/** The width of the Inbox and Tasks list pane next to a detail (docs/design.md 8.4). */
+private const val LIST_PANE_DP = 320
 
 private const val NOT_HERE = "This task is not on this phone yet. It arrives with the next sync."
 
@@ -57,6 +64,15 @@ private val TAB_ICONS =
         Tab.TASKS to R.drawable.ic_tasks,
         Tab.DEVICES to R.drawable.ic_devices,
     )
+
+/** The scene metadata of a route from its [Pane] (`Route.pane` of :control). */
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
+private fun Route.metadata(placeholder: @Composable () -> Unit): Map<String, Any> =
+    when (pane()) {
+        Pane.LIST -> ListDetailSceneStrategy.listPane(detailPlaceholder = { placeholder() })
+        Pane.DETAIL -> ListDetailSceneStrategy.detailPane()
+        Pane.SINGLE -> emptyMap()
+    }
 
 /**
  * The root of the app: the navigation suite (a bar, a rail or a drawer by the width class) and the
@@ -106,8 +122,13 @@ fun AwApp(vm: AppViewModel) {
         },
     ) {
         Scaffold(
-            // The task page has its own header with Back (as on the desktop).
-            topBar = { if (vm.backStack.lastOrNull() !is Route.Task) TopBar(vm, tab) },
+            // The task page at the full width has its own header with Back (as on the desktop); next to
+            // the Tasks list the top bar stays above the list (openspec phone-desktop-parity).
+            topBar = {
+                val top = vm.backStack.lastOrNull()
+                val fullPage = top is Route.TaskPage || (top is Route.Task && width == WidthClass.COMPACT)
+                if (!fullPage) TopBar(vm, tab)
+            },
             snackbarHost = { SnackbarHost(snackbar) },
         ) { padding ->
             // The app draws edge to edge, so the window does not resize for the keyboard: the content
@@ -181,7 +202,10 @@ private fun Panes(
     // Inbox and Tasks show 2 panes from medium width (spike S14; experimental API).
     val strategy =
         rememberListDetailSceneStrategy<Route>(
-            directive = calculatePaneScaffoldDirectiveWithTwoPanesOnMediumWidth(currentWindowAdaptiveInfoV2()),
+            // The list pane is 320 dp, as in the approved prototype (openspec phone-desktop-parity).
+            directive =
+                calculatePaneScaffoldDirectiveWithTwoPanesOnMediumWidth(currentWindowAdaptiveInfoV2())
+                    .copy(defaultPanePreferredWidth = LIST_PANE_DP.dp),
         )
     val openTask = vm.navigator.openTask
     val placeholder: @Composable () -> Unit = {
@@ -199,129 +223,153 @@ private fun Panes(
             textSize = vm.proposalTextSize,
             onTextSize = vm::changeProposalTextSize,
         )
-    NavDisplay(
-        backStack = vm.backStack,
-        onBack = { vm.back() },
-        entryDecorators = listOf(rememberSaveableStateHolderNavEntryDecorator()),
-        sceneStrategies = listOf(strategy),
-        entryProvider =
-            entryProvider {
-                entry<Route.Home> {
-                    HomeScreen(
-                        home = ScreenStates.home(snapshot, peers, now),
-                        snapshot = snapshot,
-                        openTask = openTask,
-                        syncing = vm.syncing,
-                        syncText = vm.syncText,
-                        battery = vm.batteryRestricted,
-                        onBattery = { context.startActivity(vm.batterySettings()) },
-                        onOpen = vm::openTask,
-                        onSyncNow = vm::syncNow,
-                        onAnswer = answer,
-                    )
-                }
-                entry<Route.Inbox>(metadata = ListDetailSceneStrategy.listPane(detailPlaceholder = { placeholder() })) {
-                    InboxScreen(
-                        snapshot = snapshot,
-                        updates = InboxItems.updates(peers, now),
-                        openItem = vm.navigator.openInboxItem,
-                        onOpenItem = { vm.navigator.open(Route.InboxItem(it)) },
-                        onOpenTask = vm::openTask,
-                    )
-                }
-                // The item screen of an Inbox row, next to the list from medium width.
-                entry<Route.InboxItem>(metadata = ListDetailSceneStrategy.detailPane()) { route ->
-                    val task = snapshot.task(route.task)
-                    if (task == null) {
-                        EmptyText(NOT_HERE)
-                    } else {
-                        InboxItemScreen(
-                            task = task,
+    // The clock of the relative times of Activity and the lists (openspec phone-desktop-parity).
+    CompositionLocalProvider(LocalNowMs provides now) {
+        NavDisplay(
+            backStack = vm.backStack,
+            onBack = { vm.back() },
+            entryDecorators = listOf(rememberSaveableStateHolderNavEntryDecorator()),
+            sceneStrategies = listOf(strategy),
+            entryProvider =
+                entryProvider {
+                    entry<Route.Home> {
+                        HomeScreen(
+                            home = ScreenStates.home(snapshot, peers, now),
                             snapshot = snapshot,
-                            loadThread = vm::thread,
-                            parts = parts,
-                            onAnswer = { gate, text, comment, sent -> vm.answer(task.id, gate, text, comment, sent) },
-                            onAssign = { vm.assign(task.id, it) },
-                            onOpenTask = { vm.openTask(task.id) },
+                            openTask = openTask,
+                            syncing = vm.syncing,
+                            syncText = vm.syncText,
+                            battery = vm.batteryRestricted,
+                            onBattery = { context.startActivity(vm.batterySettings()) },
+                            onOpen = vm::openTask,
+                            onSyncNow = vm::syncNow,
+                            onAnswer = answer,
                         )
                     }
-                }
-                entry<Route.Tasks>(metadata = ListDetailSceneStrategy.listPane(detailPlaceholder = { placeholder() })) {
-                    TasksScreen(snapshot, openTask, vm::openTask, vm::syncNow) { vm.navigator.open(Route.NewTask) }
-                }
-                entry<Route.Devices> {
-                    DevicesScreen(
-                        devices =
-                            ScreenStates.devices(
-                                snapshot,
-                                peers,
-                                now,
-                                engineDown = engine.takeIf { it != EngineState.RUNNING }?.let(::engineText),
-                            ),
-                        engine = engine,
-                        push = push,
-                        battery = vm.batteryRestricted,
-                        issues = snapshot.issues.size,
-                        syncing = vm.syncing,
-                        syncText = vm.syncText,
-                        syncthingTag = tag,
-                        onBattery = { context.startActivity(vm.batterySettings()) },
-                        onSyncNow = vm::syncNow,
-                        onAddCredential = { vm.navigator.open(Route.AddCredential) },
-                        onPair = { vm.navigator.open(Route.Pairing) },
-                        mobileData = vm.mobileData,
-                        onMobileData = vm::setMobileDataAllowed,
-                        keyReplaced = vm.keyReplaced,
-                        onKeyReplacedRead = vm::dismissKeyReplaced,
-                    )
-                }
-                // The task page in one pane at each width: no list next to it and no Session pane.
-                entry<Route.Task> { route ->
-                    val task = snapshot.task(route.id)
-                    if (task == null) {
-                        EmptyText(NOT_HERE)
-                    } else {
-                        TaskScreen(
-                            task = task,
+                    entry<Route.Inbox>(metadata = Route.Inbox.metadata(placeholder)) {
+                        InboxScreen(
                             snapshot = snapshot,
-                            nav =
-                                TaskPageNavigation(
-                                    onBack = { vm.back() },
-                                    onOpen = vm::openTask,
-                                    listOn = vm.taskListOn,
-                                    onList = { vm.taskListOn = it },
-                                ),
-                            loadThread = vm::thread,
-                            loadTerminal = vm::terminal,
-                            parts = parts,
-                            actions =
-                                TaskPageActions(
-                                    onAnswer = { gate, text, comment, sent ->
-                                        vm.answer(task.id, gate, text, comment, sent)
-                                    },
-                                    onAssign = { vm.assign(task.id, it) },
-                                    onSend = { text, sent -> vm.sendMessage(task.id, text, sent) },
-                                    onStopSession = { vm.stopSession(task.id) },
-                                    onNewSession = { assignee, options -> vm.newSession(task.id, assignee, options) },
-                                    onRestart = { vm.restartAgent(task.id) },
-                                    onArchive = { vm.archiveTask(task.id) },
-                                    onUnarchive = { vm.unarchiveTask(task.id) },
-                                ),
+                            updates = InboxItems.updates(peers, now),
+                            openItem = vm.navigator.openInboxItem,
+                            onOpenItem = { vm.navigator.open(Route.InboxItem(it)) },
+                            onOpenTask = vm::openTask,
                         )
                     }
-                }
-                entry<Route.NewTask>(metadata = ListDetailSceneStrategy.detailPane()) {
-                    NewTaskScreen(snapshot, vm.creating, vm::createTask) { vm.back() }
-                }
-                entry<Route.AddCredential>(metadata = ListDetailSceneStrategy.detailPane()) {
-                    CredentialScreen(vm.credentialAddAvailable, vm::addCredential) { vm.back() }
-                }
-                entry<Route.Pairing>(metadata = ListDetailSceneStrategy.detailPane()) {
-                    val pairing by vm.pairing.collectAsStateWithLifecycle()
-                    PairingScreen(pairing, vm.joining, vm.storedSlug, vm::join, vm::cancelPairing, vm::message) {
-                        vm.back()
+                    // The item screen of an Inbox row, next to the list from medium width.
+                    entry<Route.InboxItem>(metadata = Route.InboxItem("").metadata(placeholder)) { route ->
+                        val task = snapshot.task(route.task)
+                        if (task == null) {
+                            EmptyText(NOT_HERE)
+                        } else {
+                            InboxItemScreen(
+                                task = task,
+                                snapshot = snapshot,
+                                loadThread = vm::thread,
+                                parts = parts,
+                                onAnswer = { gate, text, comment, sent ->
+                                    vm.answer(task.id, gate, text, comment, sent)
+                                },
+                                onAssign = { vm.assign(task.id, it) },
+                                onOpenTask = { vm.openTask(task.id) },
+                            )
+                        }
                     }
-                }
-            },
+                    entry<Route.Tasks>(metadata = Route.Tasks.metadata(placeholder)) {
+                        TasksScreen(snapshot, openTask, vm::openTask, vm::syncNow, now) {
+                            vm.navigator.open(Route.NewTask)
+                        }
+                    }
+                    entry<Route.Devices> {
+                        DevicesScreen(
+                            devices =
+                                ScreenStates.devices(
+                                    snapshot,
+                                    peers,
+                                    now,
+                                    engineDown = engine.takeIf { it != EngineState.RUNNING }?.let(::engineText),
+                                ),
+                            engine = engine,
+                            push = push,
+                            battery = vm.batteryRestricted,
+                            issues = snapshot.issues.size,
+                            syncing = vm.syncing,
+                            syncText = vm.syncText,
+                            syncthingTag = tag,
+                            onBattery = { context.startActivity(vm.batterySettings()) },
+                            onSyncNow = vm::syncNow,
+                            onAddCredential = { vm.navigator.open(Route.AddCredential) },
+                            onPair = { vm.navigator.open(Route.Pairing) },
+                            mobileData = vm.mobileData,
+                            onMobileData = vm::setMobileDataAllowed,
+                            keyReplaced = vm.keyReplaced,
+                            onKeyReplacedRead = vm::dismissKeyReplaced,
+                        )
+                    }
+                    // A task of the Tasks list: next to the list from medium width, with "Open as page"; on a
+                    // compact window the full task page (openspec phone-desktop-parity).
+                    entry<Route.Task>(metadata = Route.Task("").metadata(placeholder)) { route ->
+                        val inPane = vm.widthClass != WidthClass.COMPACT
+                        TaskEntry(vm, snapshot, route.id, parts, if (inPane) vm.navigator::openAsPage else null)
+                    }
+                    // The task page at the full width: "Open as page", Home, Inbox and a push. No Session pane.
+                    entry<Route.TaskPage>(metadata = Route.TaskPage("").metadata(placeholder)) { route ->
+                        TaskEntry(vm, snapshot, route.id, parts, null)
+                    }
+                    entry<Route.NewTask>(metadata = Route.NewTask.metadata(placeholder)) {
+                        NewTaskScreen(snapshot, vm.creating, vm::createTask) { vm.back() }
+                    }
+                    entry<Route.AddCredential>(metadata = Route.AddCredential.metadata(placeholder)) {
+                        CredentialScreen(vm.credentialAddAvailable, vm::addCredential) { vm.back() }
+                    }
+                    entry<Route.Pairing>(metadata = Route.Pairing.metadata(placeholder)) {
+                        val pairing by vm.pairing.collectAsStateWithLifecycle()
+                        PairingScreen(pairing, vm.joining, vm.storedSlug, vm::join, vm::cancelPairing, vm::message) {
+                            vm.back()
+                        }
+                    }
+                },
+        )
+    }
+}
+
+/** The task page of [id] with the actions of the view model; [onOpenAsPage] is set next to the Tasks list. */
+@Composable
+private fun TaskEntry(
+    vm: AppViewModel,
+    snapshot: WorkspaceSnapshot,
+    id: String,
+    parts: TaskDetailParts,
+    onOpenAsPage: (() -> Unit)?,
+) {
+    val task = snapshot.task(id)
+    if (task == null) {
+        EmptyText(NOT_HERE)
+        return
+    }
+    TaskScreen(
+        task = task,
+        snapshot = snapshot,
+        nav =
+            TaskPageNavigation(
+                onBack = { vm.back() },
+                onOpen = vm::openTask,
+                listOn = vm.taskListOn,
+                onList = { vm.taskListOn = it },
+                onOpenAsPage = onOpenAsPage,
+            ),
+        loadThread = vm::thread,
+        loadTerminal = vm::terminal,
+        parts = parts,
+        actions =
+            TaskPageActions(
+                onAnswer = { gate, text, comment, sent -> vm.answer(task.id, gate, text, comment, sent) },
+                onAssign = { vm.assign(task.id, it) },
+                onSend = { text, sent -> vm.sendMessage(task.id, text, sent) },
+                onStopSession = { vm.stopSession(task.id) },
+                onNewSession = { assignee, options -> vm.newSession(task.id, assignee, options) },
+                onRestart = { vm.restartAgent(task.id) },
+                onArchive = { vm.archiveTask(task.id) },
+                onUnarchive = { vm.unarchiveTask(task.id) },
+            ),
     )
 }

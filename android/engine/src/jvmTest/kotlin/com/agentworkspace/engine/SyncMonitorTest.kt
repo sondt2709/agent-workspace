@@ -41,7 +41,7 @@ class SyncRulesTest {
         assertEquals("No changes waiting for ubuntu-01 (offline)", SyncRules.describe(peer(false, 0), 0))
         assertEquals("5 min ago", SyncRules.ago(0, 300_000))
         assertEquals("3 h ago", SyncRules.ago(0, 3 * 3_600_000))
-        assertEquals("2 d ago", SyncRules.ago(0, 49 * 3_600_000L))
+        assertEquals("2 days ago", SyncRules.ago(0, 49 * 3_600_000L))
         assertEquals("1 s ago", SyncRules.ago(0, 500))
     }
 

@@ -142,12 +142,14 @@ internal fun OptionButton(
         }
     val padding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
     if (filled) {
-        Button(onClick = onClick, modifier = modifier, contentPadding = padding) { OptionText(label, description) }
+        Button(onClick = onClick, modifier = modifier.heightIn(min = TouchHeight), contentPadding = padding) {
+            OptionText(label, description)
+        }
     } else {
         val on = checked == true
         androidx.compose.material3.OutlinedButton(
             onClick = onClick,
-            modifier = modifier.heightIn(min = ControlHeight),
+            modifier = modifier.heightIn(min = TouchHeight),
             shape = CompactShape,
             contentPadding = padding,
             border =

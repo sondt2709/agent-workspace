@@ -173,7 +173,7 @@ class PhoneActions(
 
     /**
      * Creates a task: `task.created` in a new task folder with the next free key that the phone
-     * knows. With no assignee, the task opens "Needs you: assign"; AW never assigns it alone. The
+     * knows. With no assignee, the task opens "Needs you: Assign task"; AW never assigns it alone. The
      * event has `session_options` only when the person changed them from the defaults.
      */
     suspend fun createTask(draft: NewTaskDraft): ActionResult {

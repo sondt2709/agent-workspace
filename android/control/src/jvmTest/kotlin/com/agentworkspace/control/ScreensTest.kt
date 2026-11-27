@@ -25,7 +25,8 @@ class ScreensTest {
                 val snapshot = ws.model(backgroundScope).reload()
                 assertEquals("AW", snapshot.keyPrefix)
                 val groups = ScreenStates.tasksByStage(snapshot)
-                assertEquals(Texts.STAGES, groups.map { it.stage })
+                // Only the stage with a task: no empty group (openspec phone-desktop-parity).
+                assertEquals(listOf("implement"), groups.map { it.stage })
                 val aw7 = groups.first { it.stage == "implement" }.tasks.single()
                 assertEquals("AW-7", aw7.label)
                 assertNull(aw7.pause)

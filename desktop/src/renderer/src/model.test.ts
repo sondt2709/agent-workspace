@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
+import agoJson from "../../../../contracts/fixtures/time/ago.json?raw";
 import {
   agentChoices,
+  ago,
   boardLanes,
   commentRule,
   countdown,
@@ -313,5 +315,13 @@ describe("proposals (openspec proposal-and-discussion)", () => {
       latest: 2,
       approved: 1,
     });
+  });
+});
+
+describe("the shared fixture contracts/fixtures/time/ago.json", () => {
+  const fixture = JSON.parse(agoJson) as { cases: { elapsedMs: number; text: string }[] };
+  const now = 1_795_000_000_000;
+  it.each(fixture.cases)("$elapsedMs ms: $text", ({ elapsedMs, text }) => {
+    expect(ago(now - elapsedMs, now)).toBe(text);
   });
 });

@@ -2,7 +2,7 @@
   "name": "@aw/scripts",
   "version": "0.0.0",
   "private": true,
-  "description": "The repo-wide checks: the leak check, the YAML extension check, the workspace rules and the format of the repo-wide files; the app icon generator.",
+  "description": "The repo-wide checks: the leak check, the YAML extension check, the workspace rules and the format of the repo-wide files; the app icon generator and the phone token generator.",
   "license": "MIT",
   "type": "module",
   "prettier": "@aw/config/prettier",
@@ -12,10 +12,12 @@
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "icons": "node icons.ts"
+    "icons": "node icons.ts",
+    "tokens": "node tokens.ts"
   },
   "devDependencies": {
     "@aw/config": "workspace:*",
+    "@aw/ui": "workspace:*",
     "@types/node": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",

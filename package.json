@@ -20,6 +20,7 @@
     "rules": "scripts/check-yaml-ext.sh",
     "schema:generate": "pnpm --filter @aw/schema generate",
     "api:generate": "pnpm --filter @aw/daemon api:generate",
-    "icons:generate": "pnpm --filter @aw/scripts icons"
+    "icons:generate": "pnpm --filter @aw/scripts icons",
+    "tokens:generate": "pnpm --filter @aw/scripts tokens"
   }
 }

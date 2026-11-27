@@ -1,6 +1,7 @@
 package com.agentworkspace.control
 
 import com.agentworkspace.engine.SyncRules
+import com.agentworkspace.shared.model.Hlc
 
 /** The texts of the screens: the same words as the desktop app (desktop/src/renderer/src/model.ts). */
 object Texts {
@@ -61,11 +62,17 @@ object Texts {
 
     fun roleLabel(role: String?): String = role?.let { ROLE_LABEL[it] ?: it } ?: "Unknown role"
 
-    /** "12 s ago", "5 min ago", "3 h ago", "2 d ago" (the rule of the sync texts). */
+    /** "12 s ago", "5 min ago", "3 h ago", "2 days ago": the desktop rule (`contracts/fixtures/time/ago.json`). */
     fun ago(
         fromMs: Long,
         nowMs: Long,
     ): String = SyncRules.ago(fromMs, nowMs)
+
+    /** The age of a row from its newest event: "5 min ago", or null with no valid HLC. */
+    fun age(
+        lastHlc: String?,
+        nowMs: Long,
+    ): String? = lastHlc?.let { Hlc.timeOf(it) }?.let { ago(it, nowMs) }
 
     /** The key, else the first 8 characters of the id. */
     fun taskLabel(
