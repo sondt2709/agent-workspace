@@ -26,6 +26,6 @@
 ## 6. Checks and evidence
 
 - [x] 6.1 Break the new daemon rule once, see the test of 1.1 fail, then restore it.
-- [ ] 6.2 Run `task check` on the last commit and keep the output with the SHA.
+- [x] 6.2 Run `task check` on the last commit and keep the output with the SHA.
 - [x] 6.3 Take screenshots of the task page on `local-desktop-seed`, before and after a click on "Restart agent".
 - [x] 6.4 Update `docs/` where the start retry and the task page are described.
