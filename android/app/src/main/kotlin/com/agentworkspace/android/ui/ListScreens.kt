@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -334,20 +335,19 @@ fun TasksScreen(
             )
             Button(onClick = onNewTask) { Text("New task", maxLines = 1, softWrap = false) }
         }
+        // The project filter is a filter, not a tab (several projects at once, decision of 2026-11-27):
+        // it stays at the end of the tab row, as on the desktop.
         AwTabRow(
             labels = listOf("Needs you · ${rows.size + files.size}", "Working · $working", "All · $all"),
             selected = tab,
             onSelect = { tab = it },
+            trailing = {
+                // The end padding of the screen: the trailing slot has none.
+                Box(Modifier.padding(end = 16.dp)) {
+                    ProjectChips(snapshot, projects, allowNone = false) { projects = it }
+                }
+            },
         )
-        // The project filter is a filter, not a tab: several projects at once (decision of 2026-11-27).
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-        ) {
-            ProjectChips(snapshot, projects, allowNone = false) { projects = it }
-        }
         LazyColumn(Modifier.fillMaxSize().focusGroup()) {
             when (tab) {
                 0 -> {

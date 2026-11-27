@@ -37,8 +37,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.agentworkspace.control.CardFilter
 import com.agentworkspace.control.InboxCard
@@ -103,7 +106,28 @@ fun InboxScreen(
             CardFilter(category, projects, unread, done, if (newest) "newest" else "urgency"),
         )
     val source = snapshot.sources.firstOrNull()
+    val sourceId = source?.let { (it["source"] as? JsonPrimitive)?.contentOrNull }
     Column(Modifier.fillMaxSize()) {
+        // "Inbox" and "Run now" on one line, as the title row of Tasks: Run now is never out of view.
+        Row(
+            Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                buildAnnotatedString {
+                    append("Inbox ")
+                    withStyle(SpanStyle(color = muted(), fontWeight = FontWeight.Normal)) {
+                        append("${counts.getValue("unread")} unread")
+                    }
+                },
+                style = AwType.title,
+                modifier = Modifier.weight(1f),
+            )
+            if (sourceId != null) {
+                OutlinedButton(onClick = { onRun(sourceId) }) { Text("Run now", maxLines = 1, softWrap = false) }
+            }
+        }
         Row(
             Modifier
                 .fillMaxWidth()
@@ -125,10 +149,6 @@ fun InboxScreen(
             FilterChip(unread, { unread = !unread }, label = { Text("Unread") })
             FilterChip(done, { done = !done }, label = { Text("Done") })
             FilterChip(false, { newest = !newest }, label = { Text(if (newest) "Newest ↓" else "Urgency ↓") })
-            if (source != null) {
-                val id = (source["source"] as? JsonPrimitive)?.contentOrNull
-                if (id != null) TextButton(onClick = { onRun(id) }) { Text("Run now") }
-            }
         }
         LazyColumn(Modifier.fillMaxSize().focusGroup()) {
             if (rows.isEmpty()) {
@@ -294,14 +314,25 @@ fun CardScreen(
                     }
                 }
             }
-            Text("${card.urgency} · ${card.conversationName}", style = MaterialTheme.typography.bodySmall)
+        }
+        Text(
+            "${card.urgency} urgency · ${card.conversationName} · ${clockTime(card.lastMessageAt)}",
+            style = MaterialTheme.typography.bodySmall,
+            color = muted(),
+        )
+        // Done and Mark unread at the top, as in the footer of the desktop dialog: no scroll to reach them.
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            OutlinedButton(onClick = { onSet(null, !card.done, null) }) { Text(if (card.done) "Not done" else "Done") }
+            OutlinedButton(
+                onClick = { onSet(!card.read, null, null) },
+            ) { Text(if (card.read) "Mark unread" else "Mark read") }
         }
         if (card.summary.isNotBlank()) Text(card.summary)
         when (card.category) {
             "action" -> TaskPart(card, snapshot, creating, onCreateTask, onOpenTask)
             "question" -> AnswerPart(card, onReply)
         }
-        SectionHeader("Messages")
+        CardSection("Messages")
         for (m in card.messages) {
             Column {
                 Text("${m.author}  ${clockTime(m.at)}", style = MaterialTheme.typography.labelMedium)
@@ -309,7 +340,7 @@ fun CardScreen(
                 Text(m.text)
             }
         }
-        SectionHeader("Ask the agent")
+        CardSection("Ask the agent")
         for (c in card.chat.filter { it.kind != "task" }) {
             Column {
                 Text(if (c.kind == "ask") "You" else "Agent", style = MaterialTheme.typography.labelMedium)
@@ -318,21 +349,18 @@ fun CardScreen(
         }
         if (card.chat.any { it.kind == "ask" && it.answered == false }) Text("The agent works on it…")
         var ask by rememberSaveable(card.card) { mutableStateOf("") }
-        OutlinedTextField(
-            ask,
-            { ask = it },
-            label = { Text("Ask about this card") },
-            modifier = Modifier.fillMaxWidth(),
-        )
-        Button(enabled = ask.isNotBlank(), onClick = {
-            onAsk(ask)
-            ask = ""
-        }) { Text("Send") }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            OutlinedButton(onClick = { onSet(null, !card.done, null) }) { Text(if (card.done) "Not done" else "Done") }
-            OutlinedButton(
-                onClick = { onSet(!card.read, null, null) },
-            ) { Text(if (card.read) "Mark unread" else "Mark read") }
+        // The field and Send on one line, both 36 dp, as on the desktop.
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            OutlinedTextField(
+                ask,
+                { ask = it },
+                placeholder = { Text("Ask about this card") },
+                modifier = Modifier.weight(1f),
+            )
+            Button(enabled = ask.isNotBlank(), onClick = {
+                onAsk(ask)
+                ask = ""
+            }) { Text("Send") }
         }
         Spacer(Modifier.heightIn(min = 24.dp))
     }
@@ -357,7 +385,7 @@ private fun TaskPart(
     var project by rememberSaveable(card.card) { mutableStateOf(card.taskProject ?: card.project ?: "") }
     var first by rememberSaveable(card.card) { mutableStateOf(card.taskFirstMessage ?: "") }
     var pick by remember { mutableStateOf(false) }
-    SectionHeader(if (form) "New task" else "Suggested task")
+    CardSection(if (form) "New task" else "Suggested task")
     if (!form) {
         Text(suggested)
         Text(if (project.isEmpty()) "Choose a project" else project, style = MaterialTheme.typography.bodySmall)
@@ -396,7 +424,7 @@ private fun AnswerPart(
 ) {
     var replying by rememberSaveable(card.card) { mutableStateOf(false) }
     var text by rememberSaveable(card.card) { mutableStateOf(card.answer ?: "") }
-    SectionHeader(if (replying) "Reply" else "Suggested answer")
+    CardSection(if (replying) "Reply" else "Suggested answer")
     if (!replying) {
         card.answer?.let { Text(it + (card.answerFrom?.let { from -> " · $from" } ?: "")) }
         card.replies.lastOrNull()?.let { r ->
@@ -409,7 +437,11 @@ private fun AnswerPart(
                 style = MaterialTheme.typography.bodySmall,
             )
         }
-        Button(onClick = { replying = true }) { Text("Reply…") }
+        Button(onClick = {
+            // Each reply starts from the current answer: the agent can have changed it.
+            text = card.answer ?: ""
+            replying = true
+        }) { Text("Reply…") }
         return
     }
     OutlinedTextField(text, { text = it }, label = { Text("Reply") }, modifier = Modifier.fillMaxWidth(), minLines = 3)
@@ -433,3 +465,8 @@ private fun projectLabel(
     } else {
         snapshot.openProjects.firstOrNull { it.slug == project }?.label ?: project
     }
+
+/** The title of a part of the card screen: the label style with no side padding (the screen has it). */
+@Composable
+private fun CardSection(text: String) =
+    Text(text, style = AwType.label, color = muted(), modifier = Modifier.padding(top = 8.dp))
