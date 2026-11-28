@@ -79,8 +79,14 @@ async function configure(d: SessionTestDaemon): Promise<void> {
     credential: "mattermost-alex",
     collector: "macbook-pro",
     conversations: [
-      { id: "ch-billing", name: "~billing", kind: "channel", read: "all", project: "billing-api" },
-      { id: "ch-random", name: "~random", kind: "channel", read: "off", project: null },
+      {
+        id: "ch-billing",
+        name: "~billing",
+        kind: "channel",
+        read: "all",
+        projects: ["billing-api"],
+      },
+      { id: "ch-random", name: "~random", kind: "channel", read: "off", projects: [] },
     ],
   });
   // The CLI shows the source.
@@ -287,12 +293,13 @@ describe.skipIf(!TEST_TMUX)("Inbox on the collecting device", () => {
     awd = await setup(source);
     const service = awd.server.daemon.workspace("acme");
     const { configureSource, getSource } = await import("./service.ts");
-    // First the default level "mentions" for ~billing: only b2 passes.
+    // First the channel mode "all": ~billing has the level "tagged", so only b2 passes.
     await configureSource(service, "mattermost", {
       name: "Mattermost",
       server_url: "https://chat.example.com",
       credential: "mattermost-alex",
       collector: "macbook-pro",
+      channels: "all",
     });
     await awd.aw(["inbox", "run"]);
     const ids = async () =>
@@ -308,8 +315,9 @@ describe.skipIf(!TEST_TMUX)("Inbox on the collecting device", () => {
       server_url: current.server_url,
       credential: current.credential,
       collector: current.collector,
+      channels: current.channels,
       conversations: [
-        { id: "ch-billing", name: "~billing", kind: "channel", read: "all", project: null },
+        { id: "ch-billing", name: "~billing", kind: "channel", read: "all", projects: [] },
       ],
     });
     await awd.aw(["inbox", "run"]);

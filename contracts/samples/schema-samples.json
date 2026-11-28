@@ -1628,7 +1628,7 @@
       "invalid_path": "data.messages"
     },
     {
-      "name": "source.configured with the read level some",
+      "name": "source.configured with the channel mode some",
       "value": {
         "v": 1,
         "id": "01a2038e-7f00-7000-8000-000000000001",
@@ -1649,13 +1649,13 @@
               "name": "~billing",
               "kind": "channel",
               "read": "all",
-              "project": "billing-api"
+              "projects": ["billing-api"]
             }
           ],
-          "default_read": "some"
+          "channels": "some"
         }
       },
-      "invalid_path": "data.default_read"
+      "invalid_path": "data.channels"
     }
   ],
   "event_types": [
@@ -2684,7 +2684,7 @@
               "name": "~billing",
               "kind": "channel",
               "read": "all",
-              "project": "billing-api"
+              "projects": ["billing-api"]
             }
           ]
         }

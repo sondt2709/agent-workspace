@@ -390,6 +390,7 @@
     "slots": [],
     "sources": [
       {
+        "channels": "selected",
         "collector": "ubuntu-01",
         "configured": {
           "dev": "macbook-pro",
@@ -401,19 +402,18 @@
             "id": "ch-billing",
             "kind": "channel",
             "name": "~billing",
-            "project": "billing-api",
+            "projects": ["billing-api"],
             "read": "all"
           },
           {
             "id": "dm-lan",
             "kind": "direct",
             "name": "@lan.pham",
-            "project": null,
+            "projects": [],
             "read": "all"
           }
         ],
         "credential": "mattermost-alex",
-        "default_read": "mentions",
         "kind": "mattermost",
         "name": "Mattermost",
         "read_every_s": 60,

@@ -119,14 +119,25 @@ export function scheduleAllows(source: SourceView, now: number, lastBatch: numbe
   return true;
 }
 
-/** The read level of a conversation: its own, else the default of the source. */
-function levelOf(source: SourceView, id: string): "all" | "mentions" | "off" {
-  return source.conversations.find((c) => c.id === id)?.read ?? source.default_read;
+type ReadLevel = SourceView["conversations"][number]["read"];
+
+/**
+ * The read level of a conversation (design 5): its own; else `tagged` for a direct message or a
+ * group, and for a channel the channel mode: `off` in `selected`, `tagged` in `all`.
+ */
+export function levelOf(
+  source: SourceView,
+  conversation: { id: string; kind: SourceConversation["kind"] },
+): ReadLevel {
+  const own = source.conversations.find((c) => c.id === conversation.id)?.read;
+  if (own) return own;
+  if (conversation.kind !== "channel") return "tagged";
+  return source.channels === "all" ? "tagged" : "off";
 }
 
 /** True when a message passes the read level (spec inbox-sources "Collect with read levels"). */
 export function passes(
-  level: "all" | "mentions" | "off",
+  level: ReadLevel,
   kind: SourceConversation["kind"],
   message: SourceMessage,
 ): boolean {
@@ -158,7 +169,8 @@ export function batchText(
 export interface BatchThread {
   conversation: { id: string; name: string; kind: string };
   thread: string | null;
-  project: string | null;
+  /** The projects of the conversation: the card gets one of them or none. */
+  projects: string[];
   card: { card: string; title: string; category: string; urgency: string; summary: string } | null;
   messages: { id: string; author: string; at: string; text: string; quote: string | null }[];
 }
@@ -185,7 +197,7 @@ export function batchThreads(
       group = {
         conversation: { id: m.conversation, name: m.conversation_name, kind: m.conversation_kind },
         thread,
-        project: source.conversations.find((c) => c.id === m.conversation)?.project ?? null,
+        projects: [...(source.conversations.find((c) => c.id === m.conversation)?.projects ?? [])],
         card: card && {
           card: card.card,
           title: card.title,
@@ -373,18 +385,18 @@ export class Collector {
       this.#conversations = await api.conversations();
       this.#conversationsAt = now;
     }
-    const read = this.#conversations.filter((c) => levelOf(source, c.id) !== "off");
-    // A new read level (for example "mentions" to "all") reads the last day of the conversation
+    const read = this.#conversations.filter((c) => levelOf(source, c) !== "off");
+    // A new read level (for example "tagged" to "all") reads the last day of the conversation
     // again; the message ids that cards or the waiting list have are skipped below.
-    const since = (id: string) => {
+    const since = (c: (typeof read)[number]) => {
       const back = Math.max(state.started_at ?? 0, now - FIRST_READ_BACK_MS);
-      const changed = state.levels[id] !== undefined && state.levels[id] !== levelOf(source, id);
-      return changed ? back : (state.cursor[id] ?? back);
+      const changed = state.levels[c.id] !== undefined && state.levels[c.id] !== levelOf(source, c);
+      return changed ? back : (state.cursor[c.id] ?? back);
     };
     const { messages, cursor } = await api.collect({
-      conversations: read.map((c) => ({ id: c.id, since: since(c.id) })),
+      conversations: read.map((c) => ({ id: c.id, since: since(c) })),
     });
-    for (const c of this.#conversations) state.levels[c.id] = levelOf(source, c.id);
+    for (const c of this.#conversations) state.levels[c.id] = levelOf(source, c);
     const known = new Set<string>();
     for (const card of this.#o.service.view.cards) {
       if (card.source === source.source) for (const m of card.messages) known.add(m.id);
@@ -395,7 +407,7 @@ export class Collector {
     for (const message of messages) {
       const conversation = byId.get(message.conversation)!;
       if (known.has(message.id)) continue;
-      if (!passes(levelOf(source, conversation.id), conversation.kind, message)) continue;
+      if (!passes(levelOf(source, conversation), conversation.kind, message)) continue;
       known.add(message.id);
       state.pending.push({
         id: message.id,

@@ -12,8 +12,10 @@ export const MAX_CARD_MESSAGES = 200;
 /** A source id, for example `mattermost`. */
 export const sourceId = entryName;
 export const sourceKind = z.enum(["mattermost"]);
-/** The read level of a conversation (design 5). */
-export const readLevel = z.enum(["all", "mentions", "off"]);
+/** The read level of a conversation (design 5). `tagged`: the messages for the person. */
+export const readLevel = z.enum(["all", "tagged", "off"]);
+/** Which channels a source reads with no level of their own (design 5). */
+export const channelMode = z.enum(["selected", "all"]);
 export const conversationKind = z.enum(["direct", "group", "channel"]);
 export const cardCategory = z.enum(["action", "question", "info"]);
 export const cardUrgency = z.enum(["high", "normal", "low"]);
@@ -22,13 +24,16 @@ const shortText = z.string().min(1).max(500);
 const conversationId = z.string().min(1).max(200);
 const messageId = z.string().min(1).max(200);
 
-/** A conversation of a source with its read level and project. */
+/** The most projects of one conversation. */
+export const MAX_CONVERSATION_PROJECTS = 20;
+
+/** A conversation of a source with its read level and its projects (zero or more, design 5). */
 export const sourceConversation = z.looseObject({
   id: conversationId,
   name: z.string().min(1).max(200),
   kind: conversationKind,
   read: readLevel,
-  project: projectSlug.nullable().default(null),
+  projects: z.array(projectSlug).max(MAX_CONVERSATION_PROJECTS).default([]),
 });
 
 const clockTime = z
@@ -63,7 +68,8 @@ export const sourceConfigured = z.looseObject({
   /** The user of the token, for example `alex`, as the last connection test saw it. */
   username: z.string().min(1).max(100).nullable().default(null),
   read_every_s: z.int().min(15).max(3600).default(60),
-  default_read: readLevel.default("mentions"),
+  /** `selected`: a channel with no level is not read; `all`: it is read with the level `tagged`. */
+  channels: channelMode.default("selected"),
   conversations: z.array(sourceConversation).max(5000).default([]),
   triage: sourceTriage.default({
     model: "haiku",

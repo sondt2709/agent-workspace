@@ -172,8 +172,8 @@ Each status color has a tint for chips and banners: the color at 12 % to 14 % op
 
 ### 8.3.4 Sources
 1. The box Mattermost: the server, the token (a credential), the collecting computer ("One computer at a time. The phone never reads Mattermost."), the connection ("Connected as @alex"), the last read and the waiting messages.
-2. The box Triage agent: the agent, the model, the schedule, the last batch, the instruction, Save and "Paused".
-3. The table Conversations: the name, the kind, the project and the read level (All, For me, Off).
+2. The box Triage agent: the agent, the model, the schedule (Every as text, for example `15m` or `1h30m`; the hours; the days), the last batch, the instruction, Save and "Paused".
+3. The table Conversations: the search, the channel mode (Selected channels, All channels), and per conversation the name, the kind, the projects and the read level (All, Tagged, Off).
 
 ### 8.4 Lists
 1. A row is one line, 36 px: status icon (the icon of its group), task key (mono, `text3`), title (`body-strong`), then right-aligned chips, the assignee and the age. Below 840 px the assignee hides; below 600 px the chips hide.

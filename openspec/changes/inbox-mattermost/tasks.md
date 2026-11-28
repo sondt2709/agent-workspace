@@ -51,3 +51,12 @@
 - [x] 7.5 Desktop: Run now on ⇧⌘R, the Inbox refreshes no Mattermost call on each workspace event, the saves of the Sources page run one after another on the newest configuration, Connect waits for the collecting device
 - [x] 7.6 Phone: the Inbox badge counts unread cards and Tasks counts the tasks that need you, the project menu, one create at a time, a rotation does not mark a card read again; the project filter sorts the same on both apps
 - [x] 7.7 One real Claude Code (Haiku) triage run with the untrusted launch
+
+## 8. Trial feedback
+
+- [x] 8.1 Sources page: one Mattermost box and one triage box after a save (each box has its own React key)
+- [x] 8.2 The read level `tagged` (was `mentions`, "For me") in the schema, the collector, the CLI and the page
+- [x] 8.3 The channel mode `channels` (`selected` by default, or `all`) in place of `default_read`; direct messages and groups are read with `tagged`
+- [x] 8.4 A conversation has zero or more `projects`; the batch gives them to the agent; one project is the default of a new card
+- [x] 8.5 Sources page: a search of the conversations, the selected conversations first, a projects menu with more choices
+- [x] 8.6 Triage schedule: any interval as text (`15m`, `1h30m`), the hours and the days

@@ -8,7 +8,14 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { Logger } from "../log.ts";
 import type { WorkspaceService } from "../service/workspace.ts";
-import { cardMessages, Collector, ITEM_TIMEOUT_MS, type TriageItem } from "./collector.ts";
+import {
+  batchThreads,
+  cardMessages,
+  Collector,
+  ITEM_TIMEOUT_MS,
+  levelOf,
+  type TriageItem,
+} from "./collector.ts";
 import { FakeSource } from "./testing.ts";
 import type { TriageSession } from "./triage.ts";
 
@@ -22,7 +29,7 @@ const SOURCE = {
   collector: "macbook-pro",
   username: "alex",
   read_every_s: 60,
-  default_read: "mentions",
+  channels: "selected",
   conversations: [],
   // No days and no hours: the schedule allows a batch at each time of the test.
   triage: {
@@ -228,5 +235,61 @@ describe("cardMessages", () => {
     expect(() => cardMessages(item, ["m1", "m2"], "ch-billing")).toThrow(
       "The message m2 is not of the conversation ch-billing",
     );
+  });
+});
+
+describe("levelOf", () => {
+  // Spec inbox-sources "Selected channels only".
+  const with_ = (channels: "selected" | "all") =>
+    ({
+      ...SOURCE,
+      channels,
+      conversations: [
+        { id: "ch-api", name: "~api-team", kind: "channel", read: "tagged", projects: [] },
+        { id: "dm-off", name: "@lan.pham", kind: "direct", read: "off", projects: [] },
+      ],
+    }) as unknown as SourceView;
+
+  it("reads only the selected channels and each direct message in the mode selected", () => {
+    const source = with_("selected");
+    expect(levelOf(source, { id: "ch-api", kind: "channel" })).toBe("tagged");
+    expect(levelOf(source, { id: "ch-random", kind: "channel" })).toBe("off");
+    expect(levelOf(source, { id: "dm-carson", kind: "direct" })).toBe("tagged");
+    expect(levelOf(source, { id: "gm-team", kind: "group" })).toBe("tagged");
+    expect(levelOf(source, { id: "dm-off", kind: "direct" })).toBe("off");
+  });
+
+  it("reads each channel with no level as tagged in the mode all", () => {
+    expect(levelOf(with_("all"), { id: "ch-random", kind: "channel" })).toBe("tagged");
+  });
+});
+
+describe("batchThreads", () => {
+  it("gives the agent each project of the conversation", () => {
+    const source = {
+      ...SOURCE,
+      conversations: [
+        {
+          id: "ch-billing",
+          name: "~billing",
+          kind: "channel",
+          read: "all",
+          projects: ["billing-api", "web"],
+        },
+      ],
+    } as unknown as SourceView;
+    const message = {
+      id: "m1",
+      conversation: "ch-billing",
+      conversation_name: "~billing",
+      conversation_kind: "channel" as const,
+      thread: null,
+      author: "minh",
+      at: "2026-11-23T09:00:00.000Z",
+      text: "Export CSV fails",
+      url: null,
+      quote: null,
+    };
+    expect(batchThreads([message], [], source)[0]!.projects).toEqual(["billing-api", "web"]);
   });
 });

@@ -14,7 +14,8 @@ const entry = z
   .max(63)
   .regex(/^[a-z0-9]+(?:[-_.][a-z0-9]+)*$/);
 const category = z.enum(["action", "question", "info"]);
-const readLevel = z.enum(["all", "mentions", "off"]);
+const readLevel = z.enum(["all", "tagged", "off"]);
+const channelMode = z.enum(["selected", "all"]);
 
 // ---- Inputs -------------------------------------------------------------------------------
 
@@ -58,7 +59,7 @@ export const sourceBody = z
     collector: slug.nullable(),
     username: z.string().min(1).max(100).nullable().optional(),
     read_every_s: z.int().min(15).max(3600).optional(),
-    default_read: readLevel.optional(),
+    channels: channelMode.optional(),
     conversations: z
       .array(
         z.object({
@@ -66,7 +67,7 @@ export const sourceBody = z
           name: z.string().min(1).max(200),
           kind: z.enum(["direct", "group", "channel"]),
           read: readLevel,
-          project: slug.nullable().optional(),
+          projects: z.array(slug).max(20).optional(),
         }),
       )
       .max(5000)
@@ -157,14 +158,14 @@ export const sourceView = z
     collector: z.string().nullable(),
     username: z.string().nullable(),
     read_every_s: z.number(),
-    default_read: readLevel,
+    channels: channelMode,
     conversations: z.array(
       z.looseObject({
         id: z.string(),
         name: z.string(),
         kind: z.string(),
         read: readLevel,
-        project: z.string().nullable(),
+        projects: z.array(z.string()),
       }),
     ),
     triage: z.looseObject({
@@ -234,13 +235,13 @@ export function sourceInputOf(source: InboxSource): SourceInput {
     collector: source.collector,
     username: source.username,
     read_every_s: source.read_every_s,
-    default_read: source.default_read,
+    channels: source.channels,
     conversations: source.conversations.map((c) => ({
       id: c.id,
       name: c.name,
       kind: c.kind as "direct" | "group" | "channel",
       read: c.read,
-      project: c.project,
+      projects: [...c.projects],
     })),
     triage: { ...source.triage },
     removed: source.removed,

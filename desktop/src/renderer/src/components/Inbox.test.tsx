@@ -79,7 +79,7 @@ const SOURCE = {
   collector: "ubuntu-01",
   username: "alex",
   read_every_s: 60,
-  default_read: "mentions",
+  channels: "selected",
   conversations: [],
   triage: {
     model: "haiku",

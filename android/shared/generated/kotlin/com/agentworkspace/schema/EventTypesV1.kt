@@ -40,12 +40,13 @@ private val VALUES_26 = setOf("learned", "edit", "undo", "delete")
 private val VALUES_27 = setOf("rule", "locked", "shared", "other_person")
 private val VALUES_28 = setOf("accepted", "rejected")
 private val VALUES_29 = setOf("mattermost")
-private val VALUES_30 = setOf("all", "mentions", "off")
+private val VALUES_30 = setOf("selected", "all")
 private val VALUES_31 = setOf("direct", "group", "channel")
-private val PATTERN_32 = Regex("^([01]\\d|2[0-3]):[0-5]\\d\\z")
-private val VALUES_33 = setOf("action", "question", "info")
-private val VALUES_34 = setOf("high", "normal", "low")
-private val VALUES_35 = setOf("sent", "failed")
+private val VALUES_32 = setOf("all", "tagged", "off")
+private val PATTERN_33 = Regex("^([01]\\d|2[0-3]):[0-5]\\d\\z")
+private val VALUES_34 = setOf("action", "question", "info")
+private val VALUES_35 = setOf("high", "normal", "low")
+private val VALUES_36 = setOf("sent", "failed")
 
 /** The data of an event of a known type: AW event (one JSON Lines line). */
 sealed interface EventDataV1
@@ -1021,7 +1022,7 @@ data class SourceConfiguredV1(
     @SerialName("collector") val collector: String?,
     @SerialName("username") val username: String? = null,
     @SerialName("read_every_s") val readEveryS: Long = 60L,
-    @SerialName("default_read") val defaultRead: String = "mentions",
+    @SerialName("channels") val channels: String = "selected",
     @SerialName("conversations") val conversations: List<ConversationsItem> = emptyList(),
     @SerialName("triage") val triage: Triage = Triage(model = "haiku", everyMin = 15L, days = listOf(1L, 2L, 3L, 4L, 5L), from = "08:00", to = "20:00", instruction = "", paused = false),
     @SerialName("removed") val removed: Boolean = false,
@@ -1045,7 +1046,7 @@ data class SourceConfiguredV1(
         }
         AwChecks.atLeast(readEveryS, 15L, "read_every_s")
         AwChecks.atMost(readEveryS, 3600L, "read_every_s")
-        AwChecks.oneOf(defaultRead, VALUES_30, "default_read")
+        AwChecks.oneOf(channels, VALUES_30, "channels")
         AwChecks.maxItems(conversations, 5000, "conversations")
     }
 
@@ -1055,7 +1056,7 @@ data class SourceConfiguredV1(
         @SerialName("name") val name: String,
         @SerialName("kind") val kind: String,
         @SerialName("read") val read: String,
-        @SerialName("project") val project: String? = null,
+        @SerialName("projects") val projects: List<String> = emptyList(),
     ) {
         init {
             AwChecks.minLength(id, 1, "id")
@@ -1063,10 +1064,11 @@ data class SourceConfiguredV1(
             AwChecks.minLength(name, 1, "name")
             AwChecks.maxLength(name, 200, "name")
             AwChecks.oneOf(kind, VALUES_31, "kind")
-            AwChecks.oneOf(read, VALUES_30, "read")
-            if (project != null) {
-                AwChecks.pattern(project, PATTERN_1, "project")
-                AwChecks.maxLength(project, 63, "project")
+            AwChecks.oneOf(read, VALUES_32, "read")
+            AwChecks.maxItems(projects, 20, "projects")
+            projects.forEachIndexed { index, item ->
+                AwChecks.pattern(item, PATTERN_1, "projects" + "." + index)
+                AwChecks.maxLength(item, 63, "projects" + "." + index)
             }
         }
     }
@@ -1092,10 +1094,10 @@ data class SourceConfiguredV1(
                 AwChecks.atMost(item, 7L, "days" + "." + index)
             }
             if (from != null) {
-                AwChecks.pattern(from, PATTERN_32, "from")
+                AwChecks.pattern(from, PATTERN_33, "from")
             }
             if (to != null) {
-                AwChecks.pattern(to, PATTERN_32, "to")
+                AwChecks.pattern(to, PATTERN_33, "to")
             }
             AwChecks.maxLength(instruction, 8000, "instruction")
         }
@@ -1141,8 +1143,8 @@ data class InboxCardAddedV1(
             AwChecks.pattern(project, PATTERN_1, "project")
             AwChecks.maxLength(project, 63, "project")
         }
-        AwChecks.oneOf(category, VALUES_33, "category")
-        AwChecks.oneOf(urgency, VALUES_34, "urgency")
+        AwChecks.oneOf(category, VALUES_34, "category")
+        AwChecks.oneOf(urgency, VALUES_35, "urgency")
         AwChecks.minLength(title, 1, "title")
         AwChecks.maxLength(title, 500, "title")
         AwChecks.maxLength(summary, 4000, "summary")
@@ -1243,10 +1245,10 @@ data class InboxCardUpdatedV1(
             AwChecks.maxLength(project, 63, "project")
         }
         if (category != null) {
-            AwChecks.oneOf(category, VALUES_33, "category")
+            AwChecks.oneOf(category, VALUES_34, "category")
         }
         if (urgency != null) {
-            AwChecks.oneOf(urgency, VALUES_34, "urgency")
+            AwChecks.oneOf(urgency, VALUES_35, "urgency")
         }
         if (title != null) {
             AwChecks.minLength(title, 1, "title")
@@ -1327,7 +1329,7 @@ data class InboxCardSetV1(
     init {
         AwChecks.pattern(card, PATTERN_3, "card")
         if (category != null) {
-            AwChecks.oneOf(category, VALUES_33, "category")
+            AwChecks.oneOf(category, VALUES_34, "category")
         }
     }
 }
@@ -1406,7 +1408,7 @@ data class InboxReplyResultV1(
     init {
         AwChecks.pattern(card, PATTERN_3, "card")
         AwChecks.pattern(reply, PATTERN_3, "reply")
-        AwChecks.oneOf(state, VALUES_35, "state")
+        AwChecks.oneOf(state, VALUES_36, "state")
         if (post != null) {
             AwChecks.minLength(post, 1, "post")
             AwChecks.maxLength(post, 200, "post")

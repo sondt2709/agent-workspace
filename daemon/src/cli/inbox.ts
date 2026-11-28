@@ -41,10 +41,11 @@ export function cardText(card: InboxCard): string {
 function sourceText(source: InboxSource): string {
   return [
     `${source.source}: ${source.name} ${source.server_url}${source.username ? ` as @${source.username}` : ""}`,
-    `collects on: ${source.collector ?? "no device"} · every ${source.read_every_s} s · default read ${source.default_read}`,
+    `collects on: ${source.collector ?? "no device"} · every ${source.read_every_s} s · channels ${source.channels}`,
     `triage: ${source.triage.model}, every ${source.triage.every_min} min${source.triage.paused ? ", paused" : ""}`,
     ...source.conversations.map(
-      (c) => `  ${c.read.padEnd(8)} ${(c.project ?? "-").padEnd(14)} ${c.name} (${c.kind})`,
+      (c) =>
+        `  ${c.read.padEnd(8)} ${(c.projects.join(",") || "-").padEnd(14)} ${c.name} (${c.kind})`,
     ),
   ].join("\n");
 }
@@ -136,8 +137,12 @@ export function addInboxCommands(program: Command, ctx: InboxCommandContext): vo
     .requiredOption("--credential <name>", "the credential that holds the personal access token")
     .requiredOption("--collector <device>", "the computer that reads the source")
     .option("--model <model>", "the model of the triage session", "haiku")
+    .option("--channels <mode>", "selected: read only the channels with a level; all: each channel")
     .action(async (kind, options) => {
       if (kind !== "mattermost") throw ctx.inputError("Only the kind mattermost exists");
+      if (options.channels !== undefined && !["selected", "all"].includes(options.channels)) {
+        throw ctx.inputError("The channel mode is selected or all");
+      }
       const list = await inbox.sources(ctx.wsName());
       const old = list.find((s) => s.source === kind);
       const value = await inbox.setSource(ctx.wsName(), kind, {
@@ -145,9 +150,9 @@ export function addInboxCommands(program: Command, ctx: InboxCommandContext): vo
         server_url: options.url,
         credential: options.credential,
         collector: options.collector,
-        ...(old
-          ? { conversations: old.conversations as never, default_read: old.default_read }
-          : {}),
+        ...(old ? { conversations: sourceInputOf(old).conversations } : {}),
+        channels:
+          (options.channels as "selected" | "all" | undefined) ?? old?.channels ?? "selected",
         triage: { ...(old?.triage ?? {}), model: options.model },
       });
       ctx.print(value, () => sourceText(value));
@@ -164,14 +169,14 @@ export function addInboxCommands(program: Command, ctx: InboxCommandContext): vo
 
   source
     .command("read")
-    .description("Set the read level and the project of a conversation")
+    .description("Set the read level and the projects of a conversation")
     .argument("<conversation>", "the conversation id or name, for example ~billing")
-    .argument("<level>", "all, mentions or off")
-    .option("--project <slug>", "the project of its cards")
+    .argument("<level>", "all, tagged or off")
+    .option("--project <slug...>", "the projects of its cards; replaces the old projects")
     .option("--source <source>", "the source", "mattermost")
     .action(async (conversation, level, options) => {
-      if (!["all", "mentions", "off"].includes(level)) {
-        throw ctx.inputError("The level is all, mentions or off");
+      if (!["all", "tagged", "off"].includes(level)) {
+        throw ctx.inputError("The level is all, tagged or off");
       }
       const ws = ctx.wsName();
       const current = (await inbox.sources(ws)).find((s) => s.source === options.source);
@@ -184,9 +189,9 @@ export function addInboxCommands(program: Command, ctx: InboxCommandContext): vo
         id: found.id,
         name: found.name,
         kind: found.kind as "direct" | "group" | "channel",
-        read: level as "all" | "mentions" | "off",
-        project:
-          options.project ?? current.conversations.find((c) => c.id === found.id)?.project ?? null,
+        read: level as "all" | "tagged" | "off",
+        projects:
+          options.project ?? current.conversations.find((c) => c.id === found.id)?.projects ?? [],
       });
       const value = await inbox.setSource(ws, options.source, {
         ...sourceInputOf(current),

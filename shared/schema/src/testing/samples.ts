@@ -118,7 +118,13 @@ export const validData: Record<EventType, Record<string, unknown>> = {
     credential: "mattermost-alex",
     collector: "ubuntu-01",
     conversations: [
-      { id: "ch-billing", name: "~billing", kind: "channel", read: "all", project: "billing-api" },
+      {
+        id: "ch-billing",
+        name: "~billing",
+        kind: "channel",
+        read: "all",
+        projects: ["billing-api"],
+      },
     ],
   },
   "inbox.run_requested": { source: "mattermost" },
@@ -694,11 +700,11 @@ export const eventSamples: { name: string; value: unknown; invalidPath?: string 
     invalidPath: "data.messages",
   },
   {
-    name: "source.configured with the read level some",
+    name: "source.configured with the channel mode some",
     value: event("source.configured", {
       ...validData["source.configured"],
-      default_read: "some",
+      channels: "some",
     }),
-    invalidPath: "data.default_read",
+    invalidPath: "data.channels",
   },
 ];

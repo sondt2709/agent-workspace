@@ -57,7 +57,9 @@ Fold rules: a person event needs a human `by`; an awd event needs a non-human `b
 `source.configured.collector` names one computer. Each awd folds the newest config; only the awd of that device runs the collector and the triage session. A move to another device stops them on the old device at its next merge. The new collector starts from "now minus 1 day" and skips each message id that a card already has. The cursor (the newest `update_at` per conversation) is device-local in `~/.aw/inbox/<workspace>/cursor.json`.
 
 ### 5. Read levels
-Per conversation: `all`, `mentions` (each message of a direct message or group, a message with `@<username>`, a reply in a thread whose root the person wrote), `off`. A new conversation gets `default_read` (default `mentions`). The person's own posts, system posts and deleted posts are skipped.
+Per conversation: `all`, `tagged` (each message of a direct message or group, a message with `@<username>`, a reply in a thread whose root the person wrote), `off`. A conversation with no level of its own gets a default from the channel mode `channels`: in `selected` (default) a channel gets `off`, in `all` it gets `tagged`; a direct message or a group gets `tagged` in both modes, because each message of it is for the person. So a new source reads no channel until the person selects one. The person's own posts, system posts and deleted posts are skipped.
+
+A conversation has a list of projects (`projects`, zero or more): one channel can hold the work of more projects. The batch gives the agent the projects of each thread. The agent sets one of them as the project of the card, or none when no project fits. With one project, the card gets that project. A card keeps one project, because a task needs exactly one.
 
 ### 6. The triage session
 - One Claude Code session per workspace on the collecting device, in the session host tmux (window `aw-triage`), with its own folder `~/.aw/inbox/<workspace>/triage/` and its own Claude session id. It is not a task and has no task log.

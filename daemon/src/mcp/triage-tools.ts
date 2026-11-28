@@ -128,9 +128,13 @@ export function buildTriageMcpServer(context: TriageContext): McpServer {
           throw invalid(`The messages ${wrong.join(", ")} are not of the conversation`);
         }
         const conversation = item.messages.find((m) => m.conversation === args.conversation)!;
+        // With no project from the agent, a conversation of one project gives that project.
+        const projects = source.conversations.find((c) => c.id === args.conversation)?.projects;
         const project =
           args.project === undefined
-            ? (source.conversations.find((c) => c.id === args.conversation)?.project ?? null)
+            ? projects?.length === 1
+              ? projects[0]!
+              : null
             : args.project;
         checkProject(service, project);
         checkProject(service, args.task?.project);

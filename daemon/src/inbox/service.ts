@@ -74,9 +74,9 @@ export async function configureSource(
       throw invalid(`${collector} is a phone. Select a computer as the collecting device.`);
     }
   }
-  for (const conversation of (input.conversations ?? []) as { project?: string | null }[]) {
-    if (conversation.project && !view.projects.some((p) => p.slug === conversation.project)) {
-      throw invalid(`No project ${conversation.project}`);
+  for (const conversation of (input.conversations ?? []) as { projects?: string[] }[]) {
+    for (const project of conversation.projects ?? []) {
+      if (!view.projects.some((p) => p.slug === project)) throw invalid(`No project ${project}`);
     }
   }
   await writeEvent(

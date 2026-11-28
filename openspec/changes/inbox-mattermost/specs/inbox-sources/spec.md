@@ -23,15 +23,19 @@ The source configuration SHALL name one collecting device: a computer (role `loc
 - **THEN** the list has only the computers of the workspace
 
 ### Requirement: Collect with read levels
-The collecting awd SHALL read the source every `read_every_s` seconds (default 60). Each conversation SHALL have a read level: `all` (each message), `mentions` (each message of a direct message or a group, a message that mentions the person, a reply in a thread whose root the person wrote) or `off`. A new conversation SHALL get the default level `mentions`. The collector SHALL skip the person's own posts, system posts and deleted posts. It SHALL keep a cursor per conversation in its state folder, so a restart reads no message twice. When the read level of a conversation changes, the collector SHALL read the last day of that conversation again and skip each message that a card or the waiting list already has.
+The collecting awd SHALL read the source every `read_every_s` seconds (default 60). Each conversation SHALL have a read level: `all` (each message), `tagged` (each message of a direct message or a group, a message that mentions the person, a reply in a thread whose root the person wrote) or `off`. The source SHALL have the channel mode `selected` (default) or `all`. A conversation with no level of its own SHALL get `tagged` when it is a direct message or a group. A channel with no level of its own SHALL get `off` in the mode `selected` and `tagged` in the mode `all`. The collector SHALL skip the person's own posts, system posts and deleted posts. It SHALL keep a cursor per conversation in its state folder, so a restart reads no message twice. When the read level of a conversation changes, the collector SHALL read the last day of that conversation again and skip each message that a card or the waiting list already has.
 
 #### Scenario: Mention in a channel
-- **WHEN** `~api-team` has the level `mentions` and gets "standup at 10" and "@alex can you review #42?"
+- **WHEN** `~api-team` has the level `tagged` and gets "standup at 10" and "@alex can you review #42?"
 - **THEN** only "@alex can you review #42?" goes to the next batch
+
+#### Scenario: Selected channels only
+- **WHEN** the channel mode is `selected`, `~api-team` has the level `tagged`, `~random` has no level, and Carson sends a direct message
+- **THEN** the collector reads `~api-team` and the direct message, and does not read `~random`
 
 #### Scenario: A new read level
 
-- **WHEN** `~billing` had the level `mentions`, its post "Export CSV fails" was skipped, and the person sets the level `all`
+- **WHEN** `~billing` had the level `tagged`, its post "Export CSV fails" was skipped, and the person sets the level `all`
 - **THEN** the next read gets "Export CSV fails" from the last day, and no message is added twice
 
 #### Scenario: Restart
@@ -39,8 +43,24 @@ The collecting awd SHALL read the source every `read_every_s` seconds (default 6
 - **THEN** the next read gets only the posts after them
 
 ### Requirement: Sources page
-The desktop app SHALL have the page Sources: the Mattermost box (server, user, credential name, collecting device, read interval, the last read and its error), the triage box (agent device, model, schedule, instruction, the last batch, "Open session", "Pause") and the conversations table (name, kind, project, read level). A change SHALL write `source.configured`. The phone SHALL show the same data read-only.
+The desktop app SHALL have the page Sources: the Mattermost box (server, user, credential name, collecting device, the last read and its error), the triage box (agent device, model, schedule, instruction, the last batch, "Pause") and the conversations table (name, kind, projects, read level). The schedule SHALL take any interval from 1 minute to 24 hours as text (for example `15m`, `1h`, `1h30m`), the hours (from, to) and the days. The conversations table SHALL have a search by name, the channel mode ("Selected channels" or "All channels"), and the selected conversations first. A conversation SHALL have zero or more projects. A change SHALL write `source.configured`. The page SHALL show each box once, also after a save.
 
-#### Scenario: Map a channel to a project
-- **WHEN** the person selects the project `billing-api` for `~billing`
+#### Scenario: Map a channel to projects
+- **WHEN** the person selects the projects `billing-api` and `web` for `~billing`
+- **THEN** the triage agent gets both projects for each thread of `~billing`, and each new card of `~billing` has one of them or no project
+
+#### Scenario: Map a channel to one project
+- **WHEN** the person selects only the project `billing-api` for `~billing`
 - **THEN** each new card of `~billing` has the project `billing-api`
+
+#### Scenario: Search a channel
+- **WHEN** the account reads 300 conversations and the person types "bill" in the search
+- **THEN** the table shows only the conversations whose name has "bill"
+
+#### Scenario: Any interval
+- **WHEN** the person types `1h30m` in "Every" and saves
+- **THEN** `source.configured` has `triage.every_min` 90
+
+#### Scenario: Save the server
+- **WHEN** the person changes the server and saves
+- **THEN** the page shows one Mattermost box and one triage box

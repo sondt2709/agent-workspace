@@ -2220,12 +2220,11 @@ components:
             - "null"
         read_every_s:
           type: number
-        default_read:
+        channels:
           type: string
           enum:
+            - selected
             - all
-            - mentions
-            - off
         conversations:
           type: array
           items:
@@ -2241,18 +2240,18 @@ components:
                 type: string
                 enum:
                   - all
-                  - mentions
+                  - tagged
                   - off
-              project:
-                type:
-                  - string
-                  - "null"
+              projects:
+                type: array
+                items:
+                  type: string
             required:
               - id
               - name
               - kind
               - read
-              - project
+              - projects
             additionalProperties: {}
         triage:
           type: object
@@ -2327,7 +2326,7 @@ components:
         - collector
         - username
         - read_every_s
-        - default_read
+        - channels
         - conversations
         - triage
         - removed
@@ -11393,12 +11392,11 @@ paths:
                   type: integer
                   minimum: 15
                   maximum: 3600
-                default_read:
+                channels:
                   type: string
                   enum:
+                    - selected
                     - all
-                    - mentions
-                    - off
                 conversations:
                   maxItems: 5000
                   type: array
@@ -11423,14 +11421,15 @@ paths:
                         type: string
                         enum:
                           - all
-                          - mentions
+                          - tagged
                           - off
-                      project:
-                        anyOf:
-                          - type: string
-                            maxLength: 63
-                            pattern: ^[a-z0-9]+(?:-[a-z0-9]+)*$
-                          - type: "null"
+                      projects:
+                        maxItems: 20
+                        type: array
+                        items:
+                          type: string
+                          maxLength: 63
+                          pattern: ^[a-z0-9]+(?:-[a-z0-9]+)*$
                     required:
                       - id
                       - name

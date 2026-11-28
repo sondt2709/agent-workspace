@@ -2423,11 +2423,7 @@
               "anyOf": [{ "type": "string", "minLength": 1, "maxLength": 100 }, { "type": "null" }]
             },
             "read_every_s": { "default": 60, "type": "integer", "minimum": 15, "maximum": 3600 },
-            "default_read": {
-              "default": "mentions",
-              "type": "string",
-              "enum": ["all", "mentions", "off"]
-            },
+            "channels": { "default": "selected", "type": "string", "enum": ["selected", "all"] },
             "conversations": {
               "default": [],
               "maxItems": 5000,
@@ -2438,17 +2434,16 @@
                   "id": { "type": "string", "minLength": 1, "maxLength": 200 },
                   "name": { "type": "string", "minLength": 1, "maxLength": 200 },
                   "kind": { "type": "string", "enum": ["direct", "group", "channel"] },
-                  "read": { "type": "string", "enum": ["all", "mentions", "off"] },
-                  "project": {
-                    "default": null,
-                    "anyOf": [
-                      {
-                        "type": "string",
-                        "maxLength": 63,
-                        "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
-                      },
-                      { "type": "null" }
-                    ]
+                  "read": { "type": "string", "enum": ["all", "tagged", "off"] },
+                  "projects": {
+                    "default": [],
+                    "maxItems": 20,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "maxLength": 63,
+                      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+                    }
                   }
                 },
                 "required": ["id", "name", "kind", "read"],
