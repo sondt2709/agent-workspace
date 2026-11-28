@@ -49,50 +49,23 @@ The renderer SHALL keep awd data only in TanStack Query (`staleTime: Infinity`, 
 - **THEN** the queries of `AW-3`, of its thread and of the task and gate lists refetch, and the Inbox shows the new gate
 
 ### Requirement: Navigation and layout
-The window SHALL have a sidebar with, from the top: the workspace switcher; Inbox; All tasks; the section Projects with one row for each project of the current workspace; the section Workspace with Shared knowledge and Credentials; the section This device with Devices & sync and Settings; and a footer with the device name, the sync state and Sync. A project row SHALL open the Board of the project. The project pages SHALL show a header with the project name and the tabs Board, List, Knowledge, Files and Settings. A project URL with no tab SHALL open the Board. The layout SHALL work from a 400 × 480 window to a wide screen: a temporary drawer below 600 px, an icon rail up to 1200 px, a 240 px drawer above. A task SHALL open as the task page (the task route) at each window width: from the Board, the List, the Inbox and the command menu. Back on the task page SHALL return to the screen that opened it, with its search parameters. Below 840 px a selected Inbox item, knowledge file, device or task folder SHALL replace the list; from 840 px list and detail show side by side.
+The window SHALL have a sidebar as "Sidebar counts and sync state" of desktop-navigation says, and no row for each project. A project SHALL be a filter of Tasks and of the Inbox (capability `tasks-view`). The project pages SHALL show a header with the project name and the tabs Knowledge, Files and Settings. The URLs `/w/<ws>/p/<project>`, `/board` and `/list` SHALL open Tasks › All with the filter of that project and the view Board or List. The layout SHALL work from a 400 × 480 window to a wide screen: a temporary drawer below 600 px, an icon rail up to 1200 px, a 240 px drawer above. A task SHALL open as the task page (the task route) at each window width: from the Board, the List, Tasks › Needs you and the command menu. Back on the task page SHALL return to the screen that opened it, with its search parameters. Below 840 px a selected "Needs you" row, knowledge file, device or task folder SHALL replace the list; from 840 px list and detail show side by side.
 
 #### Scenario: Narrow window
 - **WHEN** the window is 400 px wide and the person selects a task in the List
 - **THEN** the task page replaces the list, and Back returns to the list
 
 #### Scenario: A task opens as a page on a wide window
-- **WHEN** the window is 1440 px wide and the person clicks the card of AW-1 on the Board of `demo-api`
-- **THEN** the task page of AW-1 fills the content area with no board next to it, and Back returns to the Board of `demo-api`
+- **WHEN** the window is 1440 px wide and the person clicks the card of AW-1 on the Board of Tasks › All
+- **THEN** the task page of AW-1 fills the content area with no board next to it, and Back returns to the Board with the same filter
 
 #### Scenario: Knowledge in a narrow window
 - **WHEN** the window is 400 px wide and the person selects a knowledge file
 - **THEN** the file view replaces the tree, and Back returns to the tree
 
-#### Scenario: Project tabs
-- **WHEN** the person selects the project row `billing-api` in the sidebar, then the tab List in the project header
-- **THEN** the app shows the Board of `billing-api`, then its List, and the sidebar has one row for `billing-api`
-
-### Requirement: Inbox
-The Inbox SHALL show a list and a detail with the tabs "Needs you" and "Updates". "Needs you" SHALL list one row for each task in the "Needs you" lane (with its reason, title, key and project) and for each file to fix, then the groups Working now, Paused and Queued. "Updates" SHALL list the knowledge of today and each device with changes of this workspace not synced. The reason of a row SHALL be "Reply to a question" for a `question` or `reply` gate and "Approve proposal" for an `approve_proposal` gate. The detail of a task SHALL show the title, the Activity row of each open gate (the question message with its option buttons and a reply field, the proposal card, or the gate card), the Assign card or the pause, and "Open task". The person SHALL act on a gate in the detail. A task with an answer notice SHALL keep its row until the person closes the notice. From 840 px the first row shows in the detail when no row is selected, or when the selected row left the list. When the workspace has no open project, the Inbox SHALL show "No projects yet" with the button "Add a project". When it has a project but no active task, the Inbox SHALL show "No tasks yet" with the button "New task". The files to fix and the knowledge of today SHALL show in each state of the Inbox, also with no project or no active task.
-
-#### Scenario: Answer in place
-- **WHEN** the Inbox detail shows the question gate of `AW-3` with the options `100/min` and `1000/min`, and the person selects `100/min`
-- **THEN** the app sends `answerGate` with that answer and the gate version, and the card shows "Answer sent" until the gate resolves
-
-#### Scenario: Select a row
-- **WHEN** the "Needs you" tab lists `AW-1` (Assign task) and `AW-7` (Approve result), and the person selects the row of `AW-7`
-- **THEN** the detail shows the title of `AW-7`, its "Approve result" card and "Open task"
-
-#### Scenario: Updates
-- **WHEN** agents learned 2 items today and the person selects the tab "Updates"
-- **THEN** the list shows "Knowledge today", and its detail shows the learned items with Undo
-
-#### Scenario: Empty workspace
-- **WHEN** the person opens the Inbox of a new workspace with no project
-- **THEN** the Inbox shows "No projects yet" and "Add a project", and a click opens the Add a project dialog
-
-#### Scenario: Project with no task
-- **WHEN** the workspace has the project `billing-api` and no task
-- **THEN** the Inbox shows "No tasks yet" and "New task", and a click opens New task
-
-#### Scenario: Knowledge with no active task
-- **WHEN** the workspace has only archived tasks, and agents learned an item today
-- **THEN** the Inbox shows "No tasks yet" and the "Knowledge today" card with the item
+#### Scenario: Old project URL
+- **WHEN** the person opens `/w/<ws>/p/billing-api/list`
+- **THEN** the app shows Tasks › All as a List with the filter `billing-api`
 
 ### Requirement: Board and List
 The Board SHALL show the columns Backlog, Discuss, Ready, Implement, Review and Done, each with its count and a short description. The tasks with a "Needs you" reason SHALL show in the "Needs you" row across the columns, in the column of their stage; the other tasks SHALL show in the "Everything else" row. A task SHALL show in one place only. A card SHALL show the key, the project, the title, one state chip, the assignee and the age. A paused task SHALL show a Paused chip with its cause. A queued task SHALL show the chip "Queued · 2nd for claude@ubuntu-01" and its cause. The List SHALL show the same tasks in groups: Needs you, Running, Paused, Queued, Backlog, Done, with one row of one line for each task, and a group header that collapses the group. In the List, Up and Down SHALL move the focus between the rows, and Enter SHALL open the task page. A click on a card or a row SHALL open the task page ("Navigation and layout"); the Board and the List SHALL NOT show a task detail next to them. The renderer SHALL read the queues route again every 10 s. Archived tasks SHALL not show. A project with no task SHALL show "No tasks yet" with the button "New task" on the Board and the List. An empty Board column SHALL show the line "No tasks".
