@@ -8,9 +8,9 @@ import type { BindingsView } from "../../../shared/channels.ts";
 import { installBridge, makeTask, PROJECT, renderApp } from "../testing.tsx";
 import { AppShell } from "./AppShell.tsx";
 import { DialogsProvider, NewSessionDialog, NewTaskDialog, useDialogs } from "./dialogs.tsx";
-import { Inbox } from "./Inbox.tsx";
+import { NeedsYou } from "./NeedsYou.tsx";
 import { ProjectSettingsPage } from "./ProjectSettings.tsx";
-import { ProjectTasks } from "./TaskViews.tsx";
+import { TaskScreen } from "./TaskViews.tsx";
 
 afterEach(cleanup);
 
@@ -198,12 +198,12 @@ describe("Top bar with no workspace (review F-32)", () => {
 describe("Empty states (review F-33)", () => {
   it("Inbox: no project gives Add a project; a project with no task gives New task", async () => {
     installBridge({ projects: () => [], tasks: () => [] });
-    renderApp(<Inbox />, { route: "/w/:ws/inbox", url: "/w/ws-1/inbox" });
+    renderApp(<NeedsYou projects={[]} />, { route: "/w/:ws/tasks", url: "/w/ws-1/tasks" });
     expect(await screen.findByText("No projects yet")).toBeTruthy();
     expect(screen.getByRole("button", { name: "Add a project" })).toBeTruthy();
     cleanup();
     installBridge({ tasks: () => [] });
-    renderApp(<Inbox />, { route: "/w/:ws/inbox", url: "/w/ws-1/inbox" });
+    renderApp(<NeedsYou projects={[]} />, { route: "/w/:ws/tasks", url: "/w/ws-1/tasks" });
     expect(await screen.findByText("No tasks yet")).toBeTruthy();
     expect(screen.getByRole("button", { name: "New task" })).toBeTruthy();
     expect(screen.queryByText("Nothing needs you")).toBeNull();
@@ -211,7 +211,7 @@ describe("Empty states (review F-33)", () => {
 
   it("Board: a project with no task gives New task; an empty column says No tasks", async () => {
     installBridge({ tasks: () => [] });
-    renderApp(<ProjectTasks view="board" />, {
+    renderApp(<TaskScreen view="board" projects={["billing-api"]} />, {
       route: "/w/:ws/p/:project/board",
       url: "/w/ws-1/p/billing-api/board",
     });
@@ -219,7 +219,7 @@ describe("Empty states (review F-33)", () => {
     expect(screen.getByRole("button", { name: "New task" })).toBeTruthy();
     cleanup();
     installBridge({ tasks: () => [makeTask({ stage: "discuss" })] });
-    renderApp(<ProjectTasks view="board" />, {
+    renderApp(<TaskScreen view="board" projects={["billing-api"]} />, {
       route: "/w/:ws/p/:project/board",
       url: "/w/ws-1/p/billing-api/board",
     });

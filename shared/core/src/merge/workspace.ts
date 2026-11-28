@@ -1,10 +1,18 @@
 // The fold of the workspace logs (`tasks/log/<device>.jsonl`): the queue order of each agent, the
 // test slot leases and the credential names (docs/architecture.md 4.6.8 and 4.7).
 import type { AwEvent } from "@aw/schema";
+import { INBOX_EVENT_TYPES, InboxAccumulator } from "./inbox.ts";
 import { compareText, hlcMs } from "./order.ts";
 import type { LogLine } from "./source.ts";
 import { isAfterRevoke, isHuman, type Decision } from "./task.ts";
-import type { CredentialView, QueueView, RemovedProjectView, SlotView } from "./view.ts";
+import type {
+  CardView,
+  CredentialView,
+  QueueView,
+  RemovedProjectView,
+  SlotView,
+  SourceView,
+} from "./view.ts";
 
 export interface WorkspaceContext {
   /** The slot resources of a device from its `bindings.yaml`, for example `{k3d: 1}`. */
@@ -19,6 +27,8 @@ export interface WorkspaceFold {
   credentials: CredentialView[];
   /** Each `project.removed` of a person, in merge order. */
   removals: RemovedProjectView[];
+  sources: SourceView[];
+  cards: CardView[];
   decisions: Map<string, Decision>;
 }
 
@@ -32,6 +42,7 @@ export function foldWorkspace(lines: readonly LogLine[], context: WorkspaceConte
   const removals: RemovedProjectView[] = [];
   const decisions = new Map<string, Decision>();
   const ok: Decision = { applied: true, reason: null };
+  const inbox = new InboxAccumulator();
 
   for (const line of lines) {
     if (isAfterRevoke(line.event, context.revokedAt)) {
@@ -45,6 +56,7 @@ export function foldWorkspace(lines: readonly LogLine[], context: WorkspaceConte
     const e = line.event as AwEvent;
     const decide = (): Decision => {
       const ref = { event: e.id, dev: e.dev, hlc: e.hlc };
+      if (INBOX_EVENT_TYPES.has(e.type)) return inbox.apply(e, ref);
       switch (e.type) {
         case "queue.reordered":
           // The newest order wins (docs/architecture.md 4.6.8).
@@ -146,6 +158,7 @@ export function foldWorkspace(lines: readonly LogLine[], context: WorkspaceConte
     ),
     credentials: [...credentials.values()].sort((a, b) => compareText(a.name, b.name)),
     removals,
+    ...inbox.result(),
     decisions,
   };
 }

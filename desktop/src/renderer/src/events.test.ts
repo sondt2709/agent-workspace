@@ -48,6 +48,23 @@ describe("applyStreamMessage", () => {
     });
   });
 
+  it("invalidates the cards and the sources, not the source status that calls Mattermost", async () => {
+    const client = createQueryClient();
+    const cards = keys.cards("ws-1");
+    const sources = keys.sources("ws-1");
+    const status = keys.sourceStatus("ws-1", "mattermost");
+    const conversations = keys.conversations("ws-1", "mattermost");
+    for (const key of [cards, sources, status, conversations]) client.setQueryData(key, []);
+    await applyStreamMessage(client, changed({}));
+    const stale = (key: readonly unknown[]) => client.getQueryState(key)?.isInvalidated;
+    expect([stale(cards), stale(sources), stale(status), stale(conversations)]).toEqual([
+      true,
+      true,
+      false,
+      false,
+    ]);
+  });
+
   it("invalidates the projects and the session hosts when the documents changed", async () => {
     const { client, stale } = seeded();
     await applyStreamMessage(client, changed({ tasks: [], documents_changed: true }));

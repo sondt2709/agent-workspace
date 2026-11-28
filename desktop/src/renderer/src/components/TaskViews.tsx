@@ -1,5 +1,6 @@
 // The task screens of a project and of All tasks: the Board and the List. A task opens as the task
 // page (the task route) at each window width (openspec task-review-layout, design decision 10).
+import { filterByProjects } from "@aw/client/inbox";
 import { mainVar, tint } from "@aw/ui";
 import Autorenew from "@mui/icons-material/AutorenewOutlined";
 import CheckCircleOutline from "@mui/icons-material/CheckCircleOutlineOutlined";
@@ -53,7 +54,6 @@ import {
   TaskChips,
 } from "./common.tsx";
 import { useDialogs } from "./dialogs.tsx";
-import { FrameHeader } from "./ProjectFrame.tsx";
 import { QueueChip } from "./QueueChip.tsx";
 import { UnarchiveButton } from "./TaskActions.tsx";
 import { TaskDetail } from "./TaskDetail.tsx";
@@ -509,16 +509,24 @@ export function TaskList({
  * Board or List: the tasks of one project, or all tasks of the workspace (All tasks). A task opens as
  * the task page; Back returns here with the search params. An old link with `?task=` opens the page.
  */
-function TaskScreen({ view, project }: { view: "board" | "list"; project?: string }) {
+export function TaskScreen({
+  view,
+  projects = [],
+}: {
+  view: "board" | "list";
+  /** The project filter (openspec nav-tasks-needs-you): no project selected shows all. */
+  projects?: readonly string[];
+}) {
   const { ws = "" } = useParams();
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const tasks = useTasks(ws, project ? { project } : {});
+  const tasks = useTasks(ws);
   const queues = useQueues(ws).data ?? NO_QUEUES;
   const selected = params.get("task");
   if (selected) return <Navigate replace to={`/w/${ws}/tasks/${selected}`} />;
   const open = (task: Task) => void navigate(`/w/${ws}/tasks/${task.id}`);
   let body;
+  const shown = tasks.data ? filterByProjects(tasks.data, projects, (t) => t.project) : [];
   if (tasks.isPending) body = <LoadingRows rows={8} label="Loading the tasks" />;
   else if (tasks.isError)
     body = (
@@ -527,39 +535,21 @@ function TaskScreen({ view, project }: { view: "board" | "list"; project?: strin
       </Alert>
     );
   // The List also shows the archived tasks (group "Archived"); the Board shows none.
-  else if (tasks.data.filter((t) => view === "list" || !t.archived).length === 0)
-    body = <NoTasks />;
+  else if (shown.filter((t) => view === "list" || !t.archived).length === 0) body = <NoTasks />;
   else if (view === "board")
-    body = <Board tasks={tasks.data} selected={null} onOpen={open} queues={queues} />;
-  else body = <TaskList ws={ws} tasks={tasks.data} selected={null} onOpen={open} queues={queues} />;
+    body = <Board tasks={shown} selected={null} onOpen={open} queues={queues} />;
+  else body = <TaskList ws={ws} tasks={shown} selected={null} onOpen={open} queues={queues} />;
   return <Box sx={{ height: "100%", minHeight: 0 }}>{body}</Box>;
 }
 
-/** Board or List of one project (the project frame has the header and the tabs). */
+/** An old project Board or List URL: Tasks › All with the filter of the project. */
 export function ProjectTasks({ view }: { view: "board" | "list" }) {
-  const { project = "" } = useParams();
-  return <TaskScreen view={view} project={project} />;
-}
-
-/** All tasks of the workspace, with the tabs Board and List (`?view=list`). */
-export function AllTasks() {
-  const [params] = useSearchParams();
-  const view = params.get("view") === "list" ? "list" : "board";
+  const { ws = "", project = "" } = useParams();
   return (
-    <Box sx={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column" }}>
-      <FrameHeader
-        title="All tasks"
-        label="All tasks views"
-        value={view}
-        tabs={[
-          { label: "Board", value: "board", to: "?view=board" },
-          { label: "List", value: "list", to: "?view=list" },
-        ]}
-      />
-      <Box sx={{ flex: 1, minHeight: 0 }}>
-        <TaskScreen view={view} />
-      </Box>
-    </Box>
+    <Navigate
+      replace
+      to={`/w/${ws}/tasks?tab=all&view=${view}&projects=${encodeURIComponent(project)}`}
+    />
   );
 }
 

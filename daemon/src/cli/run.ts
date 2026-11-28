@@ -33,6 +33,7 @@ import {
   formatWorkspaces,
 } from "./format.ts";
 import { addIdentityCommands } from "./identity.ts";
+import { addInboxCommands } from "./inbox.ts";
 import { addKnowledgeCommands } from "./kb.ts";
 import { withPause } from "./pause.ts";
 import { HUMAN_COMMANDS } from "./person-commands.ts";
@@ -653,6 +654,13 @@ export async function run(argv: string[], io: CliIo, deps: CliDeps = {}): Promis
   addTerminalCommand(program, { client, workspace: wsName, print });
 
   // ---- kb, learn (add-knowledge-store) ----
+  addInboxCommands(program, {
+    client,
+    wsName,
+    print,
+    inputError: (message) => new InputError(message),
+  });
+
   addKnowledgeCommands(program, {
     client,
     wsName,

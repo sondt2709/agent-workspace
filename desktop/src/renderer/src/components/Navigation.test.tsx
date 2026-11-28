@@ -1,6 +1,7 @@
-// The navigation of the prototype (openspec navigation-prototype): the workspace switcher, the
-// sidebar counts and the sync state, the breadcrumb, the project tabs, All tasks and the Inbox
-// list and detail. The app routes run in a memory router at 1280 px or 400 px.
+// The navigation (openspec navigation-prototype and nav-tasks-needs-you): the workspace switcher,
+// the sidebar items and counts, the sync state, the breadcrumb, Tasks with the tabs Needs you,
+// Working and All, the project filter, Projects, and the command menu. The app routes run in a
+// memory router at 1280 px or 400 px.
 import { createAppTheme } from "@aw/ui";
 import { ThemeProvider } from "@mui/material";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -124,6 +125,8 @@ function handlers(extra: Handlers = {}): Handlers {
     task: (args: { task: string }) => TASKS.find((t) => t.id === args.task),
     issues: () => [BAD],
     syncStatus: () => SYNC,
+    inboxCards: () => [],
+    sources: () => [],
     kbDigest: () => ({
       date: "2026-11-23",
       learned: [LEARNED],
@@ -159,72 +162,85 @@ afterEach(() => {
 });
 
 describe("Sidebar", () => {
-  it("has the items of the prototype in order, with the Needs you count of the Inbox rows", async () => {
+  it("has Inbox and Tasks, the tools at the bottom, and no project rows", async () => {
     installBridge(handlers());
     renderAt("/w/ws-1/inbox");
     const nav = await screen.findByRole("navigation", { name: "Navigation" });
-    await within(nav).findByText("web-app");
     const items = () =>
       within(nav)
         .getAllByRole("link")
         .map((a) => a.textContent);
-    // Inbox: 2 tasks in the lane + 1 file to fix (not the 1 open gate, F-10). All tasks: 4 active.
+    // Tasks: 2 tasks in the lane + 1 file to fix (not the 1 open gate, F-10).
     await waitFor(() =>
       expect(items()).toEqual([
-        "Inbox3",
-        "All tasks4",
-        "BBilling API2 · 1", // the letter tile, the name, needs you · working
-        "Wweb-app0 · 1",
-        "Shared knowledge",
+        "Inbox",
+        "Tasks3",
+        "Projects",
+        "Knowledge",
+        "Sources",
         "Credentials",
         "Devices & sync",
         "Settings",
         "3 changes not synced",
       ]),
     );
-    expect(within(nav).getByText("Projects")).toBeTruthy();
-    expect(within(nav).getByText("This device")).toBeTruthy();
-    expect(within(nav).getByText("MacBook Pro · this device")).toBeTruthy();
+    expect(within(nav).queryByText("Billing API")).toBeNull();
+    expect(await within(nav).findByText("MacBook Pro · this device")).toBeTruthy();
   });
 
-  it("switches the workspace in the switcher and shows only its projects", async () => {
+  it("counts the unread open cards on the Inbox item", async () => {
+    installBridge(
+      handlers({
+        inboxCards: () => [
+          {
+            card: "c1",
+            category: "question",
+            urgency: "high",
+            project: null,
+            read: false,
+            done: false,
+            last_message_at: "2026-11-23T09:00:00.000Z",
+          },
+          {
+            card: "c2",
+            category: "info",
+            urgency: "low",
+            project: null,
+            read: true,
+            done: false,
+            last_message_at: "2026-11-23T08:00:00.000Z",
+          },
+          {
+            card: "c3",
+            category: "info",
+            urgency: "low",
+            project: null,
+            read: false,
+            done: true,
+            last_message_at: "2026-11-23T07:00:00.000Z",
+          },
+        ],
+      }),
+    );
+    renderAt("/w/ws-1/tasks");
+    const nav = await screen.findByRole("navigation", { name: "Navigation" });
+    await waitFor(() => expect(within(nav).getAllByRole("link")[0]!.textContent).toBe("Inbox1"));
+  });
+
+  it("switches the workspace in the switcher", async () => {
     installBridge(handlers());
     const router = renderAt("/w/ws-1/inbox");
     const nav = await screen.findByRole("navigation", { name: "Navigation" });
-    await within(nav).findByText("Billing API");
-    await userEvent.click(within(nav).getByRole("button", { name: "Switch workspace" }));
+    await userEvent.click(await within(nav).findByRole("button", { name: "Switch workspace" }));
     const menu = await screen.findByRole("menu");
     expect(within(menu).getByText("/tmp/AW/Side")).toBeTruthy();
     await userEvent.click(within(menu).getByText("Side projects"));
     await waitFor(() => expect(router.state.location.pathname).toBe("/w/ws-2/inbox"));
-    expect(await within(nav).findByText("blog")).toBeTruthy();
-    expect(within(nav).queryByText("Billing API")).toBeNull();
-  });
-
-  it("opens the Board of a project from its row, and the header tabs open the other pages", async () => {
-    installBridge(handlers({ bindings: () => ({ checkouts: [] }) }));
-    const router = renderAt("/w/ws-1/inbox");
-    const nav = await screen.findByRole("navigation", { name: "Navigation" });
-    await userEvent.click(await within(nav).findByRole("link", { name: /^Billing API/ }));
-    expect(router.state.location.pathname).toBe("/w/ws-1/p/billing-api/board");
-    const tabs = await screen.findByRole("tablist", { name: "Billing API pages" });
-    expect(
-      within(tabs)
-        .getAllByRole("tab")
-        .map((t) => t.textContent),
-    ).toEqual(["Board", "List", "Knowledge", "Files", "Settings"]);
-    await userEvent.click(within(tabs).getByRole("tab", { name: "List" }));
-    expect(router.state.location.pathname).toBe("/w/ws-1/p/billing-api/list");
-    expect(
-      within(nav)
-        .getByRole("link", { name: /^Billing API/ })
-        .getAttribute("aria-current"),
-    ).toBe("page");
   });
 });
 
 describe("Top bar", () => {
-  it("shows the breadcrumb of a task and the Needs you count", async () => {
+  it("shows the breadcrumb of a task and the Needs you count, which opens Tasks › Needs you", async () => {
     installBridge(
       handlers({
         thread: () => ({
@@ -240,46 +256,101 @@ describe("Top bar", () => {
     const crumb = await screen.findByRole("navigation", { name: "Breadcrumb" });
     await waitFor(() => expect(crumb.textContent).toBe("PPersonalBilling APIAW-4"));
     await userEvent.click(within(crumb).getByRole("link", { name: "Billing API" }));
-    expect(router.state.location.pathname).toBe("/w/ws-1/p/billing-api/board");
+    expect(router.state.location.pathname).toBe("/w/ws-1/tasks");
+    expect(router.state.location.search).toBe("?tab=all&projects=billing-api");
     await userEvent.click(screen.getByRole("link", { name: "Needs you: 3" }));
-    expect(router.state.location.pathname).toBe("/w/ws-1/inbox");
+    expect(router.state.location.pathname).toBe("/w/ws-1/tasks");
+    expect(router.state.location.search).toBe("?tab=needs");
   });
 
   it("shows only the last part of the breadcrumb and icons at 400 px", async () => {
     installBridge(handlers());
-    renderAt("/w/ws-1/p/billing-api/list", 400);
+    renderAt("/w/ws-1/p/billing-api/knowledge", 400);
     const crumb = await screen.findByRole("navigation", { name: "Breadcrumb" });
-    expect(crumb.textContent).toBe("List");
+    expect(crumb.textContent).toBe("Knowledge");
     expect(screen.getByRole("button", { name: "New task" })).toBeTruthy();
     expect(screen.queryByText("New session")).toBeNull();
   });
 });
 
-describe("Project frame", () => {
-  it("opens the Board on a project URL with no tab (fix list npc-8)", async () => {
+describe("Old project URLs", () => {
+  it("open Tasks › All with the filter of the project (fix list npc-8)", async () => {
     installBridge(handlers());
     const router = renderAt("/w/ws-1/p/billing-api");
-    await waitFor(() => expect(router.state.location.pathname).toBe("/w/ws-1/p/billing-api/board"));
+    await waitFor(() => expect(router.state.location.pathname).toBe("/w/ws-1/tasks"));
+    expect(router.state.location.search).toBe("?tab=all&view=board&projects=billing-api");
     expect(await screen.findByRole("region", { name: "Backlog" })).toBeTruthy();
+    // The filter keeps only the tasks of billing-api: AW-9 is of web-app.
+    expect(await screen.findByRole("button", { name: /^AW-8 / })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /^AW-9 / })).toBeNull();
+  });
+
+  it("keep the project pages Knowledge, Files and Settings", async () => {
+    installBridge(handlers({ kbList: () => [] }));
+    renderAt("/w/ws-1/p/billing-api/knowledge");
+    const tabs = await screen.findByRole("tablist", { name: "Billing API pages" });
+    expect(
+      within(tabs)
+        .getAllByRole("tab")
+        .map((t) => t.textContent),
+    ).toEqual(["Knowledge", "Files", "Settings"]);
   });
 });
 
-describe("All tasks", () => {
-  it("shows the tasks of each project of the workspace, as Board and as List", async () => {
+describe("Tasks", () => {
+  it("has the tabs Needs you, Working and All with counts", async () => {
     installBridge(handlers());
     const router = renderAt("/w/ws-1/tasks");
-    expect(await screen.findByRole("button", { name: /^AW-9 / })).toBeTruthy();
-    expect(screen.getByRole("button", { name: /^AW-8 / })).toBeTruthy();
-    await userEvent.click(screen.getByRole("tab", { name: "List" }));
-    expect(router.state.location.search).toBe("?view=list");
+    const tabs = await screen.findByRole("tablist", { name: "Tasks" });
+    await waitFor(() =>
+      expect(
+        within(tabs)
+          .getAllByRole("tab")
+          .map((t) => t.textContent),
+      ).toEqual(["Needs you3", "Working2", "All4"]),
+    );
+    await userEvent.click(within(tabs).getByRole("tab", { name: /Working/ }));
+    expect(router.state.location.search).toBe("?tab=working");
+    expect(
+      within(await screen.findByRole("list", { name: "Working now" })).getByText(
+        "Speed up the dashboard",
+      ),
+    ).toBeTruthy();
+    await userEvent.click(within(tabs).getByRole("tab", { name: /All/ }));
     expect(await screen.findByRole("list", { name: "Needs you" })).toBeTruthy();
+    await userEvent.click(screen.getByRole("button", { name: "Board" }));
+    expect(router.state.location.search).toBe("?tab=all&view=board");
+    expect(await screen.findByRole("button", { name: /^AW-9 / })).toBeTruthy();
+  });
+
+  it("filters by projects: a search, 2 projects, and the clear button", async () => {
+    installBridge(handlers());
+    const router = renderAt("/w/ws-1/tasks?tab=all");
+    expect(await screen.findByRole("button", { name: /^AW-9 / })).toBeTruthy();
+    await userEvent.click(screen.getByRole("button", { name: "Project" }));
+    const menu = await screen.findByRole("menu", { name: "Projects" });
+    // Tasks always have a project: no "No project" row.
+    expect(within(menu).queryByText("No project")).toBeNull();
+    await userEvent.type(within(menu).getByRole("textbox", { name: "Find a project" }), "web");
+    expect(
+      within(menu)
+        .getAllByRole("menuitemcheckbox")
+        .map((r) => r.textContent),
+    ).toEqual(["web-app"]);
+    await userEvent.click(within(menu).getByRole("menuitemcheckbox", { name: "web-app" }));
+    expect(router.state.location.search).toBe("?tab=all&projects=web-app");
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("button", { name: /^AW-8 / })).toBeNull());
+    expect(screen.getByRole("button", { name: /^AW-9 / })).toBeTruthy();
+    await userEvent.click(screen.getByRole("button", { name: "Clear the project filter" }));
+    expect(router.state.location.search).toBe("?tab=all");
   });
 });
 
-describe("Inbox list and detail", () => {
+describe("Tasks › Needs you", () => {
   it("shows the first row in the detail at 1280 px, and a row opens its gate card", async () => {
     installBridge(handlers());
-    const router = renderAt("/w/ws-1/inbox");
+    const router = renderAt("/w/ws-1/tasks");
     const rows = await screen.findByRole("list", { name: "Needs you" });
     expect(
       within(rows)
@@ -290,10 +361,6 @@ describe("Inbox list and detail", () => {
       "Reply to a question: AW-4 Fix rounding",
       "Fix a file: tasks/projects/broken/project.yaml",
     ]);
-    // The other active tasks are under the rows.
-    expect(
-      within(screen.getByRole("list", { name: "Working now" })).getByText("Speed up the dashboard"),
-    ).toBeTruthy();
     expect(await screen.findByRole("region", { name: "AW-1 needs you" })).toBeTruthy();
     await userEvent.click(within(rows).getByRole("button", { name: /AW-4/ }));
     expect(router.state.location.search).toBe("?item=task%3At4");
@@ -305,15 +372,14 @@ describe("Inbox list and detail", () => {
 
   it("shows the first row when the selected row left the list (an answered gate)", async () => {
     installBridge(handlers());
-    renderAt("/w/ws-1/inbox?item=task%3Agone");
+    renderAt("/w/ws-1/tasks?item=task%3Agone");
     expect(await screen.findByRole("region", { name: "AW-1 needs you" })).toBeTruthy();
     expect(screen.queryByText("Nothing selected")).toBeNull();
   });
 
-  it("lists the knowledge of today and the devices not synced in Updates", async () => {
+  it("lists the knowledge of today and the devices not synced in the section Updates", async () => {
     installBridge(handlers());
-    renderAt("/w/ws-1/inbox");
-    await userEvent.click(await screen.findByRole("tab", { name: "Updates 2" }));
+    renderAt("/w/ws-1/tasks");
     const rows = await screen.findByRole("list", { name: "Updates" });
     expect(
       within(rows)
@@ -323,12 +389,11 @@ describe("Inbox list and detail", () => {
       "Knowledge: Knowledge today",
       "Not synced: 3 changes not synced to ubuntu-01 (offline)",
     ]);
-    expect(await screen.findByLabelText("Knowledge today")).toBeTruthy();
   });
 
   it("moves the focus between the rows with the arrow keys", async () => {
     installBridge(handlers());
-    renderAt("/w/ws-1/inbox", 400);
+    renderAt("/w/ws-1/tasks", 400);
     const rows = await screen.findByRole("list", { name: "Needs you" });
     const buttons = within(rows).getAllByRole("button");
     buttons[0]!.focus();
@@ -341,6 +406,18 @@ describe("Inbox list and detail", () => {
     expect(await screen.findByRole("region", { name: "AW-1 needs you" })).toBeTruthy();
     await userEvent.click(screen.getByRole("button", { name: "Back" }));
     expect(await screen.findByRole("list", { name: "Needs you" })).toBeTruthy();
+  });
+});
+
+describe("Projects page", () => {
+  it("lists the projects, and a row opens Tasks › All with its filter", async () => {
+    installBridge(handlers());
+    const router = renderAt("/w/ws-1/projects");
+    const table = await screen.findByRole("table", { name: "Projects" });
+    expect(within(table).getByText("Billing API")).toBeTruthy();
+    expect(within(table).getAllByText("web-app")).toHaveLength(2); // the name and the slug
+    await userEvent.click(within(table).getByText("Billing API"));
+    expect(router.state.location.search).toBe("?tab=all&projects=billing-api");
   });
 });
 
@@ -377,7 +454,7 @@ describe("Command menu", () => {
 
   it("runs an action with Ctrl+K on other systems: New task opens its dialog", async () => {
     installBridge(handlers({ credentials: () => [] }));
-    renderAt("/w/ws-1/p/billing-api/board");
+    renderAt("/w/ws-1/tasks");
     await screen.findByRole("navigation", { name: "Navigation" });
     await userEvent.keyboard("{Control>}k{/Control}");
     const dialog = await screen.findByRole("dialog", { name: "Command menu" });
@@ -420,12 +497,12 @@ describe("Command menu", () => {
   it("runs no key while another dialog is open (fix list npc-2)", async () => {
     asMac();
     installBridge(handlers({ credentials: () => [] }));
-    const router = renderAt("/w/ws-1/p/billing-api/board");
+    const router = renderAt("/w/ws-1/projects");
     await screen.findByRole("navigation", { name: "Navigation" });
     await userEvent.click(screen.getByRole("button", { name: /^New task/ }));
     await screen.findByRole("dialog", { name: /^New task/ });
     await userEvent.keyboard("{Meta>}2{/Meta}");
-    expect(router.state.location.pathname).toBe("/w/ws-1/p/billing-api/board");
+    expect(router.state.location.pathname).toBe("/w/ws-1/projects");
     await userEvent.keyboard("{Meta>}k{/Meta}");
     expect(screen.queryByRole("dialog", { name: "Command menu" })).toBeNull();
   });

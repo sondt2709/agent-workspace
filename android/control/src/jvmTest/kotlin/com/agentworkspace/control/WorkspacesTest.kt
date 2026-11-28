@@ -154,7 +154,7 @@ class WorkspacesTest {
         val nav = WorkspaceNavigation(s, Navigator(stack))
         nav.openFromPush(SIDE, "t9")
         assertEquals(SIDE, s.selected.value)
-        assertEquals(listOf(Route.Inbox, Route.TaskPage("t9")), stack)
+        assertEquals(listOf(Route.Tasks, Route.Task("t9")), stack)
         // A push of a workspace that is not on this phone opens only the Inbox of the shown workspace.
         assertFalse(nav.openFromPush(GONE, "t8"))
         assertEquals(SIDE, s.selected.value)

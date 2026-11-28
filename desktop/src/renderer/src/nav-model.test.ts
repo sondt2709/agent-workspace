@@ -294,24 +294,26 @@ describe("crumbs", () => {
   };
 
   it("shows the workspace, the project and the tab of a project page", () => {
-    expect(crumbs("/w/ws-1/p/billing-api/list", names)).toEqual([
+    expect(crumbs("/w/ws-1/p/billing-api/knowledge", names)).toEqual([
       { label: "Personal", to: "/w/ws-1/inbox" },
-      { label: "Billing API", to: "/w/ws-1/p/billing-api/board" },
-      { label: "List", to: null },
+      { label: "Billing API", to: "/w/ws-1/tasks?tab=all&projects=billing-api" },
+      { label: "Knowledge", to: null },
     ]);
   });
 
   it("shows the project and the key of a task", () => {
     expect(crumbs("/w/ws-1/tasks/t7", { ...names, task: result })).toEqual([
       { label: "Personal", to: "/w/ws-1/inbox" },
-      { label: "Billing API", to: "/w/ws-1/p/billing-api/board" },
+      { label: "Billing API", to: "/w/ws-1/tasks?tab=all&projects=billing-api" },
       { label: "AW-7", to: null, mono: true },
     ]);
   });
 
   it("names the screens of a workspace and Settings", () => {
     expect(crumbs("/w/ws-1/inbox", names).map((c) => c.label)).toEqual(["Personal", "Inbox"]);
-    expect(crumbs("/w/ws-1/tasks", names).map((c) => c.label)).toEqual(["Personal", "All tasks"]);
+    expect(crumbs("/w/ws-1/tasks", names).map((c) => c.label)).toEqual(["Personal", "Tasks"]);
+    expect(crumbs("/w/ws-1/sources", names).map((c) => c.label)).toEqual(["Personal", "Sources"]);
+    expect(crumbs("/w/ws-1/projects", names).map((c) => c.label)).toEqual(["Personal", "Projects"]);
     expect(crumbs("/w/ws-1/devices", names).map((c) => c.label)).toEqual([
       "Personal",
       "Devices & sync",
@@ -340,7 +342,9 @@ describe("command menu", () => {
     expect(filterCommands(options, "export csv").map((o) => o.run)).toEqual([
       { go: "/w/ws-1/tasks/t7" },
     ]);
-    expect(filterCommands(options, "billing board").map((o) => o.id)).toEqual(["p:billing-api"]);
+    // A project opens Tasks with its filter (openspec nav-tasks-needs-you).
+    const project = filterCommands(options, "billing").find((o) => o.id === "p:billing-api");
+    expect(project?.run).toEqual({ go: "/w/ws-1/tasks?tab=all&projects=billing-api" });
   });
 
   it("puts the task with the exact key first (fix list npc-5)", () => {

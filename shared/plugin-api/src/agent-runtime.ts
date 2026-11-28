@@ -47,6 +47,13 @@ export interface LaunchInput {
    */
   permissionMode: string;
   model: string | null;
+  /**
+   * A session that reads untrusted text, for example the triage session of the Inbox (openspec
+   * inbox-mattermost, design 6). The adapter starts it with no user settings, no plugin, only the
+   * AW MCP server of `mcpConfigFile`, read-only tools in `readDirs`, and no prompt: a tool that is
+   * not allowed is refused.
+   */
+  untrusted?: { mcpConfigFile: string; readDirs: string[] };
 }
 
 /** The input of the session settings file (openspec session-options). */
@@ -122,6 +129,11 @@ export interface AgentRuntimeAdapter {
   launchArgs(input: LaunchInput): string[];
   /** The text of the session settings file that `launchArgs` names (`settingsFile`). */
   sessionSettings(input: SessionSettingsInput): string;
+  /**
+   * The files of a session of untrusted input (`LaunchInput.untrusted`): the MCP configuration
+   * with only the AW server, and the allow rules of the AW tools and of reads in `readDirs`.
+   */
+  untrustedFiles(readDirs: readonly string[]): { mcpConfig: string; allow: string[] };
   /** Parses one hook payload. Unknown fields stay out of the result; nothing throws. */
   parseHook(event: string, payload: unknown): AgentHookEvent;
   /**

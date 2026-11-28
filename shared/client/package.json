@@ -18,6 +18,8 @@
     "./doctor-types": "./src/doctor-types.ts",
     "./pause": "./src/pause.ts",
     "./pause-load": "./src/pause-load.ts",
+    "./inbox": "./src/inbox.ts",
+    "./inbox-api": "./src/inbox-api.ts",
     "./queues": "./src/queues.ts",
     "./terminal": "./src/terminal.ts",
     "./gates": "./src/gates.ts"

@@ -131,7 +131,7 @@ function sessionOf(context: ToolContext) {
 }
 
 /** Wraps a tool body: the result as JSON, a service error as the error envelope (decision 8). */
-async function call(
+export async function call(
   context: ToolContext,
   tool: string,
   body: () => unknown,

@@ -104,6 +104,13 @@ class PushAndCredentialsTest {
         assertNull(generic.task)
         assertNull(PushPreview.parse("""{"task":"../x"}""".encodeToByteArray()).task)
         assertEquals("AW · A gate needs you", PushPreview.parse(ByteArray(PushPreview.MAX_BYTES + 1)).title)
+        // A card with high urgency (openspec inbox-mattermost).
+        val card =
+            PushPreview.parse(
+                "{\"event\":\"e1\",\"task\":null,\"key\":null,\"kind\":\"inbox\",\"gate_kind\":\"question\",\"text\":\"Can partner keys go higher?\"}"
+                    .encodeToByteArray(),
+            )
+        assertEquals("Inbox · Question", card.title)
     }
 
     /** M23: a Done push and a login push name what happened, not "A gate needs you". */

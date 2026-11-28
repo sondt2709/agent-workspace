@@ -6,9 +6,9 @@ import { afterEach, describe, expect, it } from "vitest";
 import type { DeviceEntryView, PresenceReply } from "../../../shared/channels.ts";
 import { installBridge, makeTask, renderApp } from "../testing.tsx";
 import { DialogsProvider } from "./dialogs.tsx";
-import { Inbox } from "./Inbox.tsx";
+import { NeedsYou } from "./NeedsYou.tsx";
 import { TaskDetail } from "./TaskDetail.tsx";
-import { ProjectTasks } from "./TaskViews.tsx";
+import { TaskScreen } from "./TaskViews.tsx";
 
 afterEach(cleanup);
 
@@ -49,7 +49,7 @@ const handlers = {
 describe("pause of an offline device", () => {
   it("puts the task in the Paused group of the List with the device name", async () => {
     installBridge(handlers);
-    renderApp(<ProjectTasks view="list" />, {
+    renderApp(<TaskScreen view="list" projects={["billing-api"]} />, {
       route: "/w/:ws/p/:project/list",
       url: "/w/ws-1/p/billing-api/list",
     });
@@ -97,7 +97,7 @@ describe("pause of a revoked device (openspec revoke-device)", () => {
 
   it("puts the task in the Needs you group of the List", async () => {
     installBridge(revokedHandlers);
-    renderApp(<ProjectTasks view="list" />, {
+    renderApp(<TaskScreen view="list" projects={["billing-api"]} />, {
       route: "/w/:ws/p/:project/list",
       url: "/w/ws-1/p/billing-api/list",
     });
@@ -110,9 +110,9 @@ describe("pause of a revoked device (openspec revoke-device)", () => {
     installBridge(revokedHandlers);
     renderApp(
       <DialogsProvider ws="ws-1">
-        <Inbox />
+        <NeedsYou projects={[]} />
       </DialogsProvider>,
-      { route: "/w/:ws/inbox", url: "/w/ws-1/inbox" },
+      { route: "/w/:ws/tasks", url: "/w/ws-1/tasks" },
     );
     // The Inbox is a list and a detail: the row opens the detail with the card.
     await userEvent.click(await screen.findByRole("button", { name: /AW-21/ }));
@@ -121,7 +121,7 @@ describe("pause of a revoked device (openspec revoke-device)", () => {
     expect(
       within(card).getByText("Change the assignee to continue on another device."),
     ).toBeTruthy();
-    expect(screen.getByRole("tab", { name: /^Needs you\s*1$/ })).toBeTruthy();
+    expect(screen.getAllByLabelText(/needs you$/)).toHaveLength(1);
     await userEvent.click(within(card).getByRole("button", { name: "Change assignee…" }));
     expect(await screen.findByText(/^Paused: ubuntu-01 was revoked\./)).toBeTruthy();
   });

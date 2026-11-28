@@ -44,6 +44,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.agentworkspace.android.R
+import com.agentworkspace.control.InboxCards
 import com.agentworkspace.control.InboxItems
 import com.agentworkspace.control.NavKind
 import com.agentworkspace.control.Pane
@@ -93,7 +94,10 @@ fun AwApp(vm: AppViewModel) {
     val snackbar = remember { SnackbarHostState() }
     LaunchedEffect(vm) { vm.messages.collect { snackbar.showSnackbar(it) } }
     val tab = vm.navigator.tab
-    val inboxCount = snapshot?.let { ScreenStates.inbox(it).size } ?: 0
+    // The Inbox badge counts the unread open cards; the Tasks badge counts the tasks that need you
+    // (openspec inbox-mattermost, spec inbox-cards "Phone Inbox").
+    val inboxCount = snapshot?.let { InboxCards.counts(it.cards).getValue("unread") } ?: 0
+    val needsCount = snapshot?.let { ScreenStates.inbox(it).size } ?: 0
     // While the keyboard shows on a compact window, the bottom bar hides: it would sit between the
     // message box and the keyboard (openspec task-review-layout, design decision 7).
     val imeShown = WindowInsets.isImeVisible
@@ -111,8 +115,14 @@ fun AwApp(vm: AppViewModel) {
                     selected = t == tab,
                     onClick = { vm.select(t) },
                     icon = {
-                        if (t == Tab.INBOX && inboxCount > 0) {
-                            BadgedBox(badge = { Badge { Text("$inboxCount") } }) {
+                        val count =
+                            when (t) {
+                                Tab.INBOX -> inboxCount
+                                Tab.TASKS -> needsCount
+                                else -> 0
+                            }
+                        if (count > 0) {
+                            BadgedBox(badge = { Badge { Text("$count") } }) {
                                 AwIcon(TAB_ICONS.getValue(t), t.label)
                             }
                         } else {
@@ -271,11 +281,29 @@ private fun Panes(
                     entry<Route.Inbox>(metadata = Route.Inbox.metadata(placeholder)) {
                         InboxScreen(
                             snapshot = snapshot,
-                            updates = InboxItems.updates(peers, now),
-                            openItem = vm.navigator.openInboxItem,
-                            onOpenItem = { vm.navigator.open(Route.InboxItem(it)) },
-                            onOpenTask = vm::openTask,
+                            openCard = (vm.backStack.lastOrNull() as? Route.Card)?.card,
+                            onOpen = { vm.navigator.open(Route.Card(it)) },
+                            onRun = vm::runInbox,
                         )
+                    }
+                    // A card of the Inbox, next to the list from medium width (openspec inbox-mattermost).
+                    entry<Route.Card>(metadata = Route.Card("").metadata(placeholder)) { route ->
+                        val card = snapshot.cards.firstOrNull { it.card == route.card }
+                        if (card == null) {
+                            EmptyText(NOT_HERE)
+                        } else {
+                            CardScreen(
+                                card = card,
+                                snapshot = snapshot,
+                                onSet = { read, done, category -> vm.setCard(card.card, read, done, category) },
+                                onProject = { vm.setCardProject(card.card, it) },
+                                creating = vm.creating,
+                                onReply = { vm.replyCard(card.card, it) },
+                                onAsk = { vm.askCard(card.card, it) },
+                                onCreateTask = { vm.createTaskFromCard(card.card, it) },
+                                onOpenTask = vm::openTask,
+                            )
+                        }
                     }
                     // The item screen of an Inbox row, next to the list from medium width.
                     entry<Route.InboxItem>(metadata = Route.InboxItem("").metadata(placeholder)) { route ->
@@ -300,11 +328,14 @@ private fun Panes(
                         // The bar of the list pane while a task shows next to it (the app bar is hidden).
                         val split = vm.backStack.lastOrNull() is Route.Task && vm.widthClass != WidthClass.COMPACT
                         TasksScreen(
-                            snapshot,
-                            openTask,
-                            vm::openTask,
-                            vm::syncNow,
-                            now,
+                            snapshot = snapshot,
+                            updates = InboxItems.updates(peers, now),
+                            openTask = openTask,
+                            openItem = vm.navigator.openInboxItem,
+                            onOpen = vm::openTask,
+                            onOpenItem = { vm.navigator.open(Route.InboxItem(it)) },
+                            onSyncNow = vm::syncNow,
+                            nowMs = now,
                             header = if (split) ({ ListPaneBar(vm) }) else null,
                         ) { vm.navigator.open(Route.NewTask) }
                     }

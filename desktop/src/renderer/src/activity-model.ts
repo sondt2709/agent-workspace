@@ -64,6 +64,18 @@ export const ACTIVITY: Readonly<Record<string, ActivityPlace>> = {
   "knowledge.suggested": "session",
   "knowledge.suggestion_resolved": "session",
   "device.heartbeat": "session",
+  // The Inbox events are in the workspace log, never in a task thread (openspec inbox-mattermost).
+  "source.configured": "session",
+  "inbox.run_requested": "session",
+  "inbox.card_added": "session",
+  "inbox.card_updated": "session",
+  "inbox.card_set": "session",
+  "inbox.card_project": "session",
+  "inbox.ask": "session",
+  "inbox.answer": "session",
+  "inbox.reply_requested": "session",
+  "inbox.reply_result": "session",
+  "inbox.task_created": "session",
 };
 
 /** The reasons of a session end that show in Activity: the work stopped and waits for a person. */

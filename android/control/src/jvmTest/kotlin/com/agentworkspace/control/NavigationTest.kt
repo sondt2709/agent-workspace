@@ -79,14 +79,22 @@ class NavigationTest {
         assertEquals(listOf<Route>(Route.Tasks), stack)
         assertFalse(nav.back())
         assertNull(nav.openTask)
-        // A push opens [Inbox, TaskPage(id)]: the task page at the full width.
+        // A push opens [Tasks, Task(id)]; a push with no task opens [Inbox] (nav-tasks-needs-you).
+        nav.openFromPush(null)
+        assertEquals(listOf<Route>(Route.Inbox), stack)
         nav.openFromPush("c")
-        assertEquals(listOf<Route>(Route.Inbox, Route.TaskPage("c")), stack)
-        assertEquals(Tab.INBOX, nav.tab)
+        assertEquals(listOf<Route>(Route.Tasks, Route.Task("c")), stack)
+        assertEquals(Tab.TASKS, nav.tab)
+        // A card of the Inbox replaces the open card and keeps the root (inbox-mattermost).
+        nav.select(Tab.INBOX)
+        nav.open(Route.Card("k1"))
+        nav.open(Route.Card("k2"))
+        assertEquals(listOf<Route>(Route.Inbox, Route.Card("k2")), stack)
+        nav.openFromPush("c")
         // New task goes on top once.
         nav.open(Route.NewTask)
         nav.open(Route.NewTask)
-        assertEquals(listOf<Route>(Route.Inbox, Route.TaskPage("c"), Route.NewTask), stack)
+        assertEquals(listOf<Route>(Route.Tasks, Route.Task("c"), Route.NewTask), stack)
         // A tab select replaces the stack.
         nav.open(Route.Devices)
         assertEquals(listOf<Route>(Route.Devices), stack)

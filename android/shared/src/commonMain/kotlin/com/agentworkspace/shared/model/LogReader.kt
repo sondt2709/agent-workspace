@@ -16,6 +16,11 @@ data class AwEvent(
     val data: EventDataV1?,
     /** The event value with the defaults of its schema and the unknown keys (the zod output). */
     val json: JsonObject,
+    /**
+     * The keys of `data` in the line. A zod `.optional()` field that the line omits is absent in the
+     * zod output, but the typed JSON has it as null (openspec inbox-mattermost: `inbox.card_updated`).
+     */
+    val dataKeys: Set<String> = (json["data"] as? JsonObject)?.keys.orEmpty(),
 ) {
     val id: String get() = envelope.id
     val hlc: String get() = envelope.hlc
@@ -46,7 +51,7 @@ object LogReader {
     /** The current major version of each known event type. */
     private const val CURRENT_MAJOR = 1L
 
-    private val WORKSPACE_PREFIXES = listOf("slot.", "queue.", "credential.", "project.")
+    private val WORKSPACE_PREFIXES = listOf("slot.", "queue.", "credential.", "project.", "source.", "inbox.")
 
     fun isEventType(type: String): Boolean = type in EventTypesV1.serializers
 
@@ -190,7 +195,7 @@ object LogReader {
             }
         val typedData = AwJson.encodeToJsonElement(dataSerializer, data)
         val json = JsonObject(raw + ("data" to withUnknownKeys(typedData, rawData)))
-        return LineResult.Event(AwEvent(envelope, data, json))
+        return LineResult.Event(AwEvent(envelope, data, json, rawData.keys))
     }
 
     private sealed interface Decoded<out T> {

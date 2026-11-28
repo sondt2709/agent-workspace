@@ -92,7 +92,7 @@ Claude Code already gives Remote Control for one local session, background sessi
 | Push path | The way a closed phone app gets an alert: UnifiedPush with the embedded FCM distributor in the official build, or the person's own ntfy server. |
 | Credential owner | The person whose Claude plan or API key pays for an agent. |
 | Knowledge | Markdown files that agents read: shared (workspace) or project. Each change has an author, a task, a time and a diff, and the human can undo it. |
-| Inbox | The list of items that need the human. Each item names its reason. |
+| Inbox | The list of the cards of the incoming messages (decision `2026-11-27-inbox-and-tasks`). Each card has a category (Action, Question, Info), an urgency and a suggestion. The items that need the human are in Tasks › Needs you. |
 
 Phase 2 adds People, members, Send, sources, subscriptions, signals, your relay and your storage (section 8.10).
 
@@ -280,7 +280,7 @@ Phase: P1, P2 or P3 (section 10). "Must" means required for the release of that 
 ### 8.7 Inbox and notifications
 | ID | Requirement | Phase |
 |---|---|---|
-| INB-01 | The Inbox must collect all items that need the human. P1: gates, pauses that need the human, the daily digest, schema errors, credentials to rotate and sync problems. P2: shares, connection requests, signals, stopped sources. | P1 / P2 |
+| INB-01 | Tasks › Needs you must collect all items that need the human. P1: gates, pauses that need the human, the daily digest, schema errors, credentials to rotate and sync problems. P2: shares, connection requests, stopped sources. The Inbox shows the cards of the incoming messages (decision `2026-11-27-inbox-and-tasks`). | P1 / P2 |
 | INB-02 to INB-04 | Each item must name the reason, for example "Approve proposal". The user acts on it inside the Inbox, marks it as done or snoozes it. It comes back on new activity. | P1 |
 | INB-05 | The phone gets a push only when the human must act, when work finished, or when work stopped and cannot continue alone. | P1 |
 | INB-07 to INB-09 | The notification center must have the tabs All, Unread and Errors. AW groups items with the same cause, for example one usage-limit item per login. After an absence, Home must show a summary, for example "While you were away: 6 tasks done, 1 needs you, agents learned 5 things". | P1 |
@@ -326,7 +326,7 @@ Phase: P1, P2 or P3 (section 10). "Must" means required for the release of that 
 | PPL-01 to PPL-03, PPL-12, PPL-14 | The user connects with other AW users by a one-time invite and a safety code. A share has View, Comment or Edit and uses a peer link with scoped access. An unreachable side shows "Paused: Person B is not reachable". | P2 |
 | PPL-04, PPL-08 to PPL-11 | On a plan agent, only the credential owner starts sessions, sends input, takes over the terminal and answers gates. Other People create tasks and comment. API-key input is off by default. Each session header names the credential owner. | P2 |
 | PPL-05 to PPL-07 | Send to a person, GitHub, Linear, Google Drive, a Markdown file, Mattermost or WhatsApp, with a preview. A send to Linear uses the description template (TSK-23). AW records each send. | P2 |
-| SIG-01 to SIG-11 | Sources collect messages from Mattermost, WhatsApp, GitHub and Linear. Subscriptions read them in batches and create signals with reasoning, citations and suggested actions. | P2 |
+| SIG-01 to SIG-11 | Sources collect messages. P1: Mattermost, collected by one computer and sorted by a triage session into Inbox cards (Action, Question, Info) with a suggested task or answer (decision `2026-11-27-inbox-and-tasks`). P2: WhatsApp, GitHub and Linear, and knowledge from Info cards. | P1 / P2 |
 | RMT-03, INB-06, PLG-01, PLG-02 | The phone does each P2 human action and shows an ongoing notification per task. A plugin marketplace shows the permissions of each plugin. | P2 |
 
 ### 8.11 Phase 3

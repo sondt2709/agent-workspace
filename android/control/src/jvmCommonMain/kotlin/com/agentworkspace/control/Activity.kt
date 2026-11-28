@@ -69,6 +69,18 @@ object ActivityRule {
             "knowledge.suggested" to S,
             "knowledge.suggestion_resolved" to S,
             "device.heartbeat" to S,
+            // The Inbox events are in the workspace log, never in a task thread (inbox-mattermost).
+            "source.configured" to S,
+            "inbox.run_requested" to S,
+            "inbox.card_added" to S,
+            "inbox.card_updated" to S,
+            "inbox.card_set" to S,
+            "inbox.card_project" to S,
+            "inbox.ask" to S,
+            "inbox.answer" to S,
+            "inbox.reply_requested" to S,
+            "inbox.reply_result" to S,
+            "inbox.task_created" to S,
         )
 
     /** The reasons of a session end that show in Activity: the work stopped and waits for a person. */

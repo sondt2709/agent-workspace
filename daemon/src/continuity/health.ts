@@ -1,6 +1,7 @@
 // Device health (docs/architecture.md 4.6.12, design of add-continuity decision 17): the document
 // `tasks/devices/<device>/health.yaml`, written at most once per 60 s.
 import type { TaskView } from "@aw/core";
+import type { HealthInbox } from "@aw/schema";
 import type { SessionRecord } from "../sessions/records.ts";
 import { commitOf } from "./git-branch.ts";
 import type { UsageState } from "./usage.ts";
@@ -30,6 +31,8 @@ function window(w: UsageState["five_hour"]) {
 }
 
 export interface HealthInput {
+  /** The collector of this device (openspec inbox-mattermost), or null. */
+  inbox?: HealthInbox | null;
   device: string;
   updated: string;
   bootTime: string;
@@ -93,6 +96,7 @@ export function healthDocument(input: HealthInput) {
       : {}),
     sync: [],
     repairs: [],
+    ...(input.inbox ? { inbox: input.inbox } : {}),
     /** A placeholder until the backup (a second computer) is in the health view. */
     last_backup: null,
   };

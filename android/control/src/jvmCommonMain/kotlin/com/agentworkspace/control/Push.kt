@@ -181,6 +181,8 @@ data class PushPreview(
     /** The notification title: "AW-7 · Answer question", "AW-12 · Done", "AW-12 · Login expired". */
     val title: String
         get() {
+            // A card with high urgency (openspec inbox-mattermost): "Inbox · Question".
+            if (kind == "inbox") return "Inbox · ${CATEGORIES[gateKind] ?: "Card"}"
             val label = KIND_LABELS[kind] ?: gateKind?.let(Texts::gateLabel) ?: "A gate needs you"
             return key?.let { "$it · $label" } ?: "AW · $label"
         }
@@ -190,6 +192,9 @@ data class PushPreview(
 
     companion object {
         const val MAX_BYTES = 3 * 1024
+
+        /** The category of a card push (`gate_kind` of the preview). */
+        private val CATEGORIES = mapOf("action" to "Action", "question" to "Question", "info" to "Info")
 
         /** The title of a push that is not about a gate. */
         private val KIND_LABELS =

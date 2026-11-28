@@ -27,6 +27,9 @@ export async function applyStreamMessage(
     targets.push(keys.queues(ws));
     // Knowledge, the files of a task and the sync state change with the same writes.
     targets.push(keys.kb(ws), keys.taskFilesAll(ws), keys.sync());
+    // The cards and the sources are in the workspace log (openspec inbox-mattermost). The source
+    // status and the conversation list call Mattermost: they refresh on their own timer.
+    targets.push(keys.cards(ws), keys.sources(ws));
     if (message.documents_changed) {
       targets.push(keys.projects(ws), keys.devices(ws), keys.sessionHosts(ws));
     }

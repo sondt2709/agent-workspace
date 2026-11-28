@@ -36,6 +36,7 @@ class MergeCasesTest {
                 "device-revoked",
                 "far-future-hlc",
                 "gate-answered-twice",
+                "inbox-cards",
                 "project-removed",
                 "session-link",
                 "session-options",

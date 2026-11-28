@@ -12,6 +12,7 @@ import type { PeerTools } from "./api/peer.ts";
 import { run, type CliIo } from "./cli/run.ts";
 import { createLogger, type Logger } from "./log.ts";
 import { startServer, type RunningServer } from "./server.ts";
+import type { DaemonOptions } from "./service/daemon.ts";
 import { loadSettings, type Settings } from "./settings.ts";
 import { ensurePrivateFolder, type AwdConfig } from "./state.ts";
 
@@ -95,6 +96,9 @@ export interface TestDaemonOptions {
   /** The device slug of `config.yaml` (default macbook-pro). */
   device?: string;
   hostNoticeMs?: number;
+  /** The Inbox: a fake source and a short step (openspec inbox-mattermost). */
+  openSource?: DaemonOptions["openSource"];
+  inboxTickMs?: number;
 }
 
 export async function startTestDaemon(options: TestDaemonOptions = {}): Promise<TestDaemon> {
@@ -129,6 +133,8 @@ export async function startTestDaemon(options: TestDaemonOptions = {}): Promise<
       ...(options.prepareRetryMs === undefined ? {} : { prepareRetryMs: options.prepareRetryMs }),
       ...(options.peerTools ? { peerTools: options.peerTools } : {}),
       ...(options.hostNoticeMs === undefined ? {} : { hostNoticeMs: options.hostNoticeMs }),
+      ...(options.openSource ? { openSource: options.openSource } : {}),
+      ...(options.inboxTickMs === undefined ? {} : { inboxTickMs: options.inboxTickMs }),
     });
   let server = await start();
   const client = new AwClient({ socketPath: settings.socketPath });

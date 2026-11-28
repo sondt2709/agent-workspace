@@ -7,6 +7,7 @@ export {
   MAX_CONTEXT_CHARS,
   PLUGIN_DIR,
   PLUGIN_NAME,
+  UNTRUSTED_MCP_TOOLS,
   hookOutput,
   hookSessionId,
   isCoveredVersion,
@@ -20,6 +21,7 @@ export {
   sessionSettings,
   toolGate,
   transcriptPath,
+  untrustedMcpConfig,
 } from "./claude.ts";
 export { trustWorktree, type TrustResult } from "./trust.ts";
 export const packageName = "@aw/agent-claude";

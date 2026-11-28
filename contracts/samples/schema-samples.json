@@ -1563,6 +1563,99 @@
         "data": { "text": "Looks good." }
       },
       "invalid_path": "by"
+    },
+    {
+      "name": "inbox.card_added with the category maybe",
+      "value": {
+        "v": 1,
+        "id": "01a2038e-7f00-7000-8000-000000000001",
+        "hlc": "2026-11-22T14:20:01.123Z#0000",
+        "dev": "ubuntu-01",
+        "type": "inbox.card_added",
+        "by": "claude@ubuntu-01",
+        "data": {
+          "card": "01a2038e-7f00-7000-8000-000000000001",
+          "source": "mattermost",
+          "conversation": { "id": "ch-billing", "name": "~billing", "kind": "channel" },
+          "thread": "post-1",
+          "category": "maybe",
+          "urgency": "high",
+          "title": "Invoice CSV export fails with error 500",
+          "summary": "Export CSV returns error 500.",
+          "task": {
+            "title": "Fix the CSV export",
+            "project": "billing-api",
+            "first_message": "Fix it."
+          },
+          "messages": [
+            {
+              "id": "post-1",
+              "author": "Minh Tran",
+              "at": "2026-11-27T10:12:00.000Z",
+              "text": "Export fails"
+            }
+          ]
+        }
+      },
+      "invalid_path": "data.category"
+    },
+    {
+      "name": "inbox.card_added with no message",
+      "value": {
+        "v": 1,
+        "id": "01a2038e-7f00-7000-8000-000000000001",
+        "hlc": "2026-11-22T14:20:01.123Z#0000",
+        "dev": "ubuntu-01",
+        "type": "inbox.card_added",
+        "by": "claude@ubuntu-01",
+        "data": {
+          "card": "01a2038e-7f00-7000-8000-000000000001",
+          "source": "mattermost",
+          "conversation": { "id": "ch-billing", "name": "~billing", "kind": "channel" },
+          "thread": "post-1",
+          "category": "action",
+          "urgency": "high",
+          "title": "Invoice CSV export fails with error 500",
+          "summary": "Export CSV returns error 500.",
+          "task": {
+            "title": "Fix the CSV export",
+            "project": "billing-api",
+            "first_message": "Fix it."
+          },
+          "messages": []
+        }
+      },
+      "invalid_path": "data.messages"
+    },
+    {
+      "name": "source.configured with the channel mode some",
+      "value": {
+        "v": 1,
+        "id": "01a2038e-7f00-7000-8000-000000000001",
+        "hlc": "2026-11-22T14:20:01.123Z#0000",
+        "dev": "ubuntu-01",
+        "type": "source.configured",
+        "by": "claude@ubuntu-01",
+        "data": {
+          "source": "mattermost",
+          "kind": "mattermost",
+          "name": "Mattermost",
+          "server_url": "https://chat.example.com",
+          "credential": "mattermost-alex",
+          "collector": "ubuntu-01",
+          "conversations": [
+            {
+              "id": "ch-billing",
+              "name": "~billing",
+              "kind": "channel",
+              "read": "all",
+              "projects": ["billing-api"]
+            }
+          ],
+          "channels": "some"
+        }
+      },
+      "invalid_path": "data.channels"
     }
   ],
   "event_types": [
@@ -2565,6 +2658,295 @@
         "hlc": "2026-11-22T14:20:01.123Z#0000",
         "dev": "ubuntu-01",
         "type": "knowledge.suggestion_resolved",
+        "by": "claude@ubuntu-01",
+        "data": null
+      }
+    },
+    {
+      "type": "source.configured",
+      "valid": {
+        "v": 1,
+        "id": "01a2038e-7f00-7000-8000-000000000001",
+        "hlc": "2026-11-22T14:20:01.123Z#0000",
+        "dev": "ubuntu-01",
+        "type": "source.configured",
+        "by": "claude@ubuntu-01",
+        "data": {
+          "source": "mattermost",
+          "kind": "mattermost",
+          "name": "Mattermost",
+          "server_url": "https://chat.example.com",
+          "credential": "mattermost-alex",
+          "collector": "ubuntu-01",
+          "conversations": [
+            {
+              "id": "ch-billing",
+              "name": "~billing",
+              "kind": "channel",
+              "read": "all",
+              "projects": ["billing-api"]
+            }
+          ]
+        }
+      },
+      "data_null": {
+        "v": 1,
+        "id": "01a2038e-7f00-7000-8000-000000000001",
+        "hlc": "2026-11-22T14:20:01.123Z#0000",
+        "dev": "ubuntu-01",
+        "type": "source.configured",
+        "by": "claude@ubuntu-01",
+        "data": null
+      }
+    },
+    {
+      "type": "inbox.run_requested",
+      "valid": {
+        "v": 1,
+        "id": "01a2038e-7f00-7000-8000-000000000001",
+        "hlc": "2026-11-22T14:20:01.123Z#0000",
+        "dev": "ubuntu-01",
+        "type": "inbox.run_requested",
+        "by": "claude@ubuntu-01",
+        "data": { "source": "mattermost" }
+      },
+      "data_null": {
+        "v": 1,
+        "id": "01a2038e-7f00-7000-8000-000000000001",
+        "hlc": "2026-11-22T14:20:01.123Z#0000",
+        "dev": "ubuntu-01",
+        "type": "inbox.run_requested",
+        "by": "claude@ubuntu-01",
+        "data": null
+      }
+    },
+    {
+      "type": "inbox.card_added",
+      "valid": {
+        "v": 1,
+        "id": "01a2038e-7f00-7000-8000-000000000001",
+        "hlc": "2026-11-22T14:20:01.123Z#0000",
+        "dev": "ubuntu-01",
+        "type": "inbox.card_added",
+        "by": "claude@ubuntu-01",
+        "data": {
+          "card": "01a2038e-7f00-7000-8000-000000000001",
+          "source": "mattermost",
+          "conversation": { "id": "ch-billing", "name": "~billing", "kind": "channel" },
+          "thread": "post-1",
+          "category": "action",
+          "urgency": "high",
+          "title": "Invoice CSV export fails with error 500",
+          "summary": "Export CSV returns error 500.",
+          "task": {
+            "title": "Fix the CSV export",
+            "project": "billing-api",
+            "first_message": "Fix it."
+          },
+          "messages": [
+            {
+              "id": "post-1",
+              "author": "Minh Tran",
+              "at": "2026-11-27T10:12:00.000Z",
+              "text": "Export fails"
+            }
+          ]
+        }
+      },
+      "data_null": {
+        "v": 1,
+        "id": "01a2038e-7f00-7000-8000-000000000001",
+        "hlc": "2026-11-22T14:20:01.123Z#0000",
+        "dev": "ubuntu-01",
+        "type": "inbox.card_added",
+        "by": "claude@ubuntu-01",
+        "data": null
+      }
+    },
+    {
+      "type": "inbox.card_updated",
+      "valid": {
+        "v": 1,
+        "id": "01a2038e-7f00-7000-8000-000000000001",
+        "hlc": "2026-11-22T14:20:01.123Z#0000",
+        "dev": "ubuntu-01",
+        "type": "inbox.card_updated",
+        "by": "claude@ubuntu-01",
+        "data": { "card": "01a2038e-7f00-7000-8000-000000000001", "urgency": "normal" }
+      },
+      "data_null": {
+        "v": 1,
+        "id": "01a2038e-7f00-7000-8000-000000000001",
+        "hlc": "2026-11-22T14:20:01.123Z#0000",
+        "dev": "ubuntu-01",
+        "type": "inbox.card_updated",
+        "by": "claude@ubuntu-01",
+        "data": null
+      }
+    },
+    {
+      "type": "inbox.card_set",
+      "valid": {
+        "v": 1,
+        "id": "01a2038e-7f00-7000-8000-000000000001",
+        "hlc": "2026-11-22T14:20:01.123Z#0000",
+        "dev": "ubuntu-01",
+        "type": "inbox.card_set",
+        "by": "claude@ubuntu-01",
+        "data": { "card": "01a2038e-7f00-7000-8000-000000000001", "read": true }
+      },
+      "data_null": {
+        "v": 1,
+        "id": "01a2038e-7f00-7000-8000-000000000001",
+        "hlc": "2026-11-22T14:20:01.123Z#0000",
+        "dev": "ubuntu-01",
+        "type": "inbox.card_set",
+        "by": "claude@ubuntu-01",
+        "data": null
+      }
+    },
+    {
+      "type": "inbox.card_project",
+      "valid": {
+        "v": 1,
+        "id": "01a2038e-7f00-7000-8000-000000000001",
+        "hlc": "2026-11-22T14:20:01.123Z#0000",
+        "dev": "ubuntu-01",
+        "type": "inbox.card_project",
+        "by": "claude@ubuntu-01",
+        "data": { "card": "01a2038e-7f00-7000-8000-000000000001", "project": "billing-api" }
+      },
+      "data_null": {
+        "v": 1,
+        "id": "01a2038e-7f00-7000-8000-000000000001",
+        "hlc": "2026-11-22T14:20:01.123Z#0000",
+        "dev": "ubuntu-01",
+        "type": "inbox.card_project",
+        "by": "claude@ubuntu-01",
+        "data": null
+      }
+    },
+    {
+      "type": "inbox.ask",
+      "valid": {
+        "v": 1,
+        "id": "01a2038e-7f00-7000-8000-000000000001",
+        "hlc": "2026-11-22T14:20:01.123Z#0000",
+        "dev": "ubuntu-01",
+        "type": "inbox.ask",
+        "by": "claude@ubuntu-01",
+        "data": {
+          "card": "01a2038e-7f00-7000-8000-000000000001",
+          "ask": "01a2038e-7f00-7000-8000-000000000002",
+          "text": "Make it shorter"
+        }
+      },
+      "data_null": {
+        "v": 1,
+        "id": "01a2038e-7f00-7000-8000-000000000001",
+        "hlc": "2026-11-22T14:20:01.123Z#0000",
+        "dev": "ubuntu-01",
+        "type": "inbox.ask",
+        "by": "claude@ubuntu-01",
+        "data": null
+      }
+    },
+    {
+      "type": "inbox.answer",
+      "valid": {
+        "v": 1,
+        "id": "01a2038e-7f00-7000-8000-000000000001",
+        "hlc": "2026-11-22T14:20:01.123Z#0000",
+        "dev": "ubuntu-01",
+        "type": "inbox.answer",
+        "by": "claude@ubuntu-01",
+        "data": {
+          "card": "01a2038e-7f00-7000-8000-000000000001",
+          "ask": "01a2038e-7f00-7000-8000-000000000002",
+          "text": "Done."
+        }
+      },
+      "data_null": {
+        "v": 1,
+        "id": "01a2038e-7f00-7000-8000-000000000001",
+        "hlc": "2026-11-22T14:20:01.123Z#0000",
+        "dev": "ubuntu-01",
+        "type": "inbox.answer",
+        "by": "claude@ubuntu-01",
+        "data": null
+      }
+    },
+    {
+      "type": "inbox.reply_requested",
+      "valid": {
+        "v": 1,
+        "id": "01a2038e-7f00-7000-8000-000000000001",
+        "hlc": "2026-11-22T14:20:01.123Z#0000",
+        "dev": "ubuntu-01",
+        "type": "inbox.reply_requested",
+        "by": "claude@ubuntu-01",
+        "data": {
+          "card": "01a2038e-7f00-7000-8000-000000000001",
+          "reply": "01a2038e-7f00-7000-8000-000000000002",
+          "text": "Yes, today."
+        }
+      },
+      "data_null": {
+        "v": 1,
+        "id": "01a2038e-7f00-7000-8000-000000000001",
+        "hlc": "2026-11-22T14:20:01.123Z#0000",
+        "dev": "ubuntu-01",
+        "type": "inbox.reply_requested",
+        "by": "claude@ubuntu-01",
+        "data": null
+      }
+    },
+    {
+      "type": "inbox.reply_result",
+      "valid": {
+        "v": 1,
+        "id": "01a2038e-7f00-7000-8000-000000000001",
+        "hlc": "2026-11-22T14:20:01.123Z#0000",
+        "dev": "ubuntu-01",
+        "type": "inbox.reply_result",
+        "by": "claude@ubuntu-01",
+        "data": {
+          "card": "01a2038e-7f00-7000-8000-000000000001",
+          "reply": "01a2038e-7f00-7000-8000-000000000002",
+          "state": "sent",
+          "post": "post-9"
+        }
+      },
+      "data_null": {
+        "v": 1,
+        "id": "01a2038e-7f00-7000-8000-000000000001",
+        "hlc": "2026-11-22T14:20:01.123Z#0000",
+        "dev": "ubuntu-01",
+        "type": "inbox.reply_result",
+        "by": "claude@ubuntu-01",
+        "data": null
+      }
+    },
+    {
+      "type": "inbox.task_created",
+      "valid": {
+        "v": 1,
+        "id": "01a2038e-7f00-7000-8000-000000000001",
+        "hlc": "2026-11-22T14:20:01.123Z#0000",
+        "dev": "ubuntu-01",
+        "type": "inbox.task_created",
+        "by": "claude@ubuntu-01",
+        "data": {
+          "card": "01a2038e-7f00-7000-8000-000000000001",
+          "task": "01a2038e-7f00-7000-8000-000000000002"
+        }
+      },
+      "data_null": {
+        "v": 1,
+        "id": "01a2038e-7f00-7000-8000-000000000001",
+        "hlc": "2026-11-22T14:20:01.123Z#0000",
+        "dev": "ubuntu-01",
+        "type": "inbox.task_created",
         "by": "claude@ubuntu-01",
         "data": null
       }

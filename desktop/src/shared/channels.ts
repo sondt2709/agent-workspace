@@ -3,6 +3,15 @@
 // runtime dependency, so the sandboxed preload bundle stays small. The zod schemas of the call
 // arguments are in contract.ts (main only).
 import type { DoctorReply } from "@aw/client/doctor-types";
+import type {
+  CardStateInput,
+  CardTaskInput,
+  InboxCard,
+  InboxConversation,
+  InboxSource,
+  InboxSourceStatus,
+  SourceInput,
+} from "@aw/client/inbox-api";
 import type { QueuesReply } from "@aw/client/queues";
 import type { TerminalReply } from "@aw/client/terminal";
 import type {
@@ -52,6 +61,15 @@ import type { SetupCallMap } from "./setup-channels.ts";
 import type { OpenTerminalResult, TerminalAction } from "./terminal-types.ts";
 
 export type { DoctorCheck, DoctorReply } from "@aw/client/doctor-types";
+export type {
+  CardStateInput,
+  CardTaskInput,
+  InboxCard,
+  InboxConversation,
+  InboxSource,
+  InboxSourceStatus,
+  SourceInput,
+} from "@aw/client/inbox-api";
 export type * from "@aw/client/queues";
 export type * from "@aw/client/terminal";
 export type * from "@aw/client/types";
@@ -156,6 +174,24 @@ export interface CallMap extends SetupCallMap {
   presence: { args: Ws; result: PresenceReply };
   sessionHosts: { args: Ws; result: SessionHostsReply };
   queues: { args: Ws; result: QueuesReply };
+  // ---- Inbox and sources (openspec inbox-mattermost) ----
+  inboxCards: { args: Ws & { state?: "open" | "done" | "all" }; result: InboxCard[] };
+  inboxCard: { args: Ws & { card: string }; result: InboxCard };
+  setCardState: { args: Ws & { card: string; body: CardStateInput }; result: InboxCard };
+  askCard: { args: Ws & { card: string; text: string }; result: { ask: string; card: InboxCard } };
+  replyCard: {
+    args: Ws & { card: string; text: string; in_thread?: boolean };
+    result: { reply: string; card: InboxCard };
+  };
+  cardTask: {
+    args: Ws & { card: string; body: CardTaskInput };
+    result: { task: string; key: string; card: InboxCard };
+  };
+  inboxRun: { args: Ws; result: { ok: boolean } };
+  sources: { args: Ws; result: InboxSource[] };
+  setSource: { args: Ws & { source: string; body: SourceInput }; result: InboxSource };
+  sourceConversations: { args: Ws & { source: string }; result: InboxConversation[] };
+  sourceStatus: { args: Ws & { source: string }; result: InboxSourceStatus };
   revokeDevice: { args: Ws & { device: string }; result: RevokeView };
   startPairing: { args: Ws; result: PairingView };
   pairing: { args: { id: string }; result: PairingView };

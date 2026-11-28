@@ -1,11 +1,18 @@
 // The types of the merged view of a workspace. All field names are snake_case, like the files, so
 // the Kotlin port and the expected JSON files of the fixtures use the same names.
 import type {
+  CardAnswerSuggestion,
+  CardCategory,
+  CardMessage,
+  CardTaskSuggestion,
+  CardUrgency,
+  ConversationKind,
   DeviceRole,
   GateKind,
   PauseCause,
   PermissionMode,
   ProjectDocument,
+  SourceConfigured,
   Stage,
   WorkIn,
   WorkspaceDocument,
@@ -283,6 +290,10 @@ export interface WorkspaceView {
   devices: DeviceView[];
   queues: QueueView[];
   slots: SlotView[];
+  /** The sources of the Inbox (openspec inbox-mattermost). */
+  sources: SourceView[];
+  /** The Inbox cards, the newest message first. */
+  cards: CardView[];
   issues: MergeIssue[];
   /** The highest merged HLC. Give it to `HybridLogicalClock.observe()`. */
   last_hlc: string | null;
@@ -311,4 +322,59 @@ export interface PresenceView {
   now: string;
   devices: DevicePresence[];
   offline_tasks: OfflineTask[];
+}
+
+/** A source: its newest configuration and the newest "Run now" (openspec inbox-mattermost). */
+export type SourceView = SourceConfigured & {
+  configured: EventRef;
+  run_requested: EventRef | null;
+};
+
+/** An ask, an answer or a task line of a card. */
+export interface CardChatItem extends EventRef {
+  kind: "ask" | "answer" | "task";
+  /** The ask id, or the task id of a `task` line. */
+  id: string;
+  text: string;
+  by: string | null;
+  /** An ask: true after its answer. */
+  answered?: boolean;
+}
+
+export interface CardReplyView {
+  reply: string;
+  text: string;
+  in_thread: boolean;
+  requested: EventRef;
+  by: string | null;
+  state: "requested" | "sent" | "failed";
+  post: string | null;
+  url: string | null;
+  error: string | null;
+  result_hlc: string | null;
+}
+
+export interface CardView {
+  card: string;
+  source: string;
+  conversation: { id: string; name: string; kind: ConversationKind };
+  thread: string | null;
+  project: string | null;
+  category: CardCategory;
+  urgency: CardUrgency;
+  title: string;
+  summary: string;
+  task: CardTaskSuggestion | null;
+  answer: CardAnswerSuggestion | null;
+  messages: CardMessage[];
+  /** The time of the newest message. */
+  last_message_at: string;
+  read: boolean;
+  done: boolean;
+  added: EventRef;
+  updated_hlc: string;
+  chat: CardChatItem[];
+  replies: CardReplyView[];
+  /** The tasks made from the card. */
+  tasks: string[];
 }

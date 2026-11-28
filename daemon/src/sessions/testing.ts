@@ -11,7 +11,14 @@ import { execa } from "execa";
 import { chmod, mkdir, readdir, readFile, rm, rmdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { tokenFile } from "../mcp/tokens.ts";
-import { otherDevice, startTestDaemon, tempDir, waitFor, type TestDaemon } from "../testing.ts";
+import {
+  otherDevice,
+  startTestDaemon,
+  tempDir,
+  waitFor,
+  type TestDaemon,
+  type TestDaemonOptions,
+} from "../testing.ts";
 import { listRecords } from "./records.ts";
 
 /** The tmux binary of the tests: AW_E2E_TMUX, else PATH without a `/.orca/` shim. */
@@ -139,6 +146,9 @@ export async function startSessionDaemon(
     /** The version of the fake Orca CLI (default 1.4.257). */
     orcaVersion?: string;
     useOrca?: boolean;
+    /** The Inbox: a fake source and a short step (openspec inbox-mattermost). */
+    openSource?: TestDaemonOptions["openSource"];
+    inboxTickMs?: number;
   } = {},
 ): Promise<SessionTestDaemon> {
   const socket = `aw-test-${process.pid}-${++counter}`;
@@ -188,6 +198,8 @@ export async function startSessionDaemon(
     ...(options.startRetryMs === undefined ? {} : { startRetryMs: options.startRetryMs }),
     ...(options.prepareRetryMs === undefined ? {} : { prepareRetryMs: options.prepareRetryMs }),
     ...(options.hostNoticeMs === undefined ? {} : { hostNoticeMs: options.hostNoticeMs }),
+    ...(options.openSource ? { openSource: options.openSource } : {}),
+    ...(options.inboxTickMs === undefined ? {} : { inboxTickMs: options.inboxTickMs }),
   });
   // A name that tells the Orca workspace folder of the test apart (Orca names it after the repo).
   const checkout = join(daemon.home, orcaBinary ? `aw-test-repo-${socket}` : "checkout");

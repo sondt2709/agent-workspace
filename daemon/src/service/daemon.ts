@@ -8,6 +8,7 @@ import { uptime } from "node:os";
 import { isAbsolute, join, resolve } from "node:path";
 import PQueue from "p-queue";
 import { HEALTHY_AFTER_MS, markStarted } from "../continuity/update.ts";
+import { InboxManager, type InboxManagerOptions } from "../inbox/manager.ts";
 import type { Logger } from "../log.ts";
 import { syncCheck } from "../loop/sync-check.ts";
 import { SessionService } from "../sessions/service.ts";
@@ -55,6 +56,10 @@ export interface DaemonOptions {
   settings: Settings;
   log: Logger;
   clock?: Clock;
+  /** The Inbox: a fake source for tests (openspec inbox-mattermost). Default: the plugins. */
+  openSource?: InboxManagerOptions["openSource"];
+  /** The step time of the Inbox loop (tests give a short one). */
+  inboxTickMs?: number;
   /** Watch the files with `@parcel/watcher`. Default true. */
   watch?: boolean;
   /** Run the heartbeat loop. Default true. */
@@ -114,6 +119,8 @@ export class Daemon {
   readonly bootTime: string;
   /** The agent sessions, or null when they are off. */
   readonly sessions: SessionService | null;
+  /** The Inbox of this device: the collectors and the triage sessions (openspec inbox-mattermost). */
+  readonly inbox: InboxManager;
   #config: AwdConfig | null = null;
   #sync: SyncService | null = null;
   #identity: IdentityService | null = null;
@@ -164,8 +171,29 @@ export class Daemon {
             ...(options.hostNoticeMs === undefined ? {} : { hostNoticeMs: options.hostNoticeMs }),
             // The restart comment and the slot revoke after a reboot (add-continuity).
             bootTime,
+            // The collector state of this device in health.yaml (openspec inbox-mattermost).
+            inboxHealth: (workspace) => this.inbox.health(workspace),
           })
         : null;
+    this.inbox = new InboxManager({
+      settings: this.settings,
+      log: this.log,
+      clock: this.clock,
+      credential: (workspace, name) => this.credentials.value(this.workspace(workspace), name),
+      tools: () => this.sessions?.tools() ?? Promise.resolve(null),
+      push: async (service, card) => {
+        await this.sessions?.push.send(service, {
+          event: card.added.event,
+          task: null,
+          key: null,
+          kind: "inbox",
+          gate_kind: card.category,
+          text: card.title,
+        });
+      },
+      ...(options.openSource ? { openSource: options.openSource } : {}),
+      ...(options.inboxTickMs === undefined ? {} : { tickMs: options.inboxTickMs }),
+    });
   }
 
   get config(): AwdConfig {
@@ -337,6 +365,7 @@ export class Daemon {
       // The own records need the engine device id.
       .then(() => this.#devices?.reconcile());
     this.#devices?.loop();
+    this.inbox.start();
     this.#started = true;
     if (this.#heartbeat) void this.#heartbeatLoop();
     void this.#markStarted();
@@ -409,6 +438,9 @@ export class Daemon {
       await this.sessions?.attach(service).catch((error: unknown) => {
         this.log.error({ err: error, workspace: slot.entry.id }, "The sessions did not start");
       });
+      await this.inbox.attach(service).catch((error: unknown) => {
+        this.log.error({ err: error, workspace: slot.entry.id }, "The inbox did not start");
+      });
       if (this.#heartbeat && this.#started) {
         await this.#beat(service).catch((error: unknown) => {
           this.log.error({ err: error, workspace: slot.entry.id }, "The heartbeat failed");
@@ -444,6 +476,7 @@ export class Daemon {
     const { notices, ...rest } = change;
     this.bus.emit("message", { type: "changed", ...rest });
     this.sessions?.changed(change.workspace);
+    this.inbox.changed();
     if (notices.length > 0) {
       this.bus.emit("message", { type: "notice", workspace: change.workspace, notices });
     }
@@ -506,6 +539,7 @@ export class Daemon {
     // A start that runs now sees the stop and stops what it started.
     await this.#syncStart;
     // The sessions keep running in tmux; only their managers stop.
+    await this.inbox.stop();
     await this.sessions?.close();
     for (const slot of this.#slots.values()) await slot.service.close();
     this.#slots.clear();

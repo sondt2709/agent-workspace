@@ -4,6 +4,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onRoot
+import com.agentworkspace.control.InboxCards
 import com.agentworkspace.control.ScreenStates
 import com.agentworkspace.control.TaskPageLayout
 import com.agentworkspace.control.TerminalPaneState
@@ -12,6 +13,7 @@ import com.agentworkspace.control.WorkspaceSnapshot
 import com.agentworkspace.shared.merge.WorkspaceView
 import com.github.takahirom.roborazzi.captureRoboImage
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.jsonObject
 import org.junit.Rule
 import org.junit.Test
@@ -56,7 +58,61 @@ class ScreensScreenshotTest {
     private fun tasks(name: String) {
         compose.setContent {
             AwTheme {
-                Surface { TasksScreen(snapshot, openTask = null, onOpen = {}, onSyncNow = {}, nowMs = NOW) {} }
+                Surface {
+                    TasksScreen(
+                        snapshot,
+                        updates = emptyList(),
+                        openTask = null,
+                        openItem = null,
+                        onOpen = {},
+                        onOpenItem = {},
+                        onSyncNow = {},
+                        nowMs = NOW,
+                    ) {}
+                }
+            }
+        }
+        compose.onRoot().captureRoboImage("src/test/screenshots/$name.png")
+    }
+
+    /** The Inbox cards of the shared fixture `contracts/fixtures/merge/inbox-cards` (openspec inbox-mattermost). */
+    private val inbox: WorkspaceSnapshot by lazy {
+        val dir = Path.of(requireNotNull(System.getProperty("aw.schema.dir")))
+        val expected =
+            Json.parseToJsonElement(
+                Files.readString(dir.resolve("fixtures/merge/inbox-cards/expected.json")),
+            )
+        val view = expected.jsonObject.getValue("view").jsonObject
+        snapshot.copy(
+            cards = InboxCards.fromView(view),
+            sources = (view["sources"] as? JsonArray)?.map { it.jsonObject }.orEmpty(),
+        )
+    }
+
+    private fun inboxList(name: String) {
+        compose.setContent {
+            AwTheme { Surface { InboxScreen(inbox, openCard = null, onOpen = {}, onRun = {}) } }
+        }
+        compose.onRoot().captureRoboImage("src/test/screenshots/$name.png")
+    }
+
+    private fun card(name: String) {
+        val question = inbox.cards.first { it.category == "question" }
+        compose.setContent {
+            AwTheme {
+                Surface {
+                    CardScreen(
+                        card = question,
+                        snapshot = inbox,
+                        onSet = { _, _, _ -> },
+                        onProject = {},
+                        creating = false,
+                        onReply = {},
+                        onAsk = {},
+                        onCreateTask = {},
+                        onOpenTask = {},
+                    )
+                }
             }
         }
         compose.onRoot().captureRoboImage("src/test/screenshots/$name.png")
@@ -105,6 +161,14 @@ class ScreensScreenshotTest {
     @Test
     @Config(sdk = [35], qualifiers = "w412dp-h900dp-night-xxhdpi")
     fun taskPagePhone() = taskPage("task-page-412dp")
+
+    @Test
+    @Config(sdk = [35], qualifiers = "w412dp-h900dp-night-xxhdpi")
+    fun inboxPhone() = inboxList("inbox-412dp")
+
+    @Test
+    @Config(sdk = [35], qualifiers = "w412dp-h900dp-night-xxhdpi")
+    fun cardPhone() = card("card-412dp")
 
     @Test
     @Config(sdk = [35], qualifiers = "w520dp-h900dp-night-xhdpi")

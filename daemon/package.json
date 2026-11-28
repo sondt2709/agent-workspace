@@ -33,6 +33,7 @@
     "@aw/plugin-api": "workspace:*",
     "@aw/push-webpush": "workspace:*",
     "@aw/schema": "workspace:*",
+    "@aw/source-mattermost": "workspace:*",
     "@aw/sync-syncthing": "workspace:*",
     "@commander-js/extra-typings": "15.1.0",
     "@fastify/swagger": "9.9.4",

@@ -27,6 +27,7 @@
     "offline_tasks": []
   },
   "view": {
+    "cards": [],
     "credentials": [
       {
         "added": {
@@ -542,6 +543,7 @@
       }
     ],
     "slots": [],
+    "sources": [],
     "tasks": [
       {
         "archived": false,

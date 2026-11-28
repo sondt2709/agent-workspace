@@ -48,6 +48,10 @@ data class WorkspaceSnapshot(
     val gateQuestions: Map<String, List<GateQuestion>> = emptyMap(),
     /** The context of each shown question or reply gate with no body, by gate id (gate-context). */
     val gateContexts: Map<String, List<ContextEvent>> = emptyMap(),
+    /** The Inbox cards, the newest message first (openspec inbox-mattermost). */
+    val cards: List<InboxCard> = emptyList(),
+    /** The sources of the Inbox as their view JSON. */
+    val sources: List<JsonObject> = emptyList(),
 ) {
     fun task(id: String): TaskView? = tasks.firstOrNull { it.id == id }
 
@@ -239,8 +243,13 @@ object ScreenStates {
     fun tasksByStage(
         snapshot: WorkspaceSnapshot,
         project: String? = null,
+        /** The project filter of Tasks (openspec nav-tasks-needs-you): none selected keeps all. */
+        projects: List<String> = emptyList(),
     ): List<StageGroup> {
-        val own = snapshot.tasks.filter { project == null || it.project == project }
+        val own =
+            snapshot.tasks.filter {
+                (project == null || it.project == project) && (projects.isEmpty() || it.project in projects)
+            }
         val rows = own.filter { !it.archived }.map { row(it, snapshot) }
         val stages =
             Texts.STAGES

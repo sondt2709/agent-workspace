@@ -1,0 +1,840 @@
+{
+  "source": "Mattermost 12.1 (mattermost/mattermost-preview), synthetic users and posts; captured on 2026-11-27 by scripts/capture.ts",
+  "calls": [
+    {
+      "method": "get",
+      "path": "/api/v4/users/me",
+      "status": 200,
+      "body": {
+        "id": "w1mph19wo383fpwn764z8cwske",
+        "create_at": 1795781332267,
+        "update_at": 1795781333648,
+        "delete_at": 0,
+        "username": "alex"
+      }
+    },
+    {
+      "method": "get",
+      "path": "/api/v4/users/me/teams",
+      "status": 200,
+      "body": [
+        {
+          "id": "ctfc1iuoy3geiggmutmwrwp81r",
+          "create_at": 1795781333508,
+          "update_at": 1795781333508,
+          "delete_at": 0,
+          "display_name": "Example Team",
+          "name": "acme",
+          "type": "O"
+        }
+      ]
+    },
+    {
+      "method": "get",
+      "path": "/api/v4/users/me/teams/ctfc1iuoy3geiggmutmwrwp81r/channels?include_deleted=false",
+      "status": 200,
+      "body": [
+        {
+          "id": "pmxbnhhzti853fhqeccsuj4cby",
+          "create_at": 1795781359891,
+          "update_at": 1795781359891,
+          "delete_at": 0,
+          "team_id": "",
+          "type": "D",
+          "display_name": "",
+          "name": "ubtfrjh8p7b89c3tbcrtsffp5c__w1mph19wo383fpwn764z8cwske",
+          "last_post_at": 1795781360211,
+          "props": null
+        },
+        {
+          "id": "dcprzkp393gtjpq5yksgiuwwhc",
+          "create_at": 1795781359945,
+          "update_at": 1795781359945,
+          "delete_at": 0,
+          "team_id": "",
+          "type": "G",
+          "display_name": "alex, lan.pham, minh.tran",
+          "name": "915f8165d5eff71b73df49e46a30139d52c03386",
+          "last_post_at": 1795781360271,
+          "props": null
+        },
+        {
+          "id": "fijhyuf85pre886tyssq1dzepr",
+          "create_at": 1795781334311,
+          "update_at": 1795781334311,
+          "delete_at": 0,
+          "team_id": "ctfc1iuoy3geiggmutmwrwp81r",
+          "type": "O",
+          "display_name": "api-team",
+          "name": "api-team",
+          "last_post_at": 1795781334476,
+          "props": null
+        },
+        {
+          "id": "kra7qwzobt8ebnxcb176d6fpoh",
+          "create_at": 1795781334026,
+          "update_at": 1795781334026,
+          "delete_at": 0,
+          "team_id": "ctfc1iuoy3geiggmutmwrwp81r",
+          "type": "O",
+          "display_name": "billing",
+          "name": "billing",
+          "last_post_at": 1795781374725,
+          "props": null
+        },
+        {
+          "id": "pk8z6gezxfdpi841hpc8drc8kr",
+          "create_at": 1795781333519,
+          "update_at": 1795781333519,
+          "delete_at": 0,
+          "team_id": "ctfc1iuoy3geiggmutmwrwp81r",
+          "type": "O",
+          "display_name": "Off-Topic",
+          "name": "off-topic",
+          "last_post_at": 1795781333935,
+          "props": null
+        },
+        {
+          "id": "57tyin6nr3fmiygpp4e4h3a6br",
+          "create_at": 1795781334594,
+          "update_at": 1795781334594,
+          "delete_at": 0,
+          "team_id": "ctfc1iuoy3geiggmutmwrwp81r",
+          "type": "O",
+          "display_name": "ops",
+          "name": "ops",
+          "last_post_at": 1795781334759,
+          "props": null
+        },
+        {
+          "id": "9mw9fxny4iympghdg31ykfzric",
+          "create_at": 1795781333512,
+          "update_at": 1795781333512,
+          "delete_at": 0,
+          "team_id": "ctfc1iuoy3geiggmutmwrwp81r",
+          "type": "O",
+          "display_name": "Town Square",
+          "name": "town-square",
+          "last_post_at": 1795781333916,
+          "props": null
+        }
+      ]
+    },
+    {
+      "method": "post",
+      "path": "/api/v4/users/ids",
+      "status": 200,
+      "body": [
+        {
+          "id": "ubtfrjh8p7b89c3tbcrtsffp5c",
+          "create_at": 1795781332526,
+          "update_at": 1795781333724,
+          "delete_at": 0,
+          "username": "lan.pham"
+        }
+      ]
+    },
+    {
+      "method": "get",
+      "path": "/api/v4/channels/pmxbnhhzti853fhqeccsuj4cby/posts?since=0&skipFetchThreads=false&collapsedThreads=false&collapsedThreadsExtended=false",
+      "status": 200,
+      "body": {
+        "order": ["cpan9rqbdib3trfz7ytb6xuiao", "tzn8ixosifdejxsumzoorizbyo"],
+        "posts": {
+          "cpan9rqbdib3trfz7ytb6xuiao": {
+            "id": "cpan9rqbdib3trfz7ytb6xuiao",
+            "create_at": 1795781360211,
+            "update_at": 1795781360211,
+            "delete_at": 0,
+            "user_id": "ubtfrjh8p7b89c3tbcrtsffp5c",
+            "channel_id": "pmxbnhhzti853fhqeccsuj4cby",
+            "root_id": "",
+            "message": "Acme Partners expects about 400 requests per minute at launch.",
+            "type": "",
+            "props": {},
+            "pending_post_id": ""
+          },
+          "tzn8ixosifdejxsumzoorizbyo": {
+            "id": "tzn8ixosifdejxsumzoorizbyo",
+            "create_at": 1795781360158,
+            "update_at": 1795781360158,
+            "delete_at": 0,
+            "user_id": "ubtfrjh8p7b89c3tbcrtsffp5c",
+            "channel_id": "pmxbnhhzti853fhqeccsuj4cby",
+            "root_id": "",
+            "message": "Hi! Can partner keys get a higher rate limit than the default?",
+            "type": "",
+            "props": {},
+            "pending_post_id": ""
+          }
+        }
+      }
+    },
+    {
+      "method": "get",
+      "path": "/api/v4/channels/dcprzkp393gtjpq5yksgiuwwhc/posts?since=0&skipFetchThreads=false&collapsedThreads=false&collapsedThreadsExtended=false",
+      "status": 200,
+      "body": {
+        "order": ["wux5eyts878n8ew8na4wf9ppkh"],
+        "posts": {
+          "wux5eyts878n8ew8na4wf9ppkh": {
+            "id": "wux5eyts878n8ew8na4wf9ppkh",
+            "create_at": 1795781360271,
+            "update_at": 1795781360271,
+            "delete_at": 0,
+            "user_id": "w9hxuojh6pbmunow4zna8zui4r",
+            "channel_id": "dcprzkp393gtjpq5yksgiuwwhc",
+            "root_id": "",
+            "message": "Which Node version do we run on staging now?",
+            "type": "",
+            "props": {},
+            "pending_post_id": ""
+          }
+        }
+      }
+    },
+    {
+      "method": "post",
+      "path": "/api/v4/users/ids",
+      "status": 200,
+      "body": [
+        {
+          "id": "w9hxuojh6pbmunow4zna8zui4r",
+          "create_at": 1795781332779,
+          "update_at": 1795781333784,
+          "delete_at": 0,
+          "username": "minh.tran"
+        }
+      ]
+    },
+    {
+      "method": "get",
+      "path": "/api/v4/channels/fijhyuf85pre886tyssq1dzepr/posts?since=0&skipFetchThreads=false&collapsedThreads=false&collapsedThreadsExtended=false",
+      "status": 200,
+      "body": {
+        "order": [
+          "pkwfcus3uprktyx3x9bxqssudy",
+          "qqe7s81csbgpzq15zeepmrj4zo",
+          "f576noxtg7bubgiqaij39b64hc",
+          "a518towutffpundqqi6hmuujhw"
+        ],
+        "posts": {
+          "a518towutffpundqqi6hmuujhw": {
+            "id": "a518towutffpundqqi6hmuujhw",
+            "create_at": 1795781334403,
+            "update_at": 1795781334403,
+            "delete_at": 0,
+            "user_id": "w1mph19wo383fpwn764z8cwske",
+            "channel_id": "fijhyuf85pre886tyssq1dzepr",
+            "root_id": "",
+            "message": "alex joined the channel.",
+            "type": "system_join_channel",
+            "props": {
+              "username": "alex"
+            },
+            "pending_post_id": ""
+          },
+          "f576noxtg7bubgiqaij39b64hc": {
+            "id": "f576noxtg7bubgiqaij39b64hc",
+            "create_at": 1795781334428,
+            "update_at": 1795781334428,
+            "delete_at": 0,
+            "user_id": "ubtfrjh8p7b89c3tbcrtsffp5c",
+            "channel_id": "fijhyuf85pre886tyssq1dzepr",
+            "root_id": "",
+            "message": "lan.pham joined the channel.",
+            "type": "system_join_channel",
+            "props": {
+              "username": "lan.pham"
+            },
+            "pending_post_id": ""
+          },
+          "pkwfcus3uprktyx3x9bxqssudy": {
+            "id": "pkwfcus3uprktyx3x9bxqssudy",
+            "create_at": 1795781334476,
+            "update_at": 1795781334476,
+            "delete_at": 0,
+            "user_id": "qzfbpugzy3yjixa86k5e433tfy",
+            "channel_id": "fijhyuf85pre886tyssq1dzepr",
+            "root_id": "",
+            "message": "sam.lee joined the channel.",
+            "type": "system_join_channel",
+            "props": {
+              "username": "sam.lee"
+            },
+            "pending_post_id": ""
+          },
+          "qqe7s81csbgpzq15zeepmrj4zo": {
+            "id": "qqe7s81csbgpzq15zeepmrj4zo",
+            "create_at": 1795781334452,
+            "update_at": 1795781334452,
+            "delete_at": 0,
+            "user_id": "w9hxuojh6pbmunow4zna8zui4r",
+            "channel_id": "fijhyuf85pre886tyssq1dzepr",
+            "root_id": "",
+            "message": "minh.tran joined the channel.",
+            "type": "system_join_channel",
+            "props": {
+              "username": "minh.tran"
+            },
+            "pending_post_id": ""
+          }
+        }
+      }
+    },
+    {
+      "method": "post",
+      "path": "/api/v4/users/ids",
+      "status": 200,
+      "body": [
+        {
+          "id": "qzfbpugzy3yjixa86k5e433tfy",
+          "create_at": 1795781333055,
+          "update_at": 1795781333839,
+          "delete_at": 0,
+          "username": "sam.lee"
+        },
+        {
+          "id": "w1mph19wo383fpwn764z8cwske",
+          "create_at": 1795781332267,
+          "update_at": 1795781333648,
+          "delete_at": 0,
+          "username": "alex"
+        }
+      ]
+    },
+    {
+      "method": "get",
+      "path": "/api/v4/channels/kra7qwzobt8ebnxcb176d6fpoh/posts?since=0&skipFetchThreads=false&collapsedThreads=false&collapsedThreadsExtended=false",
+      "status": 200,
+      "body": {
+        "order": [
+          "1xjzi7k7stg8few4knh61eub1r",
+          "d7oprrm6sb897xuemdmf8szkua",
+          "33foey6cspbkupx6gbqxeh9k9c",
+          "aa4qytc4pbnjig17f9dxztmric",
+          "ombri9zoybf13nwxtq3zdw8dga",
+          "s7k7uqz353nruxfau5md6yhd9a",
+          "ucdm9wf343ypfgax8w9ngdx94y",
+          "p6sm145yiiby5rx6fc1qmu56xy"
+        ],
+        "posts": {
+          "1xjzi7k7stg8few4knh61eub1r": {
+            "id": "1xjzi7k7stg8few4knh61eub1r",
+            "create_at": 1795781360671,
+            "update_at": 1795781360671,
+            "delete_at": 0,
+            "user_id": "qzfbpugzy3yjixa86k5e433tfy",
+            "channel_id": "kra7qwzobt8ebnxcb176d6fpoh",
+            "root_id": "",
+            "message": "Standup moves to 10:30 tomorrow.",
+            "type": "",
+            "props": {},
+            "pending_post_id": ""
+          },
+          "33foey6cspbkupx6gbqxeh9k9c": {
+            "id": "33foey6cspbkupx6gbqxeh9k9c",
+            "create_at": 1795781360473,
+            "update_at": 1795781360473,
+            "delete_at": 0,
+            "user_id": "w9hxuojh6pbmunow4zna8zui4r",
+            "channel_id": "kra7qwzobt8ebnxcb176d6fpoh",
+            "root_id": "aa4qytc4pbnjig17f9dxztmric",
+            "message": "Log: TypeError at formatCurrency (export.ts:88)",
+            "type": "",
+            "props": {},
+            "pending_post_id": ""
+          },
+          "aa4qytc4pbnjig17f9dxztmric": {
+            "id": "aa4qytc4pbnjig17f9dxztmric",
+            "create_at": 1795781360383,
+            "update_at": 1795781360540,
+            "delete_at": 0,
+            "user_id": "w9hxuojh6pbmunow4zna8zui4r",
+            "channel_id": "kra7qwzobt8ebnxcb176d6fpoh",
+            "root_id": "",
+            "message": "Export CSV on /invoices gives a 500 since this morning",
+            "type": "",
+            "props": {},
+            "pending_post_id": ""
+          },
+          "d7oprrm6sb897xuemdmf8szkua": {
+            "id": "d7oprrm6sb897xuemdmf8szkua",
+            "create_at": 1795781360540,
+            "update_at": 1795781360540,
+            "delete_at": 0,
+            "user_id": "qzfbpugzy3yjixa86k5e433tfy",
+            "channel_id": "kra7qwzobt8ebnxcb176d6fpoh",
+            "root_id": "aa4qytc4pbnjig17f9dxztmric",
+            "message": "@alex can you take this? The customer waits for the March export.",
+            "type": "",
+            "props": {},
+            "pending_post_id": ""
+          },
+          "ombri9zoybf13nwxtq3zdw8dga": {
+            "id": "ombri9zoybf13nwxtq3zdw8dga",
+            "create_at": 1795781334223,
+            "update_at": 1795781334223,
+            "delete_at": 0,
+            "user_id": "qzfbpugzy3yjixa86k5e433tfy",
+            "channel_id": "kra7qwzobt8ebnxcb176d6fpoh",
+            "root_id": "",
+            "message": "sam.lee joined the channel.",
+            "type": "system_join_channel",
+            "props": {
+              "username": "sam.lee"
+            },
+            "pending_post_id": ""
+          },
+          "p6sm145yiiby5rx6fc1qmu56xy": {
+            "id": "p6sm145yiiby5rx6fc1qmu56xy",
+            "create_at": 1795781334139,
+            "update_at": 1795781334139,
+            "delete_at": 0,
+            "user_id": "w1mph19wo383fpwn764z8cwske",
+            "channel_id": "kra7qwzobt8ebnxcb176d6fpoh",
+            "root_id": "",
+            "message": "alex joined the channel.",
+            "type": "system_join_channel",
+            "props": {
+              "username": "alex"
+            },
+            "pending_post_id": ""
+          },
+          "s7k7uqz353nruxfau5md6yhd9a": {
+            "id": "s7k7uqz353nruxfau5md6yhd9a",
+            "create_at": 1795781334196,
+            "update_at": 1795781334196,
+            "delete_at": 0,
+            "user_id": "w9hxuojh6pbmunow4zna8zui4r",
+            "channel_id": "kra7qwzobt8ebnxcb176d6fpoh",
+            "root_id": "",
+            "message": "minh.tran joined the channel.",
+            "type": "system_join_channel",
+            "props": {
+              "username": "minh.tran"
+            },
+            "pending_post_id": ""
+          },
+          "ucdm9wf343ypfgax8w9ngdx94y": {
+            "id": "ucdm9wf343ypfgax8w9ngdx94y",
+            "create_at": 1795781334169,
+            "update_at": 1795781334169,
+            "delete_at": 0,
+            "user_id": "ubtfrjh8p7b89c3tbcrtsffp5c",
+            "channel_id": "kra7qwzobt8ebnxcb176d6fpoh",
+            "root_id": "",
+            "message": "lan.pham joined the channel.",
+            "type": "system_join_channel",
+            "props": {
+              "username": "lan.pham"
+            },
+            "pending_post_id": ""
+          }
+        }
+      }
+    },
+    {
+      "method": "get",
+      "path": "/api/v4/channels/pk8z6gezxfdpi841hpc8drc8kr/posts?since=0&skipFetchThreads=false&collapsedThreads=false&collapsedThreadsExtended=false",
+      "status": 200,
+      "body": {
+        "order": [
+          "5g6ywwh6djnsmx8opy8tme4tme",
+          "qb8a7t1eqfrmtjydynr8zo43nw",
+          "uznpbhe8y7rwdey6w1fmk81jwe",
+          "fmt8ogchtjbp8ky14hoig9jazw",
+          "bubkqh1b7fb7trepcrpngba89e"
+        ],
+        "posts": {
+          "5g6ywwh6djnsmx8opy8tme4tme": {
+            "id": "5g6ywwh6djnsmx8opy8tme4tme",
+            "create_at": 1795781333935,
+            "update_at": 1795781333935,
+            "delete_at": 0,
+            "user_id": "9n3nwn6zk7gbxxua11a4kg9hgc",
+            "channel_id": "pk8z6gezxfdpi841hpc8drc8kr",
+            "root_id": "",
+            "message": "awadmin joined the channel.",
+            "type": "system_join_channel",
+            "props": {
+              "username": "awadmin"
+            },
+            "pending_post_id": ""
+          },
+          "bubkqh1b7fb7trepcrpngba89e": {
+            "id": "bubkqh1b7fb7trepcrpngba89e",
+            "create_at": 1795781333703,
+            "update_at": 1795781333703,
+            "delete_at": 0,
+            "user_id": "w1mph19wo383fpwn764z8cwske",
+            "channel_id": "pk8z6gezxfdpi841hpc8drc8kr",
+            "root_id": "",
+            "message": "alex joined the channel.",
+            "type": "system_join_channel",
+            "props": {
+              "username": "alex"
+            },
+            "pending_post_id": ""
+          },
+          "fmt8ogchtjbp8ky14hoig9jazw": {
+            "id": "fmt8ogchtjbp8ky14hoig9jazw",
+            "create_at": 1795781333765,
+            "update_at": 1795781333765,
+            "delete_at": 0,
+            "user_id": "ubtfrjh8p7b89c3tbcrtsffp5c",
+            "channel_id": "pk8z6gezxfdpi841hpc8drc8kr",
+            "root_id": "",
+            "message": "lan.pham joined the channel.",
+            "type": "system_join_channel",
+            "props": {
+              "username": "lan.pham"
+            },
+            "pending_post_id": ""
+          },
+          "qb8a7t1eqfrmtjydynr8zo43nw": {
+            "id": "qb8a7t1eqfrmtjydynr8zo43nw",
+            "create_at": 1795781333880,
+            "update_at": 1795781333880,
+            "delete_at": 0,
+            "user_id": "qzfbpugzy3yjixa86k5e433tfy",
+            "channel_id": "pk8z6gezxfdpi841hpc8drc8kr",
+            "root_id": "",
+            "message": "sam.lee joined the channel.",
+            "type": "system_join_channel",
+            "props": {
+              "username": "sam.lee"
+            },
+            "pending_post_id": ""
+          },
+          "uznpbhe8y7rwdey6w1fmk81jwe": {
+            "id": "uznpbhe8y7rwdey6w1fmk81jwe",
+            "create_at": 1795781333823,
+            "update_at": 1795781333823,
+            "delete_at": 0,
+            "user_id": "w9hxuojh6pbmunow4zna8zui4r",
+            "channel_id": "pk8z6gezxfdpi841hpc8drc8kr",
+            "root_id": "",
+            "message": "minh.tran joined the channel.",
+            "type": "system_join_channel",
+            "props": {
+              "username": "minh.tran"
+            },
+            "pending_post_id": ""
+          }
+        }
+      }
+    },
+    {
+      "method": "post",
+      "path": "/api/v4/users/ids",
+      "status": 200,
+      "body": [
+        {
+          "id": "9n3nwn6zk7gbxxua11a4kg9hgc",
+          "create_at": 1795781333292,
+          "update_at": 1795781333898,
+          "delete_at": 0,
+          "username": "awadmin"
+        }
+      ]
+    },
+    {
+      "method": "get",
+      "path": "/api/v4/channels/57tyin6nr3fmiygpp4e4h3a6br/posts?since=0&skipFetchThreads=false&collapsedThreads=false&collapsedThreadsExtended=false",
+      "status": 200,
+      "body": {
+        "order": [
+          "y147k4mcp7r7txrkft3b9sqwyw",
+          "484w6zugft8idgazpay1jfwweh",
+          "tu95brxmojrn5em3t5s8piro5o",
+          "nwt418p9nb8pzq3fiex3gf5aso"
+        ],
+        "posts": {
+          "484w6zugft8idgazpay1jfwweh": {
+            "id": "484w6zugft8idgazpay1jfwweh",
+            "create_at": 1795781334734,
+            "update_at": 1795781334734,
+            "delete_at": 0,
+            "user_id": "w9hxuojh6pbmunow4zna8zui4r",
+            "channel_id": "57tyin6nr3fmiygpp4e4h3a6br",
+            "root_id": "",
+            "message": "minh.tran joined the channel.",
+            "type": "system_join_channel",
+            "props": {
+              "username": "minh.tran"
+            },
+            "pending_post_id": ""
+          },
+          "nwt418p9nb8pzq3fiex3gf5aso": {
+            "id": "nwt418p9nb8pzq3fiex3gf5aso",
+            "create_at": 1795781334686,
+            "update_at": 1795781334686,
+            "delete_at": 0,
+            "user_id": "w1mph19wo383fpwn764z8cwske",
+            "channel_id": "57tyin6nr3fmiygpp4e4h3a6br",
+            "root_id": "",
+            "message": "alex joined the channel.",
+            "type": "system_join_channel",
+            "props": {
+              "username": "alex"
+            },
+            "pending_post_id": ""
+          },
+          "tu95brxmojrn5em3t5s8piro5o": {
+            "id": "tu95brxmojrn5em3t5s8piro5o",
+            "create_at": 1795781334710,
+            "update_at": 1795781334710,
+            "delete_at": 0,
+            "user_id": "ubtfrjh8p7b89c3tbcrtsffp5c",
+            "channel_id": "57tyin6nr3fmiygpp4e4h3a6br",
+            "root_id": "",
+            "message": "lan.pham joined the channel.",
+            "type": "system_join_channel",
+            "props": {
+              "username": "lan.pham"
+            },
+            "pending_post_id": ""
+          },
+          "y147k4mcp7r7txrkft3b9sqwyw": {
+            "id": "y147k4mcp7r7txrkft3b9sqwyw",
+            "create_at": 1795781334759,
+            "update_at": 1795781334759,
+            "delete_at": 0,
+            "user_id": "qzfbpugzy3yjixa86k5e433tfy",
+            "channel_id": "57tyin6nr3fmiygpp4e4h3a6br",
+            "root_id": "",
+            "message": "sam.lee joined the channel.",
+            "type": "system_join_channel",
+            "props": {
+              "username": "sam.lee"
+            },
+            "pending_post_id": ""
+          }
+        }
+      }
+    },
+    {
+      "method": "get",
+      "path": "/api/v4/channels/9mw9fxny4iympghdg31ykfzric/posts?since=0&skipFetchThreads=false&collapsedThreads=false&collapsedThreadsExtended=false",
+      "status": 200,
+      "body": {
+        "order": [
+          "5oc1e97w63yctkhy3bo9nwk99y",
+          "xjrp4gnck7nm5fgewtstm5d7ay",
+          "a1n3xtp9gtgy3xcwikhc8nrgge",
+          "a6ia8tpoy7dq9ywr388mp8modw",
+          "x8df8ei9qirgfddozbjag8bd7c"
+        ],
+        "posts": {
+          "5oc1e97w63yctkhy3bo9nwk99y": {
+            "id": "5oc1e97w63yctkhy3bo9nwk99y",
+            "create_at": 1795781333916,
+            "update_at": 1795781333916,
+            "delete_at": 0,
+            "user_id": "9n3nwn6zk7gbxxua11a4kg9hgc",
+            "channel_id": "9mw9fxny4iympghdg31ykfzric",
+            "root_id": "",
+            "message": "awadmin joined the team.",
+            "type": "system_join_team",
+            "props": {
+              "username": "awadmin"
+            },
+            "pending_post_id": ""
+          },
+          "a1n3xtp9gtgy3xcwikhc8nrgge": {
+            "id": "a1n3xtp9gtgy3xcwikhc8nrgge",
+            "create_at": 1795781333803,
+            "update_at": 1795781333803,
+            "delete_at": 0,
+            "user_id": "w9hxuojh6pbmunow4zna8zui4r",
+            "channel_id": "9mw9fxny4iympghdg31ykfzric",
+            "root_id": "",
+            "message": "minh.tran joined the team.",
+            "type": "system_join_team",
+            "props": {
+              "username": "minh.tran"
+            },
+            "pending_post_id": ""
+          },
+          "a6ia8tpoy7dq9ywr388mp8modw": {
+            "id": "a6ia8tpoy7dq9ywr388mp8modw",
+            "create_at": 1795781333744,
+            "update_at": 1795781333744,
+            "delete_at": 0,
+            "user_id": "ubtfrjh8p7b89c3tbcrtsffp5c",
+            "channel_id": "9mw9fxny4iympghdg31ykfzric",
+            "root_id": "",
+            "message": "lan.pham joined the team.",
+            "type": "system_join_team",
+            "props": {
+              "username": "lan.pham"
+            },
+            "pending_post_id": ""
+          },
+          "x8df8ei9qirgfddozbjag8bd7c": {
+            "id": "x8df8ei9qirgfddozbjag8bd7c",
+            "create_at": 1795781333672,
+            "update_at": 1795781333672,
+            "delete_at": 0,
+            "user_id": "w1mph19wo383fpwn764z8cwske",
+            "channel_id": "9mw9fxny4iympghdg31ykfzric",
+            "root_id": "",
+            "message": "alex joined the team.",
+            "type": "system_join_team",
+            "props": {
+              "username": "alex"
+            },
+            "pending_post_id": ""
+          },
+          "xjrp4gnck7nm5fgewtstm5d7ay": {
+            "id": "xjrp4gnck7nm5fgewtstm5d7ay",
+            "create_at": 1795781333860,
+            "update_at": 1795781333860,
+            "delete_at": 0,
+            "user_id": "qzfbpugzy3yjixa86k5e433tfy",
+            "channel_id": "9mw9fxny4iympghdg31ykfzric",
+            "root_id": "",
+            "message": "sam.lee joined the team.",
+            "type": "system_join_team",
+            "props": {
+              "username": "sam.lee"
+            },
+            "pending_post_id": ""
+          }
+        }
+      }
+    },
+    {
+      "method": "get",
+      "path": "/api/v4/channels/kra7qwzobt8ebnxcb176d6fpoh/posts?page=0&per_page=100&skipFetchThreads=false&collapsedThreads=false&collapsedThreadsExtended=false",
+      "status": 200,
+      "body": {
+        "order": [
+          "1xjzi7k7stg8few4knh61eub1r",
+          "d7oprrm6sb897xuemdmf8szkua",
+          "33foey6cspbkupx6gbqxeh9k9c",
+          "aa4qytc4pbnjig17f9dxztmric",
+          "ombri9zoybf13nwxtq3zdw8dga",
+          "s7k7uqz353nruxfau5md6yhd9a",
+          "ucdm9wf343ypfgax8w9ngdx94y",
+          "p6sm145yiiby5rx6fc1qmu56xy"
+        ],
+        "posts": {
+          "1xjzi7k7stg8few4knh61eub1r": {
+            "id": "1xjzi7k7stg8few4knh61eub1r",
+            "create_at": 1795781360671,
+            "update_at": 1795781360671,
+            "delete_at": 0,
+            "user_id": "qzfbpugzy3yjixa86k5e433tfy",
+            "channel_id": "kra7qwzobt8ebnxcb176d6fpoh",
+            "root_id": "",
+            "message": "Standup moves to 10:30 tomorrow.",
+            "type": "",
+            "props": {},
+            "pending_post_id": ""
+          },
+          "33foey6cspbkupx6gbqxeh9k9c": {
+            "id": "33foey6cspbkupx6gbqxeh9k9c",
+            "create_at": 1795781360473,
+            "update_at": 1795781360473,
+            "delete_at": 0,
+            "user_id": "w9hxuojh6pbmunow4zna8zui4r",
+            "channel_id": "kra7qwzobt8ebnxcb176d6fpoh",
+            "root_id": "aa4qytc4pbnjig17f9dxztmric",
+            "message": "Log: TypeError at formatCurrency (export.ts:88)",
+            "type": "",
+            "props": {},
+            "pending_post_id": ""
+          },
+          "aa4qytc4pbnjig17f9dxztmric": {
+            "id": "aa4qytc4pbnjig17f9dxztmric",
+            "create_at": 1795781360383,
+            "update_at": 1795781360540,
+            "delete_at": 0,
+            "user_id": "w9hxuojh6pbmunow4zna8zui4r",
+            "channel_id": "kra7qwzobt8ebnxcb176d6fpoh",
+            "root_id": "",
+            "message": "Export CSV on /invoices gives a 500 since this morning",
+            "type": "",
+            "props": {},
+            "pending_post_id": ""
+          },
+          "d7oprrm6sb897xuemdmf8szkua": {
+            "id": "d7oprrm6sb897xuemdmf8szkua",
+            "create_at": 1795781360540,
+            "update_at": 1795781360540,
+            "delete_at": 0,
+            "user_id": "qzfbpugzy3yjixa86k5e433tfy",
+            "channel_id": "kra7qwzobt8ebnxcb176d6fpoh",
+            "root_id": "aa4qytc4pbnjig17f9dxztmric",
+            "message": "@alex can you take this? The customer waits for the March export.",
+            "type": "",
+            "props": {},
+            "pending_post_id": ""
+          },
+          "ombri9zoybf13nwxtq3zdw8dga": {
+            "id": "ombri9zoybf13nwxtq3zdw8dga",
+            "create_at": 1795781334223,
+            "update_at": 1795781334223,
+            "delete_at": 0,
+            "user_id": "qzfbpugzy3yjixa86k5e433tfy",
+            "channel_id": "kra7qwzobt8ebnxcb176d6fpoh",
+            "root_id": "",
+            "message": "sam.lee joined the channel.",
+            "type": "system_join_channel",
+            "props": {
+              "username": "sam.lee"
+            },
+            "pending_post_id": ""
+          },
+          "p6sm145yiiby5rx6fc1qmu56xy": {
+            "id": "p6sm145yiiby5rx6fc1qmu56xy",
+            "create_at": 1795781334139,
+            "update_at": 1795781334139,
+            "delete_at": 0,
+            "user_id": "w1mph19wo383fpwn764z8cwske",
+            "channel_id": "kra7qwzobt8ebnxcb176d6fpoh",
+            "root_id": "",
+            "message": "alex joined the channel.",
+            "type": "system_join_channel",
+            "props": {
+              "username": "alex"
+            },
+            "pending_post_id": ""
+          },
+          "s7k7uqz353nruxfau5md6yhd9a": {
+            "id": "s7k7uqz353nruxfau5md6yhd9a",
+            "create_at": 1795781334196,
+            "update_at": 1795781334196,
+            "delete_at": 0,
+            "user_id": "w9hxuojh6pbmunow4zna8zui4r",
+            "channel_id": "kra7qwzobt8ebnxcb176d6fpoh",
+            "root_id": "",
+            "message": "minh.tran joined the channel.",
+            "type": "system_join_channel",
+            "props": {
+              "username": "minh.tran"
+            },
+            "pending_post_id": ""
+          },
+          "ucdm9wf343ypfgax8w9ngdx94y": {
+            "id": "ucdm9wf343ypfgax8w9ngdx94y",
+            "create_at": 1795781334169,
+            "update_at": 1795781334169,
+            "delete_at": 0,
+            "user_id": "ubtfrjh8p7b89c3tbcrtsffp5c",
+            "channel_id": "kra7qwzobt8ebnxcb176d6fpoh",
+            "root_id": "",
+            "message": "lan.pham joined the channel.",
+            "type": "system_join_channel",
+            "props": {
+              "username": "lan.pham"
+            },
+            "pending_post_id": ""
+          }
+        }
+      }
+    }
+  ]
+}

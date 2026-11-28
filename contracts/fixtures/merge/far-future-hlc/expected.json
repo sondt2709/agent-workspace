@@ -34,6 +34,7 @@
     ]
   },
   "view": {
+    "cards": [],
     "credentials": [
       {
         "added": {
@@ -150,6 +151,7 @@
     "removed_projects": [],
     "removed_tasks": [],
     "slots": [],
+    "sources": [],
     "tasks": [
       {
         "archived": false,

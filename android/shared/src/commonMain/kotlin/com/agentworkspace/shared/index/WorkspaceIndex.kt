@@ -11,6 +11,7 @@ import com.agentworkspace.shared.merge.MergeUpdate
 import com.agentworkspace.shared.merge.ProjectView
 import com.agentworkspace.shared.merge.TaskView
 import com.agentworkspace.shared.model.AwJson
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.serializer
@@ -26,6 +27,10 @@ data class ThreadPlace(
         val START = ThreadPlace("", "", "")
     }
 }
+
+/** The row of the Inbox view in the documents table (no document of the workspace). */
+const val INBOX_VIEW_PATH = "view/inbox"
+const val INBOX_VIEW_KIND = "inbox-view"
 
 /**
  * Writes the merged view to the Room index and reads the queries of the phone (`sqlite.ts` of
@@ -156,6 +161,25 @@ class WorkspaceIndex(
                 )
             },
         )
+        // The sources and the cards of the Inbox (openspec inbox-mattermost): one row of a kind that
+        // is no document, so `documents()` leaves it out of the last valid documents of the merge.
+        dao.upsertDocuments(
+            listOf(
+                DocumentRow(
+                    INBOX_VIEW_PATH,
+                    INBOX_VIEW_KIND,
+                    AwJson.encodeToString(
+                        JsonObject.serializer(),
+                        JsonObject(
+                            mapOf(
+                                "sources" to JsonArray(update.view.sources),
+                                "cards" to JsonArray(update.view.cards),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+        )
         dao.clearProjects()
         dao.upsertProjects(
             update.view.projects.map { ProjectRow(it.slug, AwJson.encodeToString(serializer<ProjectView>(), it)) },
@@ -258,9 +282,12 @@ class WorkspaceIndex(
 
     /** The last valid value of each document, for `MergeEngine(lastValid = ...)` at a start. */
     suspend fun documents(): List<LastValidDocument> =
-        dao.allDocuments().map {
+        dao.allDocuments().filter { it.kind != INBOX_VIEW_KIND }.map {
             LastValidDocument(it.path, it.kind, AwJson.decodeFromString(JsonObject.serializer(), it.json))
         }
+
+    /** The sources and the cards of the Inbox (openspec inbox-mattermost), or null before a write. */
+    suspend fun inboxView(): JsonObject? = document(INBOX_VIEW_PATH)
 
     /** Each row of each table, as text, for the tests that compare an incremental index with a rebuild. */
     suspend fun dump(): Map<String, List<String>> =

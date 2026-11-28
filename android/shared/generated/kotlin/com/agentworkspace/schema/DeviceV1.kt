@@ -44,6 +44,7 @@ data class DeviceV1(
             AwChecks.pattern(revokedAt, PATTERN_4, "revoked_at")
             AwChecks.hlc(revokedAt, "revoked_at")
         }
+        AwChecks.maxItems(addresses, 16, "addresses")
         addresses.forEachIndexed { index, item ->
             AwChecks.minLength(item, 1, "addresses" + "." + index)
         }

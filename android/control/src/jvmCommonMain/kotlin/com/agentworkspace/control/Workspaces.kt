@@ -168,7 +168,7 @@ class WorkspaceNavigation(
     }
 
     /**
-     * A notification tap: the workspace of the push, then `[Inbox, Task(id)]` (docs/phase-1.md 8.4), or
+     * A notification tap: the workspace of the push, then `[Tasks, Task(id)]` (docs/phase-1.md 8.4), or
      * `[Inbox]` for a push with no task. False when the workspace is not on this phone: then only the
      * Inbox of the shown workspace opens, because the task is not in it.
      */

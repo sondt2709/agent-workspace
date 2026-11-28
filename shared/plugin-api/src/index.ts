@@ -5,4 +5,5 @@ export type * from "./session-host.ts";
 export const packageName = "@aw/plugin-api";
 
 export type * from "./knowledge.ts";
+export type * from "./source.ts";
 export type * from "./sync.ts";

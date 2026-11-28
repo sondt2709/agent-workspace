@@ -216,6 +216,10 @@ class ClassWriter {
       out.push(`AwChecks.minLength(${expr}, ${schema.minLength}, ${l})`);
     if (typeof schema.maxLength === "number")
       out.push(`AwChecks.maxLength(${expr}, ${schema.maxLength}, ${l})`);
+    if (typeof schema.minItems === "number" && schema.minItems > 0)
+      out.push(`AwChecks.minItems(${expr}, ${schema.minItems}, ${l})`);
+    if (typeof schema.maxItems === "number")
+      out.push(`AwChecks.maxItems(${expr}, ${schema.maxItems}, ${l})`);
     const suffix = schema.type === "integer" ? "L" : schema.type === "number" ? ".0" : "";
     if (typeof schema.minimum === "number")
       out.push(`AwChecks.atLeast(${expr}, ${schema.minimum}${suffix}, ${l})`);

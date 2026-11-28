@@ -34,6 +34,7 @@
     ]
   },
   "view": {
+    "cards": [],
     "credentials": [
       {
         "added": {
@@ -185,6 +186,7 @@
         "ttl_ms": 1800000
       }
     ],
+    "sources": [],
     "tasks": [
       {
         "archived": false,

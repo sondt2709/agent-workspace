@@ -7,7 +7,7 @@
 | Readers | People who change a desktop screen, reviewers |
 | Source of truth | `principles.md`. This file wins over the look of older screenshots. The prototype wins for the content and the order of each screen. |
 | Code | `shared/ui/src/index.ts` (`createAppTheme()`, `tokens`), `desktop/src/renderer/src/components/AppShell.tsx`, `android/app/.../ui/Theme.kt` and `Compact.kt` |
-| Status | Built: the tokens, the theme, the fonts, the icons, the window and the look of the sidebar and the top bar (openspec `design-system`); the task view of 8.6 on the desktop (openspec `task-view-focus`) and on the phone (openspec `phone-task-focus`); the pages of 8.16, the loading rows of 8.13.2 and Appearance (openspec `screens-align`); the create flows of 8.17 and the empty states of 8.13.1 (openspec `create-flows`); the session options of 8.18 (openspec `session-options`); the New projects setting of 8.16.8, the New task layout of 8.18.1 and the phone New task bar of 8.18.7 (openspec `permissions-default`); the sidebar and switcher of 8.2, the top bar of 8.3, the project tabs, All tasks, the Inbox list and detail, the List of 8.4, the Board of 8.5, the command menu of 8.9 and the screen keys of 9 (openspec `navigation-prototype`). |
+| Status | Built: the tokens, the theme, the fonts, the icons, the window and the look of the sidebar and the top bar (openspec `design-system`); the task view of 8.6 on the desktop (openspec `task-view-focus`) and on the phone (openspec `phone-task-focus`); the pages of 8.16, the loading rows of 8.13.2 and Appearance (openspec `screens-align`); the create flows of 8.17 and the empty states of 8.13.1 (openspec `create-flows`); the session options of 8.18 (openspec `session-options`); the New projects setting of 8.16.8, the New task layout of 8.18.1 and the phone New task bar of 8.18.7 (openspec `permissions-default`); the sidebar and switcher of 8.2, the top bar of 8.3, the project tabs, All tasks, the Inbox list and detail, the List of 8.4, the Board of 8.5, the command menu of 8.9 and the screen keys of 9 (openspec `navigation-prototype`); Tasks, the project filter, Projects, the Inbox of cards and Sources of 8.2 to 8.3.4 (openspec `nav-tasks-needs-you` and `inbox-mattermost`). |
 
 Color reference: the palette of the AW prototype (local only, not in the repository). Its surfaces, text colors and status colors are the tokens of section 2, and its yellow is the one accent. The desktop and the phone use the same values (openspec `polish-prototype-style`).
 
@@ -139,25 +139,41 @@ Each status color has a tint for chips and banners: the color at 12 % to 14 % op
 5. AW uses no vibrancy in phase 1: solid colors keep the contrast of the tokens.
 
 ### 8.2 Sidebar
-1. Order from the top: the workspace switcher; Inbox (with the count of the rows of its "Needs you" tab); All tasks; the section "Projects" with the "+" of Add a project and one row per project; the section "Workspace" (Shared knowledge, Credentials); the section "This device" (Devices & sync, Settings); at the bottom, the device name, the sync state and Sync. The sidebar shows only the current workspace.
-2. A project row has the letter tile of the project, the name and its counts "needs you · working". A click opens its Board. The project tabs (Board, List, Knowledge, Files, Settings) show in the page header (`ProjectFrame`), not in the sidebar. The letter tile is neutral: `project.yaml` has no color, and color means status (principle 3).
+1. Order from the top: the workspace switcher; Inbox (the count of the unread open cards); Tasks (the count of the "Needs you" rows in `you`); then, at the bottom above the footer, Projects, Knowledge, Sources, Credentials, Devices & sync and Settings; at the bottom, the device name, the sync state and Sync. The sidebar shows only the current workspace and has no row for each project (decision `2026-11-27-inbox-and-tasks`).
+2. A project is a filter of Tasks and the Inbox (8.3.2). The page Projects lists the projects with their repository, devices and counts; a row opens Tasks › All with its filter, and its buttons open the project pages Knowledge, Files and Settings (`ProjectFrame`). The letter tile is neutral: `project.yaml` has no color, and color means status (principle 3).
 3. The workspace switcher shows the letter tile and the name, and opens a menu: each workspace with its folder and a check mark on the current one, "Add a project…", "Add a workspace…", "Rename…", "Remove from this device…". "Join with a pairing code" is only on the first-run screen: a device with a workspace already has its identity.
-4. Items are 28 px high, with an 18 px icon, a 13 px label (510) and a right-aligned count in `text3`. The active item has the `selected` fill. The Inbox count is the number of "Needs you" rows of the Inbox (tasks in the lane, tasks with an answer notice and files to fix, not open gates) in the `you` color. All tasks counts the active tasks that are not done.
-5. The rail (600 to 1199 px) has the same items as icons with tooltips: the switcher as the letter tile, the projects as letter tiles, a divider in place of each section label, and Sync with a status dot.
+4. Items are 28 px high, with an 18 px icon, a 13 px label (510) and a right-aligned count in `text3`. The active item has the `selected` fill. The Tasks count is the number of "Needs you" rows (tasks in the lane, tasks with an answer notice and files to fix, not open gates) in the `you` color.
+5. The rail (600 to 1199 px) has the same items as icons with tooltips, the switcher as the letter tile, a divider above the tools, and Sync with a status dot.
 6. The sync state is a dot in the status color and a short text: "Synced 12 s ago" (`ok`), "Syncing" (`run`), "3 changes not synced", "Sync is off", "No other device" (`wait`), "Sync failed" (`err`). Only a connected device that is not in sync makes "Syncing". An offline device with no change to get does not change the state. It opens Devices & sync. It reads the sync status again every 10 s.
 
 ### 8.3 Top bar
-1. Left: the breadcrumb (workspace › screen; workspace › project › tab; or workspace › project › task key). The earlier parts are links. Right: the "Needs you" count (it opens the Inbox), the sync state (from 1200 px), "Sync now", "New session" and "New task" with its key hint.
+1. Left: the breadcrumb (workspace › screen; workspace › project › tab; or workspace › project › task key). The earlier parts are links; a project opens Tasks with its filter. Right: the "Needs you" count (it opens Tasks › Needs you), the sync state (from 1200 px), "Sync now", "New session" and "New task" with its key hint.
 2. "New task" is the only primary (accent) button of the top bar.
 3. Below 840 px "Sync now" and "New session" show icons only. Below 600 px the breadcrumb shows its last part only, and each button shows an icon only, with a tooltip.
 
-### 8.3.1 Inbox
-1. A list and a detail with the tabs "Needs you" and "Updates". The tab and the selected row are in the route (`?tab=updates`, `?item=`).
-2. "Needs you": one row per task in the lane (the reason in `you`: "Reply to a question", "Approve proposal", "Approve result", …; the title, the key and the project) and per file to fix; then the groups "Working now", "Paused" and "Queued", which open the task. A task with an answer notice keeps its row until the person closes the notice.
-3. "Updates": the knowledge of today and each device that is offline with changes of this workspace not synced.
-4. The detail of a task has the key, the project, the assignee, "Open task", the title and the Activity row of each open gate (the question message with its buttons and a reply field, the proposal card, or the gate card). From 840 px the first row shows when no row is selected, or when the selected row left the list (an answered gate). Below 840 px the detail replaces the list, with Back.
-5. The phone Inbox is the same: the tabs, the rows and the groups; a tap opens the item as its own screen with "Open task" (`contracts/fixtures/inbox/items.json`).
-6. With no project or no active task, the Inbox shows its empty state (8.13.1) with the "Fix a file" cards and the "Knowledge today" card under it.
+### 8.3.1 Tasks
+1. The tabs "Needs you", "Working" and "All" with their counts, the project filter and, on All, the switch List / Board. The tab, the view, the filter and the selected row are in the route (`?tab=`, `?view=`, `?projects=`, `?item=`).
+2. "Needs you" is a list and a detail: one row per task in the lane (the reason in `you`: "Reply to a question", "Approve proposal", "Approve result", …; the title, the key and the project) and per file to fix; then the section "Updates" (the knowledge of today and each device that is offline with changes of this workspace not synced). A task with an answer notice keeps its row until the person closes the notice.
+3. The detail of a task has the key, the project, the assignee, "Open task", the title and the Activity row of each open gate (the question message with its buttons and a reply field, the proposal card, or the gate card). From 840 px the first row shows when no row is selected, or when the selected row left the list. Below 840 px the detail replaces the list, with Back.
+4. "Working" has the groups "Working now", "Paused" and "Queued", which open the task. "All" has the List and the Board of 8.4 and 8.5.
+5. The phone Tasks is the same: the tabs, the rows, the groups and the filter; a tap on a "Needs you" row opens the item as its own screen with "Open task" (`contracts/fixtures/inbox/items.json`).
+6. With no project or no active task, "Needs you" shows its empty state (8.13.1) with the "Fix a file" cards and the "Knowledge today" card under it.
+
+### 8.3.2 Project filter
+1. A chip "Project" with a folder icon opens a menu: a search field ("Find a project") and one check row per project, by name. The Inbox adds "No project" first. The person selects 0, 1 or many rows.
+2. The chip shows "Project", 1 or 2 names, or "<n> projects", and a clear button (×) next to it. The rule is `filterByProjects` of `shared/client` (`contracts/fixtures/filters/projects.json`).
+
+### 8.3.3 Inbox
+1. One list of cards (decision `2026-11-27-inbox-and-tasks`). A row: the unread dot (8 px, accent), the category icon in a 24 × 24 px box (Action: a check box in `run`; Question: "?" in `you`; Info: "i" in `text3`), the title (bold when unread), the project and the conversation, the urgency as 3 bars (high in `err`), and the time. Each title starts at the same place.
+2. The filter bar: the chips All, Action, Question and Info with counts, the project filter (with "No project"), Unread, Done, the sort (Urgency ↓ or Newest ↓), and the source line ("Mattermost · 1 min ago") with Run now (⇧⌘R; ⌘R stays Sync now).
+3. A card opens in a dialog (max 900 px wide; full screen below 600 px): the category icon, the title, Previous, Next and Close; the category menu, the urgency, the project, the conversation and the time; the summary; the suggestion box (Action: "Suggested task" with "Create task…" and a form with the title, the required project, the assignee and the first message; Question: "Suggested answer" with "Reply…", Copy, and the reply form "As @<user> · <conversation> · in the thread"); the messages word for word; "Ask the agent" with the asks and the answers; Done, Mark unread and "Open in Mattermost" in the footer. Keys: ↑ ↓ j k, r, t, d, u, Esc.
+4. With no source and no card, the Inbox shows "No source yet" with "Add a source".
+5. The phone Inbox has the same rows, filter and sort; a tap opens the card as its own screen with the same parts.
+
+### 8.3.4 Sources
+1. The box Mattermost: the server, the token (a credential), the collecting computer ("One computer at a time. The phone never reads Mattermost."), the connection ("Connected as @alex"), the last read and the waiting messages.
+2. The box Triage agent: the agent, the model, the schedule (Every as text, for example `15m` or `1h30m`; the hours; the days), the last batch, the instruction, Save and "Paused".
+3. The table Conversations: the search, the channel mode (Selected channels, All channels), and per conversation the name, the kind, the projects and the read level (All, Tagged, Off).
 
 ### 8.4 Lists
 1. A row is one line, 36 px: status icon (the icon of its group), task key (mono, `text3`), title (`body-strong`), then right-aligned chips, the assignee and the age. Below 840 px the assignee hides; below 600 px the chips hide.
@@ -231,7 +247,7 @@ All buttons have `r-sm`, a 13 px label (510), no uppercase and no elevation.
 3. An error shows a red border and the error text under the field.
 
 ### 8.13 Empty states and loading
-1. An empty screen has one line that says what is missing, and one button for the next step ("Add a project", "New task"). Use `Empty` of `common.tsx` with its `action`. The Inbox of a workspace with no project shows "No projects yet" and "Add a project"; with a project and no task, "No tasks yet" and "New task". The Board and the List of a project with no task show "No tasks yet" and "New task". An empty Board column shows the line "No tasks" in `text3`.
+1. An empty screen has one line that says what is missing, and one button for the next step ("Add a project", "New task"). Use `Empty` of `common.tsx` with its `action`. Tasks › Needs you of a workspace with no project shows "No projects yet" and "Add a project"; with a project and no task, "No tasks yet" and "New task". The Board and the List of a project with no task show "No tasks yet" and "New task". An empty Board column shows the line "No tasks" in `text3`.
 2. Loading shows skeleton rows of the final size after 300 ms. Do not show a spinner for less than 300 ms.
 
 ### 8.14 Banners and notices
@@ -294,9 +310,10 @@ All buttons have `r-sm`, a 13 px label (510), no uppercase and no elevation.
 | ⌘N | New task |
 | ⌘⇧N | New session |
 | ⌘R | Sync now |
+| ⇧⌘R | Run now (Inbox, when a device collects) |
 | ⌘K | Command menu |
 | ⌘F | Search in the current list |
-| ⌘1 … ⌘4 | Inbox, All tasks, Devices & sync, Settings |
+| ⌘1 … ⌘4 | Inbox, Tasks, Devices & sync, Settings |
 | ↑ ↓ | Move the selection in a list |
 | Enter | Open the selection |
 | Esc | Close the dialog or the detail |

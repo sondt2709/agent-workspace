@@ -282,6 +282,11 @@ export class WorkspaceService {
   #snapshots = new Map<string, string>();
 
   /** This device now (slug and role): the sessions, the logs and the credentials read it. */
+  /** The clock of this service (the ids of the inbox events). */
+  get clock(): Clock {
+    return this.#clock;
+  }
+
   get device(): DeviceInfo {
     return this.#device();
   }

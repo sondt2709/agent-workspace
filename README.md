@@ -9,7 +9,7 @@ The devices sync their files directly. No central AW service keeps your data.
 Phase 1 is complete. The repository has these parts:
 
 - The documents, the checks (`scripts/`) and `contracts/`.
-- `shared/schema`, `shared/core` (files, merge, index), `shared/client`, `shared/config`, `shared/ui` (the MUI theme) and `shared/plugin-api` (the `KnowledgeStore`, `SyncTransport`, `SessionHost` and `AgentRuntimeAdapter` interfaces).
+- `shared/schema`, `shared/core` (files, merge, index), `shared/client`, `shared/config`, `shared/ui` (the MUI theme) and `shared/plugin-api` (the `KnowledgeStore`, `SyncTransport`, `SessionHost`, `AgentRuntimeAdapter` and `Source` interfaces).
 - `shared/identity` (master key, device keys, signed device records, pairing codes, sealing, keystore), with the identity, pairing and credential services of awd.
 - `daemon/`: awd, the local API, the `aw` CLI, the service units, the agent sessions and `bin/aw-launch`.
 - The MCP server in `daemon/src/mcp/`.
@@ -22,15 +22,16 @@ Phase 1 is complete. The repository has these parts:
 - `plugins/host-tmux` and `plugins/host-orca` (the optional Orca session host and its fake CLI).
 - `plugins/agent-claude`: the AW plugin for Claude Code with its `.mcp.json`, and the fake agent.
 - `plugins/push-webpush`: the Web Push sender (VAPID and RFC 8291).
+- `plugins/source-mattermost`: the Mattermost source of the Inbox, and the Inbox collector and triage session in `daemon/src/inbox/`.
 - `desktop/`: the Electron main process with the notifications, the menu bar Tray and the login item, and the preload bridge.
-- The React + MUI renderer of `desktop/`: the Inbox, the Board, the List, the task detail, the gate cards, New task and New session, Devices & sync, pairing, Knowledge, Files, Credentials, Settings, the project Settings and the workspace menu.
+- The React + MUI renderer of `desktop/`: the Inbox of cards with the card dialog, Tasks (Needs you, Working, All) with the project filter, Projects, Sources, the Board, the List, the task detail, the gate cards, New task and New session, Devices & sync, pairing, Knowledge, Files, Credentials, Settings, the project Settings and the workspace menu.
 - The Docker e2e setup (`e2e/compose.yaml`).
 - `android/shared`: the Kotlin shared module of the Android app.
 - `android/engine`: the Android sync engine build and controller.
 - `android/identity`: the identity formats of the phone (canonical JSON, the pairing code and request, the check code, the device record check, the device key, the age sealer).
 - `android/control`: the logic of the phone screens (screen states, gate rules, routes, the phone actions, the credential outbox with the age sealer, the push file, the phone pairing).
 - `android/app`: the engine foreground service, the adaptive Compose screens, the QR scanner adapter, the Keystore box of the device key and the UnifiedPush receiver.
-- The Compose screens of `android/app`: Home, Inbox, Tasks, Task detail, New task, Devices, Add credential and Pair with a computer.
+- The Compose screens of `android/app`: Home, Inbox (cards), Card, Tasks (Needs you, Working, All), Task detail, New task, Devices, Add credential and Pair with a computer.
 
 `plugins/live-direct` is a placeholder. The items marked **planned** in the documents do not exist yet.
 
